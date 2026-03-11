@@ -4,7 +4,7 @@ This is a short practical guide for creating a new shared skill in this workspac
 
 The setup used here is:
 
-- the repo and prompt files live in `${HOME}/work/vs_skills`
+- the repo and prompt files live in `${HOME}/work/vscode_skills`
 - the shared skills library lives in `${HOME}/skills`
 
 The important idea is that a skill is not just a folder. It is:
@@ -196,3 +196,6 @@ Register it in ${HOME}/skills/SKILL_LIST.md.
 Update ${HOME}/skills/README.md if needed.
 Keep the instructions concrete and simple.
 ```
+
+## TL;DR
+Just ask Copilot to look at this file and ask it to create a new skill with a name and purpose.

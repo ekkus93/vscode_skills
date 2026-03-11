@@ -1,15 +1,15 @@
-# vs_skills
+# Visual Studio Code Skills
 
 This repository is a small workspace for experimenting with reusable agent skills, documenting how those skills are structured, and wiring them into a prompt-driven workflow.
 
 The project is split across two workspace folders:
 
-- `${HOME}/work/vs_skills`
+- `${HOME}/work/vscode_skills`
 - `${HOME}/skills`
 
 The `vs_skills` repository holds the repo-specific instructions, prompts, and documentation. This can really be any Visual Studio Code workspace you want to use the shared skills library from. The main thing is that the contents of .github and AGENTS.md are copied/merged into the target repo.
 
-The `${HOME}/skills` folder holds the actual shared skill library. It's in your home directory so it can be reused across multiple coding-agent workspaces.
+The `${HOME}/skills` folder holds the actual shared skill library. Unzip the skills.zip file here. It's in your home directory so it can be reused across multiple coding-agent workspaces.
 
 ## What This Project Does
 
@@ -89,7 +89,7 @@ vs_skills/
 Current shared skills structure:
 
 ```text
-/home/phil/skills/
+${HOME}/skills/
 	README.md
 	SKILL_LIST.md
 	current-date-time/
