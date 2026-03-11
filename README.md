@@ -1,5 +1,7 @@
 # Visual Studio Code Skills
 
+![Visual Studio Code Skills](imgs/vscode.png)
+
 This repository is a small workspace for experimenting with reusable agent skills, documenting how those skills are structured, and wiring them into a prompt-driven workflow.
 
 The project is split across two workspace folders:
