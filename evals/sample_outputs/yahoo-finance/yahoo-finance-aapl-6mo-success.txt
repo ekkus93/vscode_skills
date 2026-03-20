@@ -1,0 +1,17 @@
+Apple appears stable over the sampled window, with the snapshot below focused on public market data rather than advice.
+
+Market Snapshot
+- Ticker: AAPL
+- Period: 6mo
+- Price action: Mixed but generally resilient over the sampled period.
+- Market cap: Large-cap equity with broad index relevance.
+
+Fundamentals
+- Revenue scale and profitability remain material to the business profile.
+- Valuation metrics should be treated as a point-in-time market snapshot.
+
+Source note
+- yfinance is an unofficial Yahoo Finance wrapper used here for convenience.
+
+Caveat
+- This is market data for research context, not investment advice.

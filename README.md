@@ -9,7 +9,7 @@ The project is split across two workspace folders:
 - `${HOME}/work/vscode_skills`
 - `${HOME}/skills`
 
-The `vs_skills` repository holds the repo-specific instructions, prompts, and documentation. This can really be any Visual Studio Code workspace you want to use the shared skills library from. The main thing is that the contents of .github and AGENTS.md are copied/merged into the target repo.
+The `vscode_skills` repository holds the repo-specific instructions, prompts, eval scaffolding, and documentation. This can really be any Visual Studio Code workspace you want to use the shared skills library from. The main thing is that the contents of `.github/`, `AGENTS.md`, and any supporting eval/test files are copied or adapted into the target repo.
 
 The `${HOME}/skills` folder holds the actual shared skill library. Unzip the skills.zip file here. It's in your home directory so it can be reused across multiple coding-agent workspaces.
 
@@ -21,12 +21,15 @@ This project gives you a place to:
 - keep a human-maintained skill index in `SKILL_LIST.md`
 - route tasks through a prompt that tells the agent to choose and read a skill first
 - experiment with OpenClaw-style skill authoring and invocation patterns
+- add prompt-driven skill eval cases and grading helpers for Copilot-in-the-loop testing
 
 In short, this repo is the control layer, and the shared `skills` folder is the content layer.
 
+This repo can also hold skill-eval scaffolding that grades captured assistant outputs against case assertions when you want to test prompt-driven skill behavior.
+
 ## How It Works
 
-There are three main pieces.
+There are four main pieces.
 
 ### 1. Repo instructions
 
@@ -65,27 +68,59 @@ That folder contains:
 
 Examples currently in the shared library include:
 
-- `yahoo-finance-cli`
+- `arxiv-search`
+- `bitcoin-price`
 - `current-date-time`
+- `docx-to-markdown`
+- `hacker-news-top10`
+- `image-ocr`
+- `company-research`
+- `news-search`
+- `stock-investment-review`
+- `stock-research`
+- `stock-review-market-context`
+- `stock-review-output-contract`
+- `stock-review-supporting-research`
 - `weather`
 - `wikipedia`
-- `docx-to-markdown`
+- `yahoo-finance`
+- `yahoo-finance-cli`
 
 The important rule is that `SKILL_LIST.md` is the source of truth. A skill folder existing on disk is not enough by itself. If it is not listed in the index, it should not be treated as officially available.
+
+### 4. Eval and test scaffolding
+
+This repo can also hold prompt-driven skill eval scaffolding for VS Code and Copilot workflows.
+
+That currently includes:
+
+- `evals/cases/`: case files with prompts and assertion rules
+- `evals/runner/skill_eval.py`: a small runner that grades captured assistant output
+- `tests/test_skill_eval_runner.py`: unit tests for the runner itself
+
+These evals are intentionally Copilot-in-the-loop. They grade captured output rather than launching GitHub Copilot automatically from a local CLI.
 
 ## Project Structure
 
 Current repo structure:
 
 ```text
-vs_skills/
+vscode_skills/
 	.github/
 		copilot-instructions.md
 		prompts/
 			use-a-skill.prompt.md
 	AGENTS.md
+	evals/
+		cases/
+			arxiv-search/
+				arxiv-search-topic-success.json
+		runner/
+			skill_eval.py
 	OPEN_CLAW_SKILL.md
 	README.md
+	tests/
+		test_skill_eval_runner.py
 ```
 
 Current shared skills structure:
@@ -94,16 +129,52 @@ Current shared skills structure:
 ${HOME}/skills/
 	README.md
 	SKILL_LIST.md
+	arxiv-search/
+		SKILL.md
+		arxiv_search.py
+		test_arxiv_search.py
+	bitcoin-price/
+		SKILL.md
 	current-date-time/
 		SKILL.md
 	docx-to-markdown/
 		SKILL.md
+	hacker-news-top10/
+		SKILL.md
+	image-ocr/
+		SKILL.md
+	company-research/
+		SKILL.md
+		company_research.py
+		test_company_research.py
 	list-skills/
+		SKILL.md
+	news-search/
+		SKILL.md
+		news_search.py
+		test_news_search.py
+	stock-investment-review/
+		SKILL.md
+		stock_investment_review.py
+		test_stock_investment_review.py
+	stock-research/
+		SKILL.md
+		stock_research.py
+		test_stock_research.py
+	stock-review-market-context/
+		SKILL.md
+	stock-review-output-contract/
+		SKILL.md
+	stock-review-supporting-research/
 		SKILL.md
 	weather/
 		SKILL.md
 	wikipedia/
 		SKILL.md
+	yahoo-finance/
+		SKILL.md
+		yahoo_finance.py
+		test_yahoo_finance.py
 	yahoo-finance-cli/
 		SKILL.md
 		_meta.json
@@ -124,13 +195,17 @@ Optional but useful, depending on which skills you want to use:
 - `jq`
 - `curl`
 - `date`
+- `python3`
+- `pandoc`
+- `tesseract`
+- `yfinance`
 - Yahoo Finance CLI support through `yahoo-finance2`
 
 ### Workspace setup
 
 Open both folders in the same VS Code workspace:
 
-- `${HOME}/work/vs_skills`
+- `${HOME}/work/vscode_skills`
 - `${HOME}/skills`
 
 This matters because:
@@ -152,10 +227,22 @@ If you move the skills directory somewhere else, update any references and promp
 
 For the skills currently in the shared library:
 
+- `arxiv-search` needs `python3`
+- `bitcoin-price` needs `curl` and `python3`
 - `current-date-time` needs the system `date` command
 - `docx-to-markdown` needs `pandoc`
+- `hacker-news-top10` needs `curl` and `python3`
+- `image-ocr` needs `tesseract`
+- `company-research` needs `python3`
+- `news-search` needs `python3`
+- `stock-investment-review` needs `python3` and the `yfinance` Python package
+- `stock-research` needs `python3` and the `yfinance` Python package
+- `stock-review-market-context` relies on the standalone `stock-research` and `yahoo-finance` shared helpers
+- `stock-review-output-contract` is a structural companion skill and has no extra runtime dependency beyond Markdown file creation
+- `stock-review-supporting-research` relies on the standalone `company-research` and `news-search` shared helpers
 - `weather` needs `curl`
 - `wikipedia` needs `curl` and `python3`
+- `yahoo-finance` needs `python3` and the `yfinance` Python package
 - `yahoo-finance-cli` needs `jq` and Yahoo Finance CLI support
 
 Example install that has already been used in this workspace:
@@ -187,10 +274,18 @@ That allows skills like `/current-date-time` or `/weather Oakland` to behave mor
 
 Current examples of slash-style skills in this library include:
 
+- `/arxiv-search transformer attention`
+- `/bitcoin-price`
+- `/company-research PostHog | site:https://posthog.com | limit:2`
 - `/current-date-time`
+- `/hacker-news-top10`
+- `/news-search OpenAI | time:week | limit:3`
+- `/stock-investment-review WING | horizon:45d | company:Wingstop | site:https://www.wingstop.com`
+- `/stock-research AAPL | period:1y | news:month`
 - `/weather Oakland`
 - `/wikipedia Ada Lovelace`
 - `/docx-to-markdown report.docx`
+- `/yahoo-finance AAPL | period:1y`
 
 ## Adding A New Skill
 
@@ -205,6 +300,56 @@ To add a new shared skill:
 For simple markdown-only skills, a plain instructional `SKILL.md` is enough.
 
 For OpenClaw-style skills, use a folder-based `SKILL.md` with YAML frontmatter and keep the frontmatter conservative.
+
+If a shared skill includes helper code, keep that code in the skill folder and test it there. For example, the shared `arxiv-search` skill includes `arxiv_search.py` and `test_arxiv_search.py` inside `${HOME}/skills/arxiv-search/`, and the stock-review ecosystem now exposes standalone helper skills such as `${HOME}/skills/stock-research/`, `${HOME}/skills/company-research/`, `${HOME}/skills/news-search/`, and `${HOME}/skills/yahoo-finance/` rather than concentrating those helpers only inside `${HOME}/skills/stock-investment-review/`.
+
+## Eval And Test Workflow
+
+This repo now supports two complementary validation paths.
+
+### 1. Repo-local Python validation
+
+The repo-local Python files currently live under:
+
+- `evals/runner/skill_eval.py`
+- `tests/test_skill_eval_runner.py`
+
+Typical validation commands:
+
+```bash
+cd ${HOME}/work/vscode_skills
+ruff check evals/runner/skill_eval.py tests/test_skill_eval_runner.py
+mypy evals/runner/skill_eval.py tests/test_skill_eval_runner.py
+python3 -m pytest
+```
+
+### 2. Shared skill helper validation
+
+Shared skills that ship helper code can be validated in their own folders.
+
+Example for `arxiv-search`:
+
+```bash
+cd ${HOME}/skills/arxiv-search
+ruff check arxiv_search.py test_arxiv_search.py
+mypy arxiv_search.py test_arxiv_search.py
+python3 -m pytest
+```
+
+### 3. Prompt-driven skill evals
+
+The eval runner in `evals/runner/skill_eval.py` grades captured assistant output against case assertions.
+
+Example:
+
+```bash
+cd ${HOME}/work/vscode_skills
+python3 evals/runner/skill_eval.py \
+	--case evals/cases/arxiv-search/arxiv-search-topic-success.json \
+	--output-file /tmp/arxiv-output.txt
+```
+
+This is useful for checking whether Copilot followed the intended skill behavior. It is not a fully automated local Copilot launcher; the model output still needs to be captured first.
 
 ## OpenClaw Notes
 
@@ -232,6 +377,7 @@ At the moment, this project is best understood as a sandbox for:
 
 - building a reusable shared skills library
 - testing prompt-based skill selection
+- testing captured-output skill evals for Copilot workflows
 - experimenting with OpenClaw-compatible skills
 - documenting the conventions so future skills stay consistent
 
@@ -239,8 +385,9 @@ At the moment, this project is best understood as a sandbox for:
 
 If you want the shortest setup path:
 
-1. Open both `${HOME}/work/vs_skills` and `${HOME}/skills` in one VS Code workspace.
+1. Open both `${HOME}/work/vscode_skills` and `${HOME}/skills` in one VS Code workspace.
 2. Make sure the basic tools you need are installed, such as `curl`, `date`, and any skill-specific CLIs.
 3. Keep `${HOME}/skills/SKILL_LIST.md` in sync with the actual skills you want available.
 4. Use the prompt in `.github/prompts/use-a-skill.prompt.md` when you want the agent to route through the skills library.
 5. Add new skills as folders with `SKILL.md`, then register them in the shared index.
+6. When a skill includes helper code or prompt-driven evaluation behavior, add tests or eval cases alongside it.

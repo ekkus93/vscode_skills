@@ -1,0 +1,23 @@
+{
+  "id": "yahoo-finance-aapl-6mo-success",
+  "skill": "yahoo-finance",
+  "prompt": "Use the shared skills workflow to give me a concise public-market snapshot for AAPL over the last 6 months. Include a short summary, a market snapshot section, a fundamentals section, the sampled period, and a caveat that yfinance is an unofficial Yahoo Finance wrapper and that this is not investment advice.",
+  "expected_outcome": "success",
+  "assertions": {
+    "regex_contains": [
+      "(?i)market snapshot",
+      "(?i)fundamentals",
+      "(?i)period[^\n]*6mo|sampled[^\n]*6mo",
+      "(?i)yfinance",
+      "(?i)unofficial yahoo finance wrapper|unofficial yahoo finance",
+      "(?i)not investment advice|not financial advice"
+    ],
+    "regex_not_contains": [
+      "(?i)strong buy",
+      "(?i)sell now",
+      "(?i)entry price",
+      "(?i)exit price"
+    ],
+    "min_nonempty_lines": 6
+  }
+}

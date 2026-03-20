@@ -7,11 +7,13 @@ The setup used here is:
 - the repo and prompt files live in `${HOME}/work/vscode_skills`
 - the shared skills library lives in `${HOME}/skills`
 
-The important idea is that a skill is not just a folder. It is:
+The important idea is that a registered shared skill is not just a folder. It is:
 
 1. a folder under `${HOME}/skills`
 2. a `SKILL.md` file inside that folder
 3. an entry in `${HOME}/skills/SKILL_LIST.md`
+
+Until step 3 is done, the folder exists only on disk and should not be treated as an officially available shared skill.
 
 ## What Copilot Should Help You Do
 
@@ -22,6 +24,8 @@ When you ask GitHub Copilot to make a new skill, it should usually do these thin
 3. write the skill instructions
 4. register the skill in `${HOME}/skills/SKILL_LIST.md`
 5. update `${HOME}/skills/README.md` if the library overview changed
+
+That registration step is what turns an on-disk skill folder into a shared skill that should be treated as officially available.
 
 If you want the skill to feel more like an OpenClaw-style slash command, Copilot can also add frontmatter such as:
 
@@ -170,17 +174,19 @@ After the files are created, check these things:
 1. Does the skill have its own folder?
 2. Does that folder contain `SKILL.md`?
 3. Is the skill listed in `${HOME}/skills/SKILL_LIST.md`?
-4. Is the description clear enough for discovery?
-5. If it is OpenClaw-style, is the frontmatter simple and valid?
+4. If it is not yet listed in `${HOME}/skills/SKILL_LIST.md`, remember that it still exists only on disk.
+5. Is the description clear enough for discovery?
+6. If it is OpenClaw-style, is the frontmatter simple and valid?
 
 ## Practical Workflow
 
 A good real-world sequence is:
 
 1. Start with a very small skill.
-2. Test it on one real example.
-3. Improve the workflow only after the first version works.
-4. Keep the skill focused on one job.
+2. Register it in `${HOME}/skills/SKILL_LIST.md` once it is ready to be treated as available.
+3. Test it on one real example.
+4. Improve the workflow only after the first version works.
+5. Keep the skill focused on one job.
 
 That is how the current example skills in this workspace were built.
 

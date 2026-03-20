@@ -1,0 +1,23 @@
+{
+  "id": "company-research-posthog-site-success",
+  "skill": "company-research",
+  "prompt": "Use the shared skills workflow to research PostHog with the official site pinned to https://posthog.com. Return a concise profile grounded in the official site, then add supporting recent news. Include sections for products, pricing, docs, hiring signals, and recent news, plus confidence and freshness labels.",
+  "expected_outcome": "success",
+  "assertions": {
+    "regex_contains": [
+      "https://posthog\\.com",
+      "(?i)products",
+      "(?i)pricing",
+      "(?i)docs",
+      "(?i)hiring signals",
+      "(?i)recent news",
+      "(?i)confidence:\\s*(high|medium|low)",
+      "(?i)freshness date:"
+    ],
+    "regex_not_contains": [
+      "(?i)guess",
+      "(?i)unknown website"
+    ],
+    "min_nonempty_lines": 8
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "id": "stock-research-aapl-6mo-week-success",
+  "skill": "stock-research",
+  "prompt": "Use the shared skills workflow to build a concise stock research snapshot for AAPL with period:6mo and news:week. Include a short summary, market snapshot, business profile, research takeaways, recent market news, recent company news, the sampled period and news window, and a caveat that the result is a research snapshot rather than investment advice.",
+  "expected_outcome": "success",
+  "assertions": {
+    "regex_contains": [
+      "(?i)market snapshot",
+      "(?i)business profile",
+      "(?i)research takeaways",
+      "(?i)recent market news",
+      "(?i)recent company news",
+      "(?i)period[^\n]*6mo|sampled[^\n]*6mo",
+      "(?i)news window[^\n]*week|news[^\n]*week",
+      "(?i)research snapshot",
+      "(?i)not investment advice|not financial advice"
+    ],
+    "regex_not_contains": [
+      "(?i)strong buy",
+      "(?i)sell now",
+      "(?i)entry price",
+      "(?i)exit price"
+    ],
+    "min_nonempty_lines": 10
+  }
+}

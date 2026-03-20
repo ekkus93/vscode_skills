@@ -1,0 +1,21 @@
+PostHog presents itself on https://posthog.com as a product-led platform for product analytics, experimentation, feature flags, and related developer-oriented tooling.
+
+Products
+- Product analytics
+- Session replay
+- Feature flags and experimentation
+
+Pricing
+- Pricing information is available from the official site pricing page: https://posthog.com/pricing
+
+Docs
+- Documentation is available from the official site docs area: https://posthog.com/docs
+
+Hiring Signals
+- The official site includes careers and company-growth signals that suggest active hiring interest.
+
+Recent News
+- Recent coverage appears to focus on product expansion and developer-platform positioning.
+
+Confidence: high
+Freshness Date: 2026-03-19

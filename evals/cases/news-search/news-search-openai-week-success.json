@@ -1,0 +1,21 @@
+{
+  "id": "news-search-openai-week-success",
+  "skill": "news-search",
+  "prompt": "Use the shared skills workflow to summarize recent OpenAI coverage from the last week. Return 3 distinct stories with source names, dates, links, a short direct summary up front, and include confidence and freshness labels.",
+  "expected_outcome": "success",
+  "assertions": {
+    "regex_contains": [
+      "(?i)confidence:\\s*(high|medium|low)",
+      "(?i)freshness date:",
+      "(?i)source:",
+      "(?i)date:",
+      "https?://"
+    ],
+    "regex_not_contains": [
+      "(?i)raw rss",
+      "(?i)<rss",
+      "(?i)<item>"
+    ],
+    "min_nonempty_lines": 8
+  }
+}

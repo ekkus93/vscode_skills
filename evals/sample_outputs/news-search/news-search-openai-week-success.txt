@@ -1,0 +1,22 @@
+Recent OpenAI coverage over the last week centers on product releases, competitive positioning, and governance implications, with duplicate headlines merged into a smaller set of distinct stories.
+
+Story 1
+Source: Reuters
+Date: 2026-03-18
+Link: https://www.reuters.com/technology/example-openai-story-1
+Summary: Coverage focused on OpenAI's latest enterprise-facing launch and its implications for the broader AI tooling market.
+
+Story 2
+Source: The Verge
+Date: 2026-03-17
+Link: https://www.theverge.com/example-openai-story-2
+Summary: Reporting emphasized product integration details and competitive response from major AI platform vendors.
+
+Story 3
+Source: Financial Times
+Date: 2026-03-16
+Link: https://www.ft.com/content/example-openai-story-3
+Summary: Coverage highlighted business strategy and governance questions; outlet may be paywalled.
+
+Confidence: high
+Freshness Date: 2026-03-19

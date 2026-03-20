@@ -1,0 +1,20 @@
+{
+  "id": "arxiv-search-topic-success",
+  "skill": "arxiv-search",
+  "prompt": "Use the shared skills workflow to help me find relevant arXiv papers on transformer attention. Return a concise shortlist with titles, authors, summaries, abstract links, and PDF links.",
+  "expected_outcome": "success",
+  "assertions": {
+    "text_contains": [
+      "Authors:",
+      "Summary:",
+      "Abstract:",
+      "PDF:",
+      "Confidence: high"
+    ],
+    "text_not_contains": [
+      "raw xml",
+      "<feed"
+    ],
+    "min_nonempty_lines": 6
+  }
+}
