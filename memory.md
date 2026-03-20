@@ -91,3 +91,12 @@
 ## 2026-03-19T18:29:42-07:00 - GPT-5.4 - Pushed eval scaffolding and documentation update to master
 - Committed and pushed `vscode_skills` changes to `origin/master` in commit `1561049` with the message `Add skill eval scaffolding and documentation`.
 - The pushed change set includes the repo eval runner, checked-in eval cases and sample outputs, eval smoke/completeness tests, README updates, workspace settings, and the repo memory file.
+
+## 2026-03-20T01:35:12Z - GPT-5.4 - Updated README for in-repo skills directory and compatibility symlink
+- Updated `vscode_skills/README.md` so the canonical shared-skill location is `${HOME}/work/vscode_skills/skills` instead of `${HOME}/skills`.
+- Documented that `${HOME}/skills` is now a compatibility symlink pointing to the repo-local `skills/` directory, and rewrote the setup, structure, new-skill, and quick-start sections accordingly.
+
+## 2026-03-20T01:36:38Z - GPT-5.4 - Refreshed repo-wide validation baseline after moving skills into vscode_skills
+- Ran Ruff across all 14 checked-in Python files in `vscode_skills`, including `evals/runner/skill_eval.py`, `tests/test_skill_eval_runner.py`, and the helper/test modules under `skills/`; all checks passed.
+- Ran MyPy across the same 14 Python files in `vscode_skills`; it reported success with no issues.
+- Ran `/bin/python3 -m pytest` across the repo-local and in-repo skill test modules; all 67 tests passed.

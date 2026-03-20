@@ -4,14 +4,11 @@
 
 This repository is a small workspace for experimenting with reusable agent skills, documenting how those skills are structured, and wiring them into a prompt-driven workflow.
 
-The project is split across two workspace folders:
+The `vscode_skills` repository now contains both the repo-specific control files and the shared skills library.
 
-- `${HOME}/work/vscode_skills`
-- `${HOME}/skills`
+The main repo content lives under `${HOME}/work/vscode_skills`, and the shared skill library now lives inside that repo at `${HOME}/work/vscode_skills/skills`.
 
-The `vscode_skills` repository holds the repo-specific instructions, prompts, eval scaffolding, and documentation. This can really be any Visual Studio Code workspace you want to use the shared skills library from. The main thing is that the contents of `.github/`, `AGENTS.md`, and any supporting eval/test files are copied or adapted into the target repo.
-
-The `${HOME}/skills` folder holds the actual shared skill library. Unzip the skills.zip file here. It's in your home directory so it can be reused across multiple coding-agent workspaces.
+For compatibility with older prompts and tooling, `${HOME}/skills` is a symlink that points to `${HOME}/work/vscode_skills/skills`.
 
 ## What This Project Does
 
@@ -23,7 +20,7 @@ This project gives you a place to:
 - experiment with OpenClaw-style skill authoring and invocation patterns
 - add prompt-driven skill eval cases and grading helpers for Copilot-in-the-loop testing
 
-In short, this repo is the control layer, and the shared `skills` folder is the content layer.
+In short, this repo now contains both the control layer and the content layer, with the shared skills stored in the in-repo `skills/` directory.
 
 This repo can also hold skill-eval scaffolding that grades captured assistant outputs against case assertions when you want to test prompt-driven skill behavior.
 
@@ -58,13 +55,15 @@ That means the prompt does not contain the skill logic itself. It delegates to t
 
 The real skills live in:
 
-- `${HOME}/skills`
+- `${HOME}/work/vscode_skills/skills`
 
 That folder contains:
 
 - `SKILL_LIST.md`: the index of officially available skills
 - one folder per skill
 - a `SKILL.md` inside each skill folder
+
+For compatibility, `${HOME}/skills` points to the same directory via symlink.
 
 Examples currently in the shared library include:
 
@@ -119,6 +118,14 @@ vscode_skills/
 			skill_eval.py
 	OPEN_CLAW_SKILL.md
 	README.md
+	skills/
+		SKILL_LIST.md
+		arxiv-search/
+		company-research/
+		news-search/
+		stock-investment-review/
+		stock-research/
+		yahoo-finance/
 	tests/
 		test_skill_eval_runner.py
 ```
@@ -126,7 +133,7 @@ vscode_skills/
 Current shared skills structure:
 
 ```text
-${HOME}/skills/
+${HOME}/work/vscode_skills/skills/
 	README.md
 	SKILL_LIST.md
 	arxiv-search/
@@ -180,6 +187,12 @@ ${HOME}/skills/
 		_meta.json
 ```
 
+Compatibility symlink:
+
+```text
+${HOME}/skills -> ${HOME}/work/vscode_skills/skills
+```
+
 ## Setup
 
 ### Prerequisites
@@ -188,7 +201,7 @@ You need:
 
 - VS Code
 - GitHub Copilot Chat or another compatible coding-agent workflow in VS Code
-- both workspace folders available locally
+- the `vscode_skills` repo available locally
 
 Optional but useful, depending on which skills you want to use:
 
@@ -203,15 +216,14 @@ Optional but useful, depending on which skills you want to use:
 
 ### Workspace setup
 
-Open both folders in the same VS Code workspace:
+Open `${HOME}/work/vscode_skills` in VS Code.
 
-- `${HOME}/work/vscode_skills`
-- `${HOME}/skills`
+If you want to keep the older two-folder workspace layout, you can still add `${HOME}/skills`, but it now resolves to the repo-local `skills/` directory through a symlink.
 
 This matters because:
 
 - the repo contains the instructions and prompt files
-- the separate `skills` folder contains the reusable skill definitions
+- the repo-local `skills/` folder contains the reusable skill definitions
 
 ### Skill library setup
 
@@ -221,7 +233,9 @@ The shared library should contain:
 2. one directory per skill
 3. a `SKILL.md` inside each skill directory
 
-If you move the skills directory somewhere else, update any references and prompts that assume the current workspace layout.
+The canonical location is now `${HOME}/work/vscode_skills/skills`.
+
+If you move the skills directory somewhere else again, update any references and prompts that assume the current workspace layout, or recreate the `${HOME}/skills` symlink to point at the new location.
 
 ### Tool setup for current example skills
 
@@ -291,17 +305,17 @@ Current examples of slash-style skills in this library include:
 
 To add a new shared skill:
 
-1. Create a new folder under `${HOME}/skills`.
+1. Create a new folder under `${HOME}/work/vscode_skills/skills`.
 2. Add a `SKILL.md` file.
 3. Write the skill instructions.
-4. Register the skill in `${HOME}/skills/SKILL_LIST.md`.
-5. Update `${HOME}/skills/README.md` if the library overview changed.
+4. Register the skill in `${HOME}/work/vscode_skills/skills/SKILL_LIST.md`.
+5. Update `${HOME}/work/vscode_skills/skills/README.md` if the library overview changed.
 
 For simple markdown-only skills, a plain instructional `SKILL.md` is enough.
 
 For OpenClaw-style skills, use a folder-based `SKILL.md` with YAML frontmatter and keep the frontmatter conservative.
 
-If a shared skill includes helper code, keep that code in the skill folder and test it there. For example, the shared `arxiv-search` skill includes `arxiv_search.py` and `test_arxiv_search.py` inside `${HOME}/skills/arxiv-search/`, and the stock-review ecosystem now exposes standalone helper skills such as `${HOME}/skills/stock-research/`, `${HOME}/skills/company-research/`, `${HOME}/skills/news-search/`, and `${HOME}/skills/yahoo-finance/` rather than concentrating those helpers only inside `${HOME}/skills/stock-investment-review/`.
+If a shared skill includes helper code, keep that code in the skill folder and test it there. For example, the shared `arxiv-search` skill includes `arxiv_search.py` and `test_arxiv_search.py` inside `${HOME}/work/vscode_skills/skills/arxiv-search/`, and the stock-review ecosystem now exposes standalone helper skills such as `${HOME}/work/vscode_skills/skills/stock-research/`, `${HOME}/work/vscode_skills/skills/company-research/`, `${HOME}/work/vscode_skills/skills/news-search/`, and `${HOME}/work/vscode_skills/skills/yahoo-finance/` rather than concentrating those helpers only inside `${HOME}/work/vscode_skills/skills/stock-investment-review/`.
 
 ## Eval And Test Workflow
 
@@ -330,7 +344,7 @@ Shared skills that ship helper code can be validated in their own folders.
 Example for `arxiv-search`:
 
 ```bash
-cd ${HOME}/skills/arxiv-search
+cd ${HOME}/work/vscode_skills/skills/arxiv-search
 ruff check arxiv_search.py test_arxiv_search.py
 mypy arxiv_search.py test_arxiv_search.py
 python3 -m pytest
@@ -369,7 +383,7 @@ The main points are:
 
 See the shared skill index for the current active set of skills:
 
-- `${HOME}/skills/SKILL_LIST.md`
+- `${HOME}/work/vscode_skills/skills/SKILL_LIST.md`
 
 ## Current Purpose Of The Repo
 
@@ -385,9 +399,10 @@ At the moment, this project is best understood as a sandbox for:
 
 If you want the shortest setup path:
 
-1. Open both `${HOME}/work/vscode_skills` and `${HOME}/skills` in one VS Code workspace.
-2. Make sure the basic tools you need are installed, such as `curl`, `date`, and any skill-specific CLIs.
-3. Keep `${HOME}/skills/SKILL_LIST.md` in sync with the actual skills you want available.
-4. Use the prompt in `.github/prompts/use-a-skill.prompt.md` when you want the agent to route through the skills library.
-5. Add new skills as folders with `SKILL.md`, then register them in the shared index.
-6. When a skill includes helper code or prompt-driven evaluation behavior, add tests or eval cases alongside it.
+1. Open `${HOME}/work/vscode_skills` in VS Code.
+2. If older tooling expects `${HOME}/skills`, keep the symlink pointing at `${HOME}/work/vscode_skills/skills`.
+3. Make sure the basic tools you need are installed, such as `curl`, `date`, and any skill-specific CLIs.
+4. Keep `${HOME}/work/vscode_skills/skills/SKILL_LIST.md` in sync with the actual skills you want available.
+5. Use the prompt in `.github/prompts/use-a-skill.prompt.md` when you want the agent to route through the skills library.
+6. Add new skills as folders with `SKILL.md`, then register them in the shared index.
+7. When a skill includes helper code or prompt-driven evaluation behavior, add tests or eval cases alongside it.
