@@ -104,3 +104,22 @@
 ## 2026-03-19T18:37:13-07:00 - GPT-5.4 - Pushed repo-local skills path update to master
 - Committed and pushed `vscode_skills` changes to `origin/master` in commit `8afd234` with the message `Move shared skills into repo-local directory`.
 - The pushed change set updates `README.md` for the new canonical `skills/` path, records the layout change and validation run in `memory.md`, and removes the no-longer-needed `skills.zip` archive.
+
+## 2026-03-20T01:45:02Z - GPT-5.4 - Ported excel-to-markdown and excel-to-delimited into vscode_skills
+- Added shared skill folders for `excel-to-markdown` and `excel-to-delimited` under `vscode_skills/skills/`, including `SKILL.md`, deterministic Python helpers, and local pytest modules.
+- Updated `skills/SKILL_LIST.md`, `skills/README.md`, and the repo `README.md` so the new Excel conversion skills are discoverable and their Python package dependencies (`openpyxl`, `xlrd`) are documented.
+- Validation results: Ruff and MyPy passed on the four new Python files; pytest passed with 14 tests and 2 skips because `openpyxl` is not installed in the current environment, so the workbook-writing integration tests are skipped rather than failing.
+
+## 2026-03-20T01:50:02Z - GPT-5.4 - Audited shared skill dependencies for real OpenClaw installation
+- Reviewed every `SKILL.md` under `vscode_skills/skills` to identify required binaries, Python packages, optional converters, and transitive helper dependencies.
+- Updated `skills/README.md` with an `OpenClaw Prerequisites` section, a one-pass install guide for Ubuntu/Debian and macOS, a per-skill dependency matrix, and smaller install bundles for partial deployments.
+- Corrected the malformed shared-library directory tree in `skills/README.md` while documenting the install requirements.
+
+## 2026-03-20T01:54:51Z - GPT-5.4 - Added machine-readable install manifest for OpenClaw deployment
+- Added `skills/install-manifest.json` as a machine-readable dependency manifest for the shared skill library.
+- The manifest includes full install profiles, smaller capability bundles, and per-skill requirements such as binaries, Python packages, node packages, network access, transitive skill dependencies, and post-install steps.
+- Updated `skills/README.md` to point human readers at `skills/install-manifest.json`; validated the JSON with `python -m json.tool`.
+
+## 2026-03-20T01:59:45Z - GPT-5.4 - Prepared excel skill and install-manifest changes for check-in
+- Final staged change set includes the new `excel-to-markdown` and `excel-to-delimited` shared skills, registry updates in `skills/SKILL_LIST.md`, README documentation updates in both repo docs, and the new machine-readable install manifest.
+- Verified there were no editor diagnostics in the modified README, JSON, and new Python helper/test files before committing.

@@ -71,6 +71,8 @@ Examples currently in the shared library include:
 - `bitcoin-price`
 - `current-date-time`
 - `docx-to-markdown`
+- `excel-to-delimited`
+- `excel-to-markdown`
 - `hacker-news-top10`
 - `image-ocr`
 - `company-research`
@@ -122,6 +124,8 @@ vscode_skills/
 		SKILL_LIST.md
 		arxiv-search/
 		company-research/
+		excel-to-delimited/
+		excel-to-markdown/
 		news-search/
 		stock-investment-review/
 		stock-research/
@@ -146,6 +150,14 @@ ${HOME}/work/vscode_skills/skills/
 		SKILL.md
 	docx-to-markdown/
 		SKILL.md
+	excel-to-delimited/
+		SKILL.md
+		excel_to_delimited.py
+		test_excel_to_delimited.py
+	excel-to-markdown/
+		SKILL.md
+		excel_to_markdown.py
+		test_excel_to_markdown.py
 	hacker-news-top10/
 		SKILL.md
 	image-ocr/
@@ -245,6 +257,8 @@ For the skills currently in the shared library:
 - `bitcoin-price` needs `curl` and `python3`
 - `current-date-time` needs the system `date` command
 - `docx-to-markdown` needs `pandoc`
+- `excel-to-delimited` needs `python3` plus the `openpyxl` and `xlrd` Python packages
+- `excel-to-markdown` needs `python3` plus the `openpyxl` and `xlrd` Python packages
 - `hacker-news-top10` needs `curl` and `python3`
 - `image-ocr` needs `tesseract`
 - `company-research` needs `python3`
@@ -266,6 +280,12 @@ npm install yahoo-finance2
 ```
 
 Depending on how you want to expose it, you may also need a `yf` executable or wrapper.
+
+For the Excel conversion skills, install the workbook readers with:
+
+```bash
+python3 -m pip install openpyxl xlrd
+```
 
 ## Day-To-Day Workflow
 
@@ -292,6 +312,8 @@ Current examples of slash-style skills in this library include:
 - `/bitcoin-price`
 - `/company-research PostHog | site:https://posthog.com | limit:2`
 - `/current-date-time`
+- `/excel-to-delimited /tmp/vendor-pricing.xls | format:tsv`
+- `/excel-to-markdown /path/to/research-notes.xlsx`
 - `/hacker-news-top10`
 - `/news-search OpenAI | time:week | limit:3`
 - `/stock-investment-review WING | horizon:45d | company:Wingstop | site:https://www.wingstop.com`

@@ -1,0 +1,527 @@
+{
+  "schema_version": 1,
+  "manifest_name": "vscode_skills_shared_skill_install_manifest",
+  "skills_root": "skills",
+  "description": "Machine-readable install manifest for the shared skills library used by vscode_skills/OpenClaw deployments.",
+  "install_profiles": {
+    "ubuntu_debian_full": {
+      "apt": [
+        "python3",
+        "curl",
+        "jq",
+        "pandoc",
+        "tesseract-ocr",
+        "nodejs",
+        "npm",
+        "libreoffice"
+      ],
+      "pip": [
+        "yfinance",
+        "openpyxl",
+        "xlrd"
+      ],
+      "npm_global": [
+        "yahoo-finance2"
+      ],
+      "post_install": [
+        "ln -sf \"$(npm bin -g)/yahoo-finance\" /usr/local/bin/yf"
+      ]
+    },
+    "macos_homebrew_full": {
+      "brew": [
+        "python",
+        "curl",
+        "jq",
+        "pandoc",
+        "tesseract",
+        "node",
+        "libreoffice"
+      ],
+      "pip": [
+        "yfinance",
+        "openpyxl",
+        "xlrd"
+      ],
+      "npm_global": [
+        "yahoo-finance2"
+      ],
+      "post_install": [
+        "ln -sf \"$(npm bin -g)/yahoo-finance\" /usr/local/bin/yf"
+      ]
+    }
+  },
+  "capability_bundles": {
+    "research_only": {
+      "bins": [
+        "python3",
+        "curl"
+      ],
+      "python_packages": [],
+      "node_packages": []
+    },
+    "finance": {
+      "bins": [
+        "python3",
+        "curl",
+        "jq",
+        "node",
+        "npm",
+        "yf"
+      ],
+      "python_packages": [
+        "yfinance"
+      ],
+      "node_packages": [
+        "yahoo-finance2"
+      ]
+    },
+    "document_conversion": {
+      "bins": [
+        "python3",
+        "pandoc"
+      ],
+      "python_packages": [
+        "openpyxl",
+        "xlrd"
+      ],
+      "optional_bins": [
+        "soffice"
+      ],
+      "node_packages": []
+    },
+    "ocr": {
+      "bins": [
+        "tesseract"
+      ],
+      "python_packages": [],
+      "node_packages": []
+    }
+  },
+  "skills": {
+    "arxiv-search": {
+      "path": "skills/arxiv-search/",
+      "registered": true,
+      "user_invocable": true,
+      "requires": {
+        "bins": [
+          "python3"
+        ],
+        "python_packages": [],
+        "node_packages": [],
+        "optional_bins": [],
+        "optional_python_packages": []
+      },
+      "network_access": true,
+      "depends_on_skills": [],
+      "notes": [
+        "Uses the bundled Python helper to query arXiv."
+      ]
+    },
+    "bitcoin-price": {
+      "path": "skills/bitcoin-price/",
+      "registered": true,
+      "user_invocable": true,
+      "requires": {
+        "bins": [
+          "curl",
+          "python3"
+        ],
+        "python_packages": [],
+        "node_packages": [],
+        "optional_bins": [],
+        "optional_python_packages": []
+      },
+      "network_access": true,
+      "depends_on_skills": [],
+      "notes": [
+        "Calls CoinGecko over HTTP."
+      ]
+    },
+    "company-research": {
+      "path": "skills/company-research/",
+      "registered": true,
+      "user_invocable": true,
+      "requires": {
+        "bins": [
+          "python3"
+        ],
+        "python_packages": [],
+        "node_packages": [],
+        "optional_bins": [],
+        "optional_python_packages": []
+      },
+      "network_access": true,
+      "depends_on_skills": [
+        "news-search"
+      ],
+      "notes": [
+        "Uses the bundled Python helper and shared news-search logic."
+      ]
+    },
+    "current-date-time": {
+      "path": "skills/current-date-time/",
+      "registered": true,
+      "user_invocable": true,
+      "requires": {
+        "bins": [
+          "date"
+        ],
+        "python_packages": [],
+        "node_packages": [],
+        "optional_bins": [],
+        "optional_python_packages": []
+      },
+      "network_access": false,
+      "depends_on_skills": [],
+      "notes": [
+        "Uses the system clock only."
+      ]
+    },
+    "docx-to-markdown": {
+      "path": "skills/docx-to-markdown/",
+      "registered": true,
+      "user_invocable": true,
+      "requires": {
+        "bins": [
+          "pandoc"
+        ],
+        "python_packages": [],
+        "node_packages": [],
+        "optional_bins": [
+          "soffice"
+        ],
+        "optional_python_packages": []
+      },
+      "network_access": false,
+      "depends_on_skills": [],
+      "notes": [
+        "Legacy .doc input additionally requires LibreOffice or soffice."
+      ]
+    },
+    "excel-to-delimited": {
+      "path": "skills/excel-to-delimited/",
+      "registered": true,
+      "user_invocable": true,
+      "requires": {
+        "bins": [
+          "python3"
+        ],
+        "python_packages": [
+          "openpyxl",
+          "xlrd"
+        ],
+        "node_packages": [],
+        "optional_bins": [],
+        "optional_python_packages": []
+      },
+      "network_access": false,
+      "depends_on_skills": [
+        "excel-to-markdown"
+      ],
+      "notes": [
+        "openpyxl is used for .xlsx and xlrd for legacy .xls."
+      ]
+    },
+    "excel-to-markdown": {
+      "path": "skills/excel-to-markdown/",
+      "registered": true,
+      "user_invocable": true,
+      "requires": {
+        "bins": [
+          "python3"
+        ],
+        "python_packages": [
+          "openpyxl",
+          "xlrd"
+        ],
+        "node_packages": [],
+        "optional_bins": [],
+        "optional_python_packages": []
+      },
+      "network_access": false,
+      "depends_on_skills": [],
+      "notes": [
+        "openpyxl is used for .xlsx and xlrd for legacy .xls."
+      ]
+    },
+    "hacker-news-top10": {
+      "path": "skills/hacker-news-top10/",
+      "registered": true,
+      "user_invocable": true,
+      "requires": {
+        "bins": [
+          "curl",
+          "python3"
+        ],
+        "python_packages": [],
+        "node_packages": [],
+        "optional_bins": [],
+        "optional_python_packages": []
+      },
+      "network_access": true,
+      "depends_on_skills": [],
+      "notes": [
+        "Uses the Hacker News API and linked-page fetching."
+      ]
+    },
+    "image-ocr": {
+      "path": "skills/image-ocr/",
+      "registered": true,
+      "user_invocable": true,
+      "requires": {
+        "bins": [
+          "tesseract"
+        ],
+        "python_packages": [],
+        "node_packages": [],
+        "optional_bins": [],
+        "optional_python_packages": []
+      },
+      "network_access": false,
+      "depends_on_skills": [],
+      "notes": [
+        "Additional Tesseract language packs may be needed for non-English OCR."
+      ]
+    },
+    "list-skills": {
+      "path": "skills/list-skills/",
+      "registered": false,
+      "user_invocable": false,
+      "requires": {
+        "bins": [],
+        "python_packages": [],
+        "node_packages": [],
+        "optional_bins": [],
+        "optional_python_packages": []
+      },
+      "network_access": false,
+      "depends_on_skills": [],
+      "notes": [
+        "Unregistered helper skill that only reads SKILL_LIST.md."
+      ]
+    },
+    "news-search": {
+      "path": "skills/news-search/",
+      "registered": true,
+      "user_invocable": true,
+      "requires": {
+        "bins": [
+          "python3"
+        ],
+        "python_packages": [],
+        "node_packages": [],
+        "optional_bins": [],
+        "optional_python_packages": []
+      },
+      "network_access": true,
+      "depends_on_skills": [],
+      "notes": [
+        "Uses the bundled Python helper and Google News RSS."
+      ]
+    },
+    "stock-investment-review": {
+      "path": "skills/stock-investment-review/",
+      "registered": true,
+      "user_invocable": true,
+      "requires": {
+        "bins": [
+          "python3"
+        ],
+        "python_packages": [
+          "yfinance"
+        ],
+        "node_packages": [],
+        "optional_bins": [],
+        "optional_python_packages": []
+      },
+      "network_access": true,
+      "depends_on_skills": [
+        "stock-research",
+        "company-research",
+        "news-search",
+        "yahoo-finance",
+        "stock-review-market-context",
+        "stock-review-output-contract",
+        "stock-review-supporting-research"
+      ],
+      "notes": [
+        "Main orchestration skill for the stock review workflow."
+      ]
+    },
+    "stock-research": {
+      "path": "skills/stock-research/",
+      "registered": true,
+      "user_invocable": true,
+      "requires": {
+        "bins": [
+          "python3"
+        ],
+        "python_packages": [
+          "yfinance"
+        ],
+        "node_packages": [],
+        "optional_bins": [],
+        "optional_python_packages": []
+      },
+      "network_access": true,
+      "depends_on_skills": [
+        "yahoo-finance",
+        "company-research",
+        "news-search"
+      ],
+      "notes": [
+        "Uses the shared company-research and news-search helpers in addition to yfinance."
+      ]
+    },
+    "stock-review-market-context": {
+      "path": "skills/stock-review-market-context/",
+      "registered": true,
+      "user_invocable": false,
+      "requires": {
+        "bins": [
+          "python3"
+        ],
+        "python_packages": [
+          "yfinance"
+        ],
+        "node_packages": [],
+        "optional_bins": [],
+        "optional_python_packages": []
+      },
+      "network_access": true,
+      "depends_on_skills": [
+        "stock-research",
+        "yahoo-finance"
+      ],
+      "notes": [
+        "Companion skill for one-year market and technical context."
+      ]
+    },
+    "stock-review-output-contract": {
+      "path": "skills/stock-review-output-contract/",
+      "registered": true,
+      "user_invocable": false,
+      "requires": {
+        "bins": [],
+        "python_packages": [],
+        "node_packages": [],
+        "optional_bins": [],
+        "optional_python_packages": []
+      },
+      "network_access": false,
+      "depends_on_skills": [],
+      "notes": [
+        "Markdown and file-structure contract only."
+      ]
+    },
+    "stock-review-supporting-research": {
+      "path": "skills/stock-review-supporting-research/",
+      "registered": true,
+      "user_invocable": false,
+      "requires": {
+        "bins": [
+          "python3"
+        ],
+        "python_packages": [],
+        "node_packages": [],
+        "optional_bins": [],
+        "optional_python_packages": []
+      },
+      "network_access": true,
+      "depends_on_skills": [
+        "company-research",
+        "news-search"
+      ],
+      "notes": [
+        "Companion skill for company context and recent catalysts."
+      ]
+    },
+    "weather": {
+      "path": "skills/weather/",
+      "registered": true,
+      "user_invocable": true,
+      "requires": {
+        "bins": [
+          "curl"
+        ],
+        "python_packages": [],
+        "node_packages": [],
+        "optional_bins": [],
+        "optional_python_packages": []
+      },
+      "network_access": true,
+      "depends_on_skills": [],
+      "notes": [
+        "Uses wttr.in over HTTP."
+      ]
+    },
+    "wikipedia": {
+      "path": "skills/wikipedia/",
+      "registered": true,
+      "user_invocable": true,
+      "requires": {
+        "bins": [
+          "curl",
+          "python3"
+        ],
+        "python_packages": [],
+        "node_packages": [],
+        "optional_bins": [],
+        "optional_python_packages": []
+      },
+      "network_access": true,
+      "depends_on_skills": [],
+      "notes": [
+        "Uses the Wikipedia API over HTTP."
+      ]
+    },
+    "yahoo-finance": {
+      "path": "skills/yahoo-finance/",
+      "registered": true,
+      "user_invocable": true,
+      "requires": {
+        "bins": [
+          "python3"
+        ],
+        "python_packages": [
+          "yfinance"
+        ],
+        "node_packages": [],
+        "optional_bins": [],
+        "optional_python_packages": []
+      },
+      "network_access": true,
+      "depends_on_skills": [],
+      "notes": [
+        "Uses the bundled Python helper and Yahoo Finance network access."
+      ]
+    },
+    "yahoo-finance-cli": {
+      "path": "skills/yahoo-finance-cli/",
+      "registered": true,
+      "user_invocable": false,
+      "requires": {
+        "bins": [
+          "node",
+          "npm",
+          "jq",
+          "yf"
+        ],
+        "python_packages": [],
+        "node_packages": [
+          "yahoo-finance2"
+        ],
+        "optional_bins": [],
+        "optional_python_packages": []
+      },
+      "network_access": true,
+      "depends_on_skills": [],
+      "notes": [
+        "The yahoo-finance2 package is typically installed globally and exposed as the yf command."
+      ],
+      "post_install": [
+        "ln -sf \"$(npm bin -g)/yahoo-finance\" /usr/local/bin/yf"
+      ]
+    }
+  }
+}

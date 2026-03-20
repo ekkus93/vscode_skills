@@ -45,50 +45,57 @@ skills/
 		test_arxiv_search.py
 	bitcoin-price/
 		SKILL.md
+	company-research/
+		SKILL.md
+		company_research.py
+		test_company_research.py
 	current-date-time/
 		SKILL.md
 	docx-to-markdown/
 		SKILL.md
+	excel-to-delimited/
+		SKILL.md
+		excel_to_delimited.py
+		test_excel_to_delimited.py
+	excel-to-markdown/
+		SKILL.md
+		excel_to_markdown.py
+		test_excel_to_markdown.py
 	hacker-news-top10/
 		SKILL.md
 	image-ocr/
+		SKILL.md
+	news-search/
+		SKILL.md
+		news_search.py
+		test_news_search.py
+	stock-investment-review/
+		SKILL.md
+		stock_investment_review.py
+		test_stock_investment_review.py
+	stock-research/
+		SKILL.md
+		stock_research.py
+		test_stock_research.py
+	stock-review-market-context/
+		SKILL.md
+	stock-review-output-contract/
+		SKILL.md
+	stock-review-supporting-research/
 		SKILL.md
 	weather/
 		SKILL.md
 	wikipedia/
 		SKILL.md
-	yahoo-finance-cli/
-		SKILL.md
-	company-research/
-		SKILL.md
-		company_research.py
-		test_company_research.py
-	news-search/
-		SKILL.md
-		news_search.py
-		test_news_search.py
-		_meta.json
-			stock-investment-review/
-				SKILL.md
-				yahoo_finance.py
-	stock-research/
-		SKILL.md
-		stock_research.py
-		test_stock_research.py
-				test_stock_investment_review.py
-			stock-review-market-context/
-				SKILL.md
-			stock-review-output-contract/
-				SKILL.md
-			stock-review-supporting-research/
-				SKILL.md
-	list-skills/
-		SKILL.md
-```
 	yahoo-finance/
 		SKILL.md
 		yahoo_finance.py
 		test_yahoo_finance.py
+	yahoo-finance-cli/
+		SKILL.md
+	list-skills/
+		SKILL.md
+```
 
 Typical meanings:
 
@@ -112,7 +119,7 @@ Some skills are simple markdown instructions.
 
 Some skills may also use YAML frontmatter and extra metadata files if they are intended to work with external registries or toolchains.
 
-Some shared skills also bundle helper code and tests inside the skill folder when the workflow needs deterministic local behavior. For example, `arxiv-search`, `yahoo-finance`, `news-search`, `company-research`, `stock-research`, and `stock-investment-review` include helper code or tests alongside `SKILL.md`.
+Some shared skills also bundle helper code and tests inside the skill folder when the workflow needs deterministic local behavior. For example, `arxiv-search`, `excel-to-markdown`, `excel-to-delimited`, `yahoo-finance`, `news-search`, `company-research`, `stock-research`, and `stock-investment-review` include helper code or tests alongside `SKILL.md`.
 
 ## How To Use A Skill
 
@@ -159,6 +166,8 @@ According to `SKILL_LIST.md`, the currently registered shared skills are:
 - `bitcoin-price`: get the current Bitcoin price in USD
 - `current-date-time`: get the current local date, time, or datetime from the system clock
 - `docx-to-markdown`: convert `.docx` and legacy `.doc` files into Markdown `.md` files
+- `excel-to-markdown`: convert `.xlsx` and `.xls` workbooks into a Markdown file for model-readable review
+- `excel-to-delimited`: convert `.xlsx` and `.xls` workbooks into per-sheet `.csv` or `.tsv` exports
 - `hacker-news-top10`: get the current top 10 Hacker News stories with titles, URLs, and short summaries
 - `image-ocr`: extract text from image files with OCR using Tesseract
 - `company-research`: build a concise company profile from official-site context plus recent news
@@ -172,6 +181,110 @@ According to `SKILL_LIST.md`, the currently registered shared skills are:
 - `wikipedia`: search Wikipedia and return a concise topic summary
 - `yahoo-finance`: fetch a concise market snapshot from Yahoo Finance via `yfinance`
 - `yahoo-finance-cli`: fetch stock prices, financial data, and market summaries with the Yahoo Finance CLI
+
+## OpenClaw Prerequisites
+
+If you want to install this shared skill set on a real OpenClaw bot, these are the runtime dependencies to plan for.
+
+The machine-readable version of this dependency audit lives in `skills/install-manifest.json`.
+
+### Core binaries
+
+These cover most of the registered skills:
+
+- `python3`
+- `curl`
+- `date`
+
+### Extra binaries or CLIs used by specific skills
+
+- `pandoc` for `docx-to-markdown`
+- `soffice` or LibreOffice for legacy `.doc` input in `docx-to-markdown`
+- `tesseract` for `image-ocr`
+- `jq` for `yahoo-finance-cli`
+- `node` and `npm` for `yahoo-finance-cli`
+- `yf` for `yahoo-finance-cli`, usually exposed by the globally installed `yahoo-finance2` package
+
+### Python packages used by specific skills
+
+- `yfinance` for `yahoo-finance`, `stock-research`, `stock-investment-review`, and `stock-review-market-context`
+- `openpyxl` for `.xlsx` support in `excel-to-markdown` and `excel-to-delimited`
+- `xlrd` for `.xls` support in `excel-to-markdown` and `excel-to-delimited`
+
+### Internet access
+
+These skills depend on live network access at runtime:
+
+- `arxiv-search`
+- `bitcoin-price`
+- `company-research`
+- `hacker-news-top10`
+- `news-search`
+- `stock-investment-review`
+- `stock-research`
+- `stock-review-market-context`
+- `stock-review-supporting-research`
+- `weather`
+- `wikipedia`
+- `yahoo-finance`
+- `yahoo-finance-cli`
+
+### One-pass install guidance
+
+Ubuntu or Debian baseline:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y python3 curl jq pandoc tesseract-ocr nodejs npm libreoffice
+python3 -m pip install yfinance openpyxl xlrd
+npm install -g yahoo-finance2
+sudo ln -sf "$(npm bin -g)/yahoo-finance" /usr/local/bin/yf
+```
+
+macOS with Homebrew baseline:
+
+```bash
+brew install python curl jq pandoc tesseract node libreoffice
+python3 -m pip install yfinance openpyxl xlrd
+npm install -g yahoo-finance2
+sudo ln -sf "$(npm bin -g)/yahoo-finance" /usr/local/bin/yf
+```
+
+If you do not need every skill, you can install only the subset required by the skills you plan to enable.
+
+## Per-Skill Dependency Matrix
+
+| Skill | Needs installable dependencies? | What to install | Notes |
+| --- | --- | --- | --- |
+| `arxiv-search` | Yes | `python3` | Uses the bundled Python helper and arXiv network access. |
+| `bitcoin-price` | Yes | `curl`, `python3` | Calls CoinGecko over HTTP. |
+| `company-research` | Yes | `python3` | Uses the bundled Python helper and live web/news retrieval. |
+| `current-date-time` | Yes | `date` | Uses the system clock only. |
+| `docx-to-markdown` | Yes | `pandoc` | Also needs `soffice` or LibreOffice if you want legacy `.doc` support. |
+| `excel-to-delimited` | Yes | `python3`, `openpyxl`, `xlrd` | `openpyxl` is for `.xlsx`; `xlrd` is for legacy `.xls`. |
+| `excel-to-markdown` | Yes | `python3`, `openpyxl`, `xlrd` | `openpyxl` is for `.xlsx`; `xlrd` is for legacy `.xls`. |
+| `hacker-news-top10` | Yes | `curl`, `python3` | Uses the Hacker News API and linked page fetches. |
+| `image-ocr` | Yes | `tesseract` | Additional Tesseract language packs may be needed for non-English OCR. |
+| `news-search` | Yes | `python3` | Uses the bundled Python helper and Google News RSS. |
+| `stock-investment-review` | Yes | `python3`, `yfinance` | Also depends on the registered helper skills `stock-research`, `company-research`, `news-search`, and `yahoo-finance`. |
+| `stock-research` | Yes | `python3`, `yfinance` | Also uses the shared `company-research` and `news-search` helpers. |
+| `stock-review-market-context` | Yes | `python3`, `yfinance` | Companion skill that routes through `stock-research` and `yahoo-finance`. |
+| `stock-review-output-contract` | No extra install | none | Markdown/file-structure rules only. |
+| `stock-review-supporting-research` | Yes | `python3` | Companion skill that routes through `company-research` and `news-search`. |
+| `weather` | Yes | `curl` | Uses `wttr.in` over HTTP. |
+| `wikipedia` | Yes | `curl`, `python3` | Uses the Wikipedia API over HTTP. |
+| `yahoo-finance` | Yes | `python3`, `yfinance` | Uses the bundled Python helper and Yahoo Finance network access. |
+| `yahoo-finance-cli` | Yes | `node`, `npm`, `jq`, `yahoo-finance2`, `yf` | Install `yahoo-finance2` globally, then expose or symlink the CLI as `yf`. |
+| `list-skills` | No extra install | none | Unregistered helper skill that only reads `SKILL_LIST.md`. |
+
+## Minimum Install Sets
+
+If you want a smaller OpenClaw deployment, these bundles cover the major categories:
+
+- Research-only bundle: `python3 curl`
+- Finance bundle: `python3 curl jq node npm` plus `python3 -m pip install yfinance` and global `npm install -g yahoo-finance2`
+- Document conversion bundle: `pandoc` plus `python3 -m pip install openpyxl xlrd`, and LibreOffice if you need `.doc`
+- OCR bundle: `tesseract`
 
 ## Summary
 

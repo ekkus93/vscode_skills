@@ -81,6 +81,16 @@ This file lists reusable skills available in the shared workspace skill library.
 - Use for: converting `.docx` and legacy `.doc` files into Markdown `.md` files
 - Typical outputs: converted markdown file, output path confirmation
 
+### excel-to-markdown
+- Path: `skills/excel-to-markdown/`
+- Use for: converting local `.xlsx` and `.xls` workbooks into a single Markdown file for readable workbook review
+- Typical outputs: converted markdown workbook, output path confirmation, per-sheet markdown sections
+
+### excel-to-delimited
+- Path: `skills/excel-to-delimited/`
+- Use for: converting local `.xlsx` and `.xls` workbooks into per-sheet `.csv` or `.tsv` exports
+- Typical outputs: output directory path, per-sheet delimited files, sheet-oriented machine-friendly exports
+
 ### image-ocr
 - Path: `skills/image-ocr/`
 - Use for: extracting text from image files with OCR using Tesseract
