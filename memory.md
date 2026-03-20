@@ -100,3 +100,7 @@
 - Ran Ruff across all 14 checked-in Python files in `vscode_skills`, including `evals/runner/skill_eval.py`, `tests/test_skill_eval_runner.py`, and the helper/test modules under `skills/`; all checks passed.
 - Ran MyPy across the same 14 Python files in `vscode_skills`; it reported success with no issues.
 - Ran `/bin/python3 -m pytest` across the repo-local and in-repo skill test modules; all 67 tests passed.
+
+## 2026-03-19T18:37:13-07:00 - GPT-5.4 - Pushed repo-local skills path update to master
+- Committed and pushed `vscode_skills` changes to `origin/master` in commit `8afd234` with the message `Move shared skills into repo-local directory`.
+- The pushed change set updates `README.md` for the new canonical `skills/` path, records the layout change and validation run in `memory.md`, and removes the no-longer-needed `skills.zip` archive.
