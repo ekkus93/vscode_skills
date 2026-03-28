@@ -37,6 +37,23 @@ def load_phase4_scenarios() -> dict[str, dict[str, dict[str, object]]]:
     return scenarios
 
 
+def test_phase4_scenarios_cover_phase16_canonical_fixture_inventory() -> None:
+    scenarios = load_phase4_scenarios()
+
+    assert {
+        "weak_signal_client",
+        "overloaded_ap",
+        "dhcp_slowness",
+        "dns_slowness",
+        "auth_timeout",
+        "bad_ap_uplink",
+        "stp_loop_symptoms",
+        "wrong_vlan_policy",
+        "mixed_evidence_two_domain_ambiguity",
+        "dependency_failure_scenario",
+    } <= set(scenarios)
+
+
 def test_normalization_helpers_preserve_source_metadata_and_aliases() -> None:
     scenarios = load_phase4_scenarios()
     observed_at = datetime(2026, 3, 28, 8, 0, tzinfo=timezone.utc)
@@ -124,6 +141,39 @@ def test_threshold_scoring_and_recommendation_helpers() -> None:
         == Confidence.HIGH
     )
     assert [action.skill for action in actions] == ["net.ap_rf_health", "net.path_probe"]
+
+
+def test_mixed_evidence_fixture_preserves_two_domain_ambiguity_inputs() -> None:
+    scenarios = load_phase4_scenarios()
+    observed_at = datetime(2026, 3, 28, 8, 30, tzinfo=timezone.utc)
+    scenario = scenarios["mixed_evidence_two_domain_ambiguity"]
+
+    auth = normalize_auth_summary(
+        scenario["auth"],
+        provider="stub-auth",
+        raw_ref="fixture:mixed_evidence_two_domain_ambiguity:auth",
+        collected_at=observed_at,
+    )
+    dhcp = normalize_dhcp_summary(
+        scenario["dhcp"],
+        provider="stub-dhcp",
+        raw_ref="fixture:mixed_evidence_two_domain_ambiguity:dhcp",
+        collected_at=observed_at,
+    )
+    dns = normalize_dns_summary(
+        scenario["dns"],
+        provider="stub-dns",
+        raw_ref="fixture:mixed_evidence_two_domain_ambiguity:dns",
+        collected_at=observed_at,
+    )
+
+    assert scenario["incident"]["siteId"] == "hq-1"
+    assert scenario["incident"]["ssid"] == "CorpWiFi"
+    assert auth.auth_success_rate_pct == 78.0
+    assert auth.timeouts == 6
+    assert dhcp.avg_offer_latency_ms == 1700
+    assert dhcp.avg_ack_latency_ms == 1550
+    assert dns.overall_avg_latency_ms == 18.0
 
 
 def test_threshold_helpers_treat_equal_boundary_as_breached() -> None:

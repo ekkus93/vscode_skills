@@ -77,5 +77,53 @@
       "policy_group": "guest",
       "expected_policy_group": "corp"
     }
+  },
+  "mixed_evidence_two_domain_ambiguity": {
+    "incident": {
+      "incidentId": "inc-ambiguous-1",
+      "siteId": "hq-1",
+      "ssid": "CorpWiFi",
+      "summary": "Cannot connect sometimes and onboarding fails intermittently"
+    },
+    "auth": {
+      "clientMac": "00:11:22:33:44:55",
+      "successRatePct": 78.0,
+      "timeouts": 6,
+      "radius_servers": [
+        {"server": "radius-a", "avg_rtt_ms": 2800, "reachable": true}
+      ]
+    },
+    "dhcp": {
+      "clientMac": "00:11:22:33:44:55",
+      "offerLatencyMs": 1700,
+      "ackLatencyMs": 1550,
+      "successRatePct": 86.0,
+      "timeouts": 2
+    },
+    "dns": {
+      "clientId": "client-ambiguous-1",
+      "overallLatencyMs": 18.0,
+      "timeoutPct": 0.0,
+      "sample_queries": ["idp.corp.example"]
+    }
+  },
+  "dependency_failure_scenario": {
+    "incident": {
+      "incidentId": "inc-dependency-1",
+      "siteId": "hq-1",
+      "ssid": "CorpWiFi",
+      "summary": "Cannot connect sometimes and reconnect helps"
+    },
+    "stub_fixtures": {
+      "get_radius_reachability": [
+        {"server": "radius-a", "avg_rtt_ms": 120.0, "reachable": true}
+      ],
+      "retrieve_categorized_auth_failures": []
+    },
+    "controls": {
+      "skill_name": "net.auth_8021x_radius",
+      "payload": {"site_id": "hq-1"},
+      "unavailable_operations": ["get_auth_event_summaries"]
+    }
   }
 }

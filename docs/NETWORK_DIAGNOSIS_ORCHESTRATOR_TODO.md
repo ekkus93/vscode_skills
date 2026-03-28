@@ -460,15 +460,15 @@ Notes:
 - [x] AP uplink CRC/flap issue
 - [x] STP loop / MAC flap instability
 - [x] wrong VLAN / policy placement
-- [ ] mixed evidence two-domain ambiguity
-- [ ] dependency failure scenario
+- [x] mixed evidence two-domain ambiguity
+- [x] dependency failure scenario
 
 ### 16.2 Build replay scenarios
-- [ ] single-client scenario
-- [ ] area-based scenario
-- [ ] site-wide slowdown scenario
-- [ ] onboarding/auth scenario
-- [ ] ambiguous scenario
+- [x] single-client scenario
+- [x] area-based scenario
+- [x] site-wide slowdown scenario
+- [x] onboarding/auth scenario
+- [x] ambiguous scenario
 
 ---
 

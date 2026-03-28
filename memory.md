@@ -120,6 +120,21 @@
 - Pushed `master` to `origin/master`, advancing the remote from `b22c19b` to `7b0ea40`.
 - Verified the post-push worktree was clean before recording this checkpoint.
 
+## 2026-03-28T20:20:57Z - GPT-5.4 - Completed Phase 16.1 canonical scenario fixtures
+- Extended `tests/fixtures/nettools/phase4_scenarios.json` with the remaining canonical cases: `mixed_evidence_two_domain_ambiguity` and `dependency_failure_scenario`.
+- Added focused coverage in `tests/unit/nettools/test_phase4_analysis.py` for fixture inventory and mixed auth/DHCP ambiguity inputs, plus `tests/integration/nettools/test_failure_modes.py` coverage proving the dependency-failure fixture drives a normalized dependency-unavailable result.
+- Marked the remaining Phase 16.1 items complete in `docs/NETWORK_DIAGNOSIS_ORCHESTRATOR_TODO.md` and validated the slice with `pytest tests/unit/nettools/test_phase4_analysis.py tests/integration/nettools/test_failure_modes.py` (9 passed).
+
+## 2026-03-28T20:28:35Z - GPT-5.4 - Completed Phase 16.2 replay scenarios
+- Added `tests/fixtures/nettools/replay_scenarios.json` with five canonical persisted-audit replay scenarios covering single-client, area-based, site-wide slowdown, onboarding/auth, and bounded-ambiguity investigations.
+- Added `tests/integration/nettools/test_replay_scenarios.py` to expand those fixture specs into validated audit trails and assert replay-mode report, metrics, sampling, and follow-up behavior without invoking primitive skills.
+- Marked all Phase 16.2 replay scenario items complete in `docs/NETWORK_DIAGNOSIS_ORCHESTRATOR_TODO.md` and validated the slice with Ruff, `MYPYPATH=skills/nettools-core python -m mypy`, and `pytest tests/integration/nettools/test_replay_scenarios.py tests/unit/nettools/test_orchestrator_diagnose_incident.py -k replay` (11 passed).
+
+## 2026-03-28T20:29:56Z - GPT-5.4 - Refreshed full repo validation baseline after replay scenario changes
+- Ran `/home/phil/.local/bin/ruff check .` from the repo root; Ruff passed cleanly.
+- Ran `/home/phil/work/vscode_skills/.venv/bin/python -m mypy .`; MyPy reported success with no issues in 122 source files.
+- Ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest`; the full suite passed with 291 tests.
+
 ## 2026-03-28T20:13:18Z - GPT-5.4 - Refreshed full repo validation baseline after primitive skill adapter changes
 - Ran `/home/phil/.local/bin/ruff check .` from the repo root; Ruff passed cleanly.
 - Ran `/home/phil/work/vscode_skills/.venv/bin/python -m mypy .`; MyPy reported success with no issues in 121 source files.

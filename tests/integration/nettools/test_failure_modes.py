@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
+from typing import cast
+
 from nettools.adapters import (
     StubAuthAdapter,
     StubDhcpAdapter,
@@ -15,17 +19,27 @@ from nettools.orchestrator import invoke_skill
 from nettools.priority1 import AdapterBundle
 
 
-def build_bundle(fixtures: dict[str, object]) -> AdapterBundle:
+def build_bundle(
+    fixtures: dict[str, object], *, auth_unavailable: set[str] | None = None
+) -> AdapterBundle:
     return AdapterBundle(
         wireless=StubWirelessControllerAdapter(fixtures=fixtures),
         switch=StubSwitchAdapter(fixtures=fixtures),
         dhcp=StubDhcpAdapter(fixtures=fixtures),
         dns=StubDnsAdapter(fixtures=fixtures),
-        auth=StubAuthAdapter(fixtures=fixtures),
+        auth=StubAuthAdapter(fixtures=fixtures, unavailable_operations=auth_unavailable),
         probe=StubProbeAdapter(fixtures=fixtures),
         inventory=StubInventoryConfigAdapter(fixtures=fixtures),
         syslog=StubSyslogEventAdapter(fixtures=fixtures),
     )
+
+
+def load_phase4_scenarios() -> dict[str, dict[str, dict[str, object]]]:
+    path = Path("tests/fixtures/nettools/phase4_scenarios.json")
+    scenarios: dict[str, dict[str, dict[str, object]]] = json.loads(
+        path.read_text(encoding="utf-8")
+    )
+    return scenarios
 
 
 def test_partial_client_history_without_current_session_still_returns_skill_result() -> None:
@@ -75,3 +89,24 @@ def test_partial_expected_mapping_without_observed_client_data_still_returns_ski
     assert result.findings == []
     assert result.evidence["expected_policy_mapping"]["expected_vlan"] == 120
     assert result.evidence["expected_policy_mapping"]["expected_policy_group"] == "corp"
+
+
+def test_dependency_failure_scenario_fixture_yields_dependency_unavailable_result() -> None:
+    scenario = load_phase4_scenarios()["dependency_failure_scenario"]
+    controls = scenario["controls"]
+
+    record = invoke_skill(
+        cast(str, controls["skill_name"]),
+        cast(dict[str, object], controls["payload"]),
+        build_bundle(
+            scenario["stub_fixtures"],
+            auth_unavailable=set(cast(list[str], controls["unavailable_operations"])),
+        ),
+    )
+
+    assert record.error_type == "DependencyUnavailableError"
+
+    result = SkillResult.model_validate(record.result)
+    assert result.status.value == "unknown"
+    assert result.findings[0].code == "DEPENDENCY_UNAVAILABLE"
+    assert result.raw_refs == ["adapter:stub-auth:get_auth_event_summaries"]

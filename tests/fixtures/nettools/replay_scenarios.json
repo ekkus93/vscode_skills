@@ -1,0 +1,506 @@
+{
+  "single_client_scenario": {
+    "persisted_at": "2026-03-28T10:00:00Z",
+    "incident_record": {
+      "incident_id": "replay-single-client-1",
+      "summary": "Laptop has slow browsing and intermittent DNS lookups",
+      "site_id": "hq-1",
+      "client_id": "client-42",
+      "ssid": "CorpWiFi"
+    },
+    "state": {
+      "incident_id": "replay-single-client-1",
+      "created_at": "2026-03-28T09:55:00Z",
+      "updated_at": "2026-03-28T10:00:00Z",
+      "incident_type": "single_client",
+      "playbook_used": "single_client_wifi_issue",
+      "status": "completed",
+      "scope_summary": {
+        "site_id": "hq-1",
+        "ssid": "CorpWiFi",
+        "known_client_ids": ["client-42"]
+      }
+    },
+    "executions": [
+      {
+        "skill_name": "net.client_health",
+        "observed_at": "2026-03-28T09:56:00Z",
+        "scope_type": "client",
+        "scope_id": "client-42",
+        "status": "warn",
+        "finding_codes": ["HIGH_PACKET_LOSS"],
+        "evidence": {
+          "client_id": "client-42",
+          "ap_name": "AP-12"
+        },
+        "raw_refs": ["fixture:replay:single_client:client_health"]
+      },
+      {
+        "skill_name": "net.dns_latency",
+        "observed_at": "2026-03-28T09:59:00Z",
+        "scope_type": "client",
+        "scope_id": "client-42",
+        "status": "warn",
+        "finding_codes": ["HIGH_DNS_LATENCY", "DNS_TIMEOUT_RATE"],
+        "evidence": {
+          "client_id": "client-42",
+          "site_id": "hq-1"
+        },
+        "raw_refs": ["fixture:replay:single_client:dns_latency"]
+      }
+    ],
+    "trace": [
+      {
+        "event_type": "playbook_selection",
+        "recorded_at": "2026-03-28T09:55:30Z",
+        "message": "Selected playbook single_client_wifi_issue for single_client.",
+        "details": {
+          "playbook_name": "single_client_wifi_issue"
+        }
+      }
+    ],
+    "domain_scores": [
+      {
+        "domain": "dns_issue",
+        "score": 0.84,
+        "confidence": "high",
+        "supporting_findings": ["HIGH_DNS_LATENCY", "DNS_TIMEOUT_RATE"]
+      }
+    ],
+    "stop_reason": {
+      "code": "high_confidence_diagnosis",
+      "message": "High-confidence diagnosis points to dns_issue with high confidence.",
+      "related_domains": ["dns_issue"],
+      "supporting_context": {
+        "replay": true
+      }
+    },
+    "expected": {
+      "status": "warn",
+      "incident_type": "single_client",
+      "playbook_used": "single_client_wifi_issue",
+      "ranked_domains": ["dns_issue"],
+      "stop_reason": "high_confidence_diagnosis",
+      "followup_skills": [],
+      "human_action_fragment": "Check DNS resolver latency and timeout path",
+      "metrics_lead_domain": "dns_issue",
+      "sampling_summary": {
+        "sampled_clients": [],
+        "sampled_aps": [],
+        "sampled_comparison_aps": [],
+        "sampled_areas": [],
+        "sampled_comparison_areas": [],
+        "rationale": []
+      }
+    }
+  },
+  "area_based_scenario": {
+    "persisted_at": "2026-03-28T11:30:00Z",
+    "incident_record": {
+      "incident_id": "replay-area-1",
+      "summary": "North wing Wi-Fi is slow near the conference rooms",
+      "site_id": "hq-1",
+      "ssid": "CorpWiFi",
+      "location": "north-wing"
+    },
+    "state": {
+      "incident_id": "replay-area-1",
+      "created_at": "2026-03-28T11:20:00Z",
+      "updated_at": "2026-03-28T11:30:00Z",
+      "incident_type": "single_area",
+      "playbook_used": "area_based_wifi_issue",
+      "status": "completed",
+      "scope_summary": {
+        "site_id": "hq-1",
+        "ssid": "CorpWiFi",
+        "affected_areas": ["north-wing"],
+        "known_ap_names": ["AP-21", "AP-22"],
+        "sampled_aps": ["AP-21", "AP-22"],
+        "sampled_comparison_aps": ["AP-99"],
+        "sampling_rationale": [
+          "Selected two affected APs and one comparison AP for area triage."
+        ]
+      }
+    },
+    "executions": [
+      {
+        "skill_name": "net.ap_rf_health",
+        "observed_at": "2026-03-28T11:23:00Z",
+        "scope_type": "ap",
+        "scope_id": "ap-21",
+        "status": "warn",
+        "finding_codes": [
+          "HIGH_CHANNEL_UTILIZATION",
+          "HIGH_AP_CLIENT_LOAD",
+          "POTENTIAL_CO_CHANNEL_INTERFERENCE"
+        ],
+        "evidence": {
+          "ap_name": "AP-21",
+          "ap_id": "ap-21",
+          "site_id": "hq-1"
+        },
+        "raw_refs": ["fixture:replay:area:ap_rf_health"]
+      },
+      {
+        "skill_name": "net.roaming_analysis",
+        "observed_at": "2026-03-28T11:27:00Z",
+        "scope_type": "service",
+        "scope_id": "north-wing",
+        "status": "ok",
+        "finding_codes": [],
+        "evidence": {
+          "site_id": "hq-1",
+          "source_location": "north-wing"
+        },
+        "raw_refs": ["fixture:replay:area:roaming_analysis"]
+      }
+    ],
+    "trace": [
+      {
+        "event_type": "playbook_selection",
+        "recorded_at": "2026-03-28T11:20:30Z",
+        "message": "Selected playbook area_based_wifi_issue for single_area.",
+        "details": {
+          "playbook_name": "area_based_wifi_issue"
+        }
+      }
+    ],
+    "domain_scores": [
+      {
+        "domain": "single_ap_rf",
+        "score": 0.82,
+        "confidence": "high",
+        "supporting_findings": [
+          "HIGH_CHANNEL_UTILIZATION",
+          "HIGH_AP_CLIENT_LOAD"
+        ]
+      }
+    ],
+    "stop_reason": {
+      "code": "high_confidence_diagnosis",
+      "message": "High-confidence diagnosis points to single_ap_rf with high confidence.",
+      "related_domains": ["single_ap_rf"],
+      "supporting_context": {
+        "replay": true
+      }
+    },
+    "expected": {
+      "status": "warn",
+      "incident_type": "single_area",
+      "playbook_used": "area_based_wifi_issue",
+      "ranked_domains": ["single_ap_rf"],
+      "stop_reason": "high_confidence_diagnosis",
+      "followup_skills": [],
+      "human_action_fragment": "Inspect AP radio utilization and interference",
+      "metrics_lead_domain": "single_ap_rf",
+      "sampling_summary": {
+        "sampled_clients": [],
+        "sampled_aps": ["AP-21", "AP-22"],
+        "sampled_comparison_aps": ["AP-99"],
+        "sampled_areas": [],
+        "sampled_comparison_areas": [],
+        "rationale": [
+          "Selected two affected APs and one comparison AP for area triage."
+        ]
+      }
+    }
+  },
+  "site_wide_slowdown_scenario": {
+    "persisted_at": "2026-03-28T12:45:00Z",
+    "incident_record": {
+      "incident_id": "replay-site-wide-1",
+      "summary": "Both floors report widespread slow browsing",
+      "site_id": "hq-1",
+      "location": "campus"
+    },
+    "state": {
+      "incident_id": "replay-site-wide-1",
+      "created_at": "2026-03-28T12:30:00Z",
+      "updated_at": "2026-03-28T12:45:00Z",
+      "incident_type": "site_wide",
+      "playbook_used": "site_wide_internal_slowdown",
+      "status": "completed",
+      "scope_summary": {
+        "site_id": "hq-1",
+        "affected_areas": ["north-wing", "south-wing"],
+        "sampled_areas": ["north-wing", "south-wing"],
+        "sampled_comparison_areas": ["west-wing"],
+        "sampling_rationale": [
+          "Selected affected and comparison areas for site-wide slowdown triage."
+        ]
+      }
+    },
+    "executions": [
+      {
+        "skill_name": "net.change_detection",
+        "observed_at": "2026-03-28T12:32:00Z",
+        "scope_type": "site",
+        "scope_id": "hq-1",
+        "status": "ok",
+        "finding_codes": [],
+        "evidence": {
+          "site_id": "hq-1"
+        },
+        "raw_refs": ["fixture:replay:site_wide:change_detection"]
+      },
+      {
+        "skill_name": "net.path_probe",
+        "observed_at": "2026-03-28T12:38:00Z",
+        "scope_type": "site",
+        "scope_id": "hq-1",
+        "status": "warn",
+        "finding_codes": ["SITE_WIDE_PATH_LOSS"],
+        "evidence": {
+          "site_id": "hq-1",
+          "source_location": "north-wing"
+        },
+        "raw_refs": ["fixture:replay:site_wide:path_probe"]
+      },
+      {
+        "skill_name": "net.dns_latency",
+        "observed_at": "2026-03-28T12:43:00Z",
+        "scope_type": "site",
+        "scope_id": "hq-1",
+        "status": "warn",
+        "finding_codes": ["HIGH_DNS_LATENCY"],
+        "evidence": {
+          "site_id": "hq-1",
+          "source_location": "south-wing"
+        },
+        "raw_refs": ["fixture:replay:site_wide:dns_latency"]
+      }
+    ],
+    "trace": [
+      {
+        "event_type": "playbook_selection",
+        "recorded_at": "2026-03-28T12:30:30Z",
+        "message": "Selected playbook site_wide_internal_slowdown for site_wide.",
+        "details": {
+          "playbook_name": "site_wide_internal_slowdown"
+        }
+      }
+    ],
+    "domain_scores": [
+      {
+        "domain": "site_wide_internal_lan_issue",
+        "score": 0.79,
+        "confidence": "high",
+        "supporting_findings": ["SITE_WIDE_PATH_LOSS", "HIGH_DNS_LATENCY"]
+      }
+    ],
+    "stop_reason": {
+      "code": "high_confidence_diagnosis",
+      "message": "High-confidence diagnosis points to site_wide_internal_lan_issue with high confidence.",
+      "related_domains": ["site_wide_internal_lan_issue"],
+      "supporting_context": {
+        "replay": true
+      }
+    },
+    "expected": {
+      "status": "warn",
+      "incident_type": "site_wide",
+      "playbook_used": "site_wide_internal_slowdown",
+      "ranked_domains": ["site_wide_internal_lan_issue"],
+      "stop_reason": "high_confidence_diagnosis",
+      "followup_skills": [],
+      "human_action_fragment": "Inspect internal LAN path loss and site uplinks",
+      "metrics_lead_domain": "site_wide_internal_lan_issue",
+      "sampling_summary": {
+        "sampled_clients": [],
+        "sampled_aps": [],
+        "sampled_comparison_aps": [],
+        "sampled_areas": ["north-wing", "south-wing"],
+        "sampled_comparison_areas": ["west-wing"],
+        "rationale": [
+          "Selected affected and comparison areas for site-wide slowdown triage."
+        ]
+      }
+    }
+  },
+  "onboarding_auth_scenario": {
+    "persisted_at": "2026-03-28T14:10:00Z",
+    "incident_record": {
+      "incident_id": "replay-auth-1",
+      "summary": "New hires cannot finish onboarding on CorpWiFi",
+      "site_id": "hq-1",
+      "client_id": "client-77",
+      "ssid": "CorpWiFi"
+    },
+    "state": {
+      "incident_id": "replay-auth-1",
+      "created_at": "2026-03-28T14:00:00Z",
+      "updated_at": "2026-03-28T14:10:00Z",
+      "incident_type": "auth_or_onboarding",
+      "playbook_used": "auth_or_onboarding_issue",
+      "status": "completed",
+      "scope_summary": {
+        "site_id": "hq-1",
+        "ssid": "CorpWiFi",
+        "known_client_ids": ["client-77"]
+      }
+    },
+    "executions": [
+      {
+        "skill_name": "net.auth_8021x_radius",
+        "observed_at": "2026-03-28T14:08:00Z",
+        "scope_type": "client",
+        "scope_id": "client-77",
+        "status": "fail",
+        "finding_codes": ["LOW_AUTH_SUCCESS_RATE", "AUTH_TIMEOUTS", "RADIUS_HIGH_RTT"],
+        "evidence": {
+          "client_id": "client-77",
+          "site_id": "hq-1"
+        },
+        "raw_refs": ["fixture:replay:auth:auth_8021x_radius"]
+      }
+    ],
+    "trace": [
+      {
+        "event_type": "playbook_selection",
+        "recorded_at": "2026-03-28T14:00:30Z",
+        "message": "Selected playbook auth_or_onboarding_issue for auth_or_onboarding.",
+        "details": {
+          "playbook_name": "auth_or_onboarding_issue"
+        }
+      }
+    ],
+    "domain_scores": [
+      {
+        "domain": "auth_issue",
+        "score": 0.88,
+        "confidence": "high",
+        "supporting_findings": ["LOW_AUTH_SUCCESS_RATE", "AUTH_TIMEOUTS", "RADIUS_HIGH_RTT"]
+      }
+    ],
+    "stop_reason": {
+      "code": "high_confidence_diagnosis",
+      "message": "High-confidence diagnosis points to auth_issue with high confidence.",
+      "related_domains": ["auth_issue"],
+      "supporting_context": {
+        "replay": true
+      }
+    },
+    "expected": {
+      "status": "warn",
+      "incident_type": "auth_or_onboarding",
+      "playbook_used": "auth_or_onboarding_issue",
+      "ranked_domains": ["auth_issue"],
+      "stop_reason": "high_confidence_diagnosis",
+      "followup_skills": [],
+      "human_action_fragment": "Check 802.1X and RADIUS authentication failures",
+      "metrics_lead_domain": "auth_issue",
+      "sampling_summary": {
+        "sampled_clients": [],
+        "sampled_aps": [],
+        "sampled_comparison_aps": [],
+        "sampled_areas": [],
+        "sampled_comparison_areas": [],
+        "rationale": []
+      }
+    }
+  },
+  "ambiguous_scenario": {
+    "persisted_at": "2026-03-28T15:25:00Z",
+    "input_overrides": {
+      "capture_authorized": true,
+      "capture_approval_ticket": "CHG-2001"
+    },
+    "incident_record": {
+      "incident_id": "replay-ambiguous-1",
+      "summary": "Clients intermittently fail onboarding and sometimes stall before getting an address",
+      "site_id": "hq-1",
+      "ssid": "CorpWiFi"
+    },
+    "state": {
+      "incident_id": "replay-ambiguous-1",
+      "created_at": "2026-03-28T15:10:00Z",
+      "updated_at": "2026-03-28T15:25:00Z",
+      "incident_type": "auth_or_onboarding",
+      "playbook_used": "auth_or_onboarding_issue",
+      "status": "completed",
+      "scope_summary": {
+        "site_id": "hq-1",
+        "ssid": "CorpWiFi"
+      }
+    },
+    "executions": [
+      {
+        "skill_name": "net.auth_8021x_radius",
+        "observed_at": "2026-03-28T15:17:00Z",
+        "scope_type": "service",
+        "scope_id": "hq-1",
+        "status": "warn",
+        "finding_codes": ["LOW_AUTH_SUCCESS_RATE", "AUTH_TIMEOUTS"],
+        "evidence": {
+          "site_id": "hq-1",
+          "ssid": "CorpWiFi"
+        },
+        "raw_refs": ["fixture:replay:ambiguous:auth_8021x_radius"]
+      },
+      {
+        "skill_name": "net.dhcp_path",
+        "observed_at": "2026-03-28T15:22:00Z",
+        "scope_type": "service",
+        "scope_id": "hq-1",
+        "status": "warn",
+        "finding_codes": ["HIGH_DHCP_OFFER_LATENCY", "HIGH_DHCP_ACK_LATENCY"],
+        "evidence": {
+          "site_id": "hq-1",
+          "ssid": "CorpWiFi"
+        },
+        "raw_refs": ["fixture:replay:ambiguous:dhcp_path"]
+      }
+    ],
+    "trace": [
+      {
+        "event_type": "playbook_selection",
+        "recorded_at": "2026-03-28T15:10:30Z",
+        "message": "Selected playbook auth_or_onboarding_issue for auth_or_onboarding.",
+        "details": {
+          "playbook_name": "auth_or_onboarding_issue"
+        }
+      }
+    ],
+    "domain_scores": [
+      {
+        "domain": "auth_issue",
+        "score": 0.63,
+        "confidence": "medium",
+        "supporting_findings": ["LOW_AUTH_SUCCESS_RATE", "AUTH_TIMEOUTS"]
+      },
+      {
+        "domain": "dhcp_issue",
+        "score": 0.59,
+        "confidence": "medium",
+        "supporting_findings": ["HIGH_DHCP_OFFER_LATENCY", "HIGH_DHCP_ACK_LATENCY"]
+      }
+    ],
+    "stop_reason": {
+      "code": "two_domain_bounded_ambiguity",
+      "message": "Mixed evidence leaves auth_issue and dhcp_issue as the top bounded ambiguity.",
+      "related_domains": ["auth_issue", "dhcp_issue"],
+      "supporting_context": {
+        "replay": true
+      },
+      "uncertainty_summary": "Auth and DHCP evidence remain close enough that one discriminator is still needed."
+    },
+    "expected": {
+      "status": "warn",
+      "incident_type": "auth_or_onboarding",
+      "playbook_used": "auth_or_onboarding_issue",
+      "ranked_domains": ["auth_issue", "dhcp_issue"],
+      "stop_reason": "two_domain_bounded_ambiguity",
+      "followup_skills": ["net.capture_trigger"],
+      "human_action_fragment": "Collect one discriminator between auth_issue and dhcp_issue",
+      "metrics_lead_domain": "auth_issue",
+      "sampling_summary": {
+        "sampled_clients": [],
+        "sampled_aps": [],
+        "sampled_comparison_aps": [],
+        "sampled_areas": [],
+        "sampled_comparison_areas": [],
+        "rationale": []
+      }
+    }
+  }
+}
