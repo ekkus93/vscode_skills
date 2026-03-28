@@ -218,6 +218,11 @@
 - Added `tests/integration/nettools/test_orchestrator_major_scenarios.py` with six live stub-backed orchestrator scenarios covering single-client DNS, area RF, site-wide L2, onboarding/auth, bounded ambiguity, and dependency-blocked investigations.
 - Fixed `skills/nettools-core/nettools/orchestrator/execution.py` so dependency-failure normalization derives `time_window` from only the shared input fields, preventing validation crashes when a skill input model includes extra orchestrator-only fields.
 - Re-ran full repo validation after the new integration suite and execution fix: `ruff check .` passed, `/home/phil/work/vscode_skills/.venv/bin/python -m mypy --python-executable /home/phil/work/vscode_skills/.venv/bin/python .` passed on 123 source files, and `/home/phil/work/vscode_skills/.venv/bin/python -m pytest -q` passed with 298 tests.
+
+## 2026-03-28T20:57:23Z - GPT-5.4 - Pushed orchestrator integration coverage to origin/master
+- Committed the orchestrator integration coverage and execution-wrapper fix as `8dd0e00` with the message `Add orchestrator integration scenarios`.
+- Pushed `master` to `origin/master`, advancing the remote from `4f11664` to `8dd0e00`.
+- Verified the worktree was clean immediately after the push before recording this checkpoint.
 - Added `tests/unit/nettools/test_phase2_models.py` to cover partial-data tolerance, nested serialization, and source/version metadata behavior across the new models.
 - Re-ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest tests/unit/nettools`; the full NETTOOLS unit suite passed with 16 tests.
 - Marked all Phase 2 items complete in `docs/NETTOOLS_TODO.md`.
