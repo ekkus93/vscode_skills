@@ -685,15 +685,15 @@ Implementation assumption for v1:
 - [x] Add unit tests for error translation
 
 ### 11.2 Integration testing
-- [ ] Create end-to-end tests for:
-  - [ ] weak client RF case
-  - [ ] overloaded AP case
-  - [ ] slow DHCP case
-  - [ ] slow DNS case
-  - [ ] auth timeout case
-  - [ ] AP uplink issue case
-  - [ ] STP loop symptom case
-  - [ ] wrong VLAN case
+- [x] Create end-to-end tests for:
+  - [x] weak client RF case
+  - [x] overloaded AP case
+  - [x] slow DHCP case
+  - [x] slow DNS case
+  - [x] auth timeout case
+  - [x] AP uplink issue case
+  - [x] STP loop symptom case
+  - [x] wrong VLAN case
 
 ### 11.3 Failure mode testing
 - [x] Test source adapter timeouts

@@ -397,3 +397,17 @@
 ## 2026-03-28T14:39:00Z - GPT-5.4 - Prepared NETTOOLS Phase 9 testing updates for check-in
 - The pending NETTOOLS Phase 9 change set consists of the new output-contract coverage in `tests/unit/nettools/test_skill_output_contracts.py`, the threshold-boundary coverage added to `tests/unit/nettools/test_phase4_analysis.py`, and the corresponding checklist updates in `docs/NETTOOLS_TODO.md`.
 - The current branch is `master`, and the pending files match the recent validation baseline that already passed repo-wide Ruff, MyPy, and pytest.
+
+## 2026-03-28T14:46:45Z - GPT-5.4 - Added NETTOOLS Phase 9 integration coverage for the core scenario matrix
+- Added `tests/integration/nettools/conftest.py` plus `tests/integration/nettools/test_end_to_end_skill_cases.py` so the integration suite can import the in-repo `nettools-core` package and exercise the shared `invoke_skill(...)` wrapper end to end.
+- The new integration suite covers the eight Phase 9 scenarios in `docs/NETTOOLS_TODO.md`: weak client RF, overloaded AP, slow DHCP, slow DNS, auth timeout, AP uplink issue, STP loop symptoms, and wrong VLAN placement.
+- Focused validation is green for this slice: `pytest tests/integration/nettools/test_end_to_end_skill_cases.py` passed with 9 tests, `ruff check tests/integration/nettools` passed, and `env MYPYPATH=skills/nettools-core mypy --python-executable /home/phil/work/vscode_skills/.venv/bin/python tests/integration/nettools` reported success on 2 source files.
+
+## 2026-03-28T14:49:44Z - GPT-5.4 - Restored clean repo-wide validation after adding NETTOOLS integration tests
+- Repo-wide `ruff check .` passes cleanly and `/home/phil/work/vscode_skills/.venv/bin/python -m pytest` passes with 243 tests.
+- Repo-wide MyPy initially failed because `tests/unit/nettools/conftest.py` and `tests/integration/nettools/conftest.py` were both resolved as the same top-level `conftest` module.
+- Added minimal package markers in `tests/`, `tests/unit/`, `tests/unit/nettools/`, `tests/integration/`, and `tests/integration/nettools/` so MyPy resolves the unit and integration test trees as distinct packages; after that, `/home/phil/.local/bin/mypy --python-executable /home/phil/work/vscode_skills/.venv/bin/python .` reported success on 118 source files.
+
+## 2026-03-28T14:52:14Z - GPT-5.4 - Prepared NETTOOLS integration-testing and MyPy package-resolution fixes for check-in
+- The pending change set includes the new Phase 9 end-to-end NETTOOLS integration suite, the corresponding checklist updates in `docs/NETTOOLS_TODO.md`, and the minimal `tests/**/__init__.py` package markers required to keep repo-wide MyPy clean with both unit and integration `conftest.py` files present.
+- This exact pending set has already been validated repo-wide with Ruff, MyPy, and pytest before check-in.
