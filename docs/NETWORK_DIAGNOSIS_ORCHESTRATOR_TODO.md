@@ -340,7 +340,7 @@ Notes:
 ### 11.3 Handle partial investigations
 - [x] support blocked state
 - [x] support unresolved state
-- [ ] support replay/debug mode
+- [x] support replay/debug mode
 
 ### 11.4 Tests
 - [x] single-client end-to-end path test

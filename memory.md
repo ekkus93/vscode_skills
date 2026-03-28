@@ -515,3 +515,10 @@
 - Fixed the remaining repo-wide MyPy error in `tests/unit/nettools/test_orchestration.py` by changing the malformed-result fake handler to return `cast(SkillResult, {"skill_name": "net.client_health"})` instead of `cast(Any, ...)`.
 - The edit was purely for static typing in the test helper; the runtime behavior of the malformed-result test remains unchanged because the wrapper still receives an intentionally invalid dict payload.
 - Revalidated the full repository successfully: `/home/phil/.local/bin/ruff check .` passed, `/home/phil/work/vscode_skills/.venv/bin/python -m mypy .` passed on 120 source files, and `/home/phil/work/vscode_skills/.venv/bin/python -m pytest` passed with 254 tests.
+
+## 2026-03-28T17:55:01Z - GPT-5.4 - Added replay/debug mode for partial orchestrator investigations
+- Extended `DiagnoseIncidentInput` in `skills/nettools-core/nettools/orchestrator/diagnose_incident.py` with `replay_state`, plus CLI flags to load replay state and an optional incident record from JSON files.
+- `evaluate_diagnose_incident(...)` now supports deterministic debug replay from serialized `IncidentState` without invoking primitive skills, rebuilding the diagnosis report, raw refs, follow-up skill recommendation, and a small `replay_debug` evidence block from the captured state.
+- When replay input does not include an `incident_record`, the orchestrator now synthesizes a minimal debug incident record from `IncidentState.scope_summary` and the recorded stop/result summaries so replay remains usable from state alone.
+- Added unit tests covering replay execution without live skill calls and CLI replay-file parsing in `tests/unit/nettools/test_orchestrator_diagnose_incident.py`.
+- Revalidated the full repository successfully: `/home/phil/.local/bin/ruff check .` passed, `/home/phil/work/vscode_skills/.venv/bin/python -m mypy .` passed on 120 source files, and `/home/phil/work/vscode_skills/.venv/bin/python -m pytest` passed with 256 tests.

@@ -19,6 +19,7 @@ from ..models import (
     SharedInputBase,
     SkillResult,
     Status,
+    TimeWindow,
 )
 from ..priority1 import AdapterBundle, load_stub_adapter_bundle
 from ..priority3 import IncidentIntakeInput
@@ -64,13 +65,14 @@ class DiagnoseIncidentInput(SharedInputBase):
     candidate_areas: list[str] = Field(default_factory=list)
     comparison_areas: list[str] = Field(default_factory=list)
     incident_record: IncidentRecord | None = None
+    replay_state: IncidentState | None = None
     playbook_override: str | None = None
     max_steps: int | None = Field(default=None, ge=1)
 
     @model_validator(mode="after")
     def validate_incident_source(self) -> DiagnoseIncidentInput:
-        if self.incident_record is None and not self.complaint:
-            raise ValueError("either complaint or incident_record is required")
+        if self.replay_state is None and self.incident_record is None and not self.complaint:
+            raise ValueError("either complaint, incident_record, or replay_state is required")
         return self
 
 
@@ -131,6 +133,41 @@ def _incident_record_from_input(skill_input: DiagnoseIncidentInput) -> IncidentR
             "impacted_apps": record.impacted_apps or list(skill_input.impacted_apps),
             "occurred_at": _merge_scope_value(record.occurred_at, skill_input.occurred_at),
             "notes": record.notes or list(skill_input.notes),
+        }
+    )
+
+
+def _incident_record_from_replay_state(
+    skill_input: DiagnoseIncidentInput,
+    state: IncidentState,
+) -> IncidentRecord:
+    scope_summary = state.scope_summary
+    known_client_id = next(iter(scope_summary.known_client_ids), None)
+    known_client_mac = next(iter(scope_summary.known_client_macs), None)
+    affected_area = next(iter(scope_summary.affected_areas), None)
+    if state.stop_reason is not None:
+        summary = state.stop_reason.message
+    elif state.skill_trace:
+        summary = state.skill_trace[-1].result.summary
+    else:
+        summary = "Replayed investigation state for debugging."
+
+    return IncidentRecord.model_validate(
+        {
+            "incident_id": state.incident_id,
+            "summary": summary,
+            "reporter": skill_input.reporter,
+            "location": _merge_scope_value(skill_input.location, affected_area),
+            "site_id": _merge_scope_value(skill_input.site_id, scope_summary.site_id),
+            "device_type": skill_input.device_type,
+            "client_id": _merge_scope_value(skill_input.client_id, known_client_id),
+            "client_mac": _merge_scope_value(skill_input.client_mac, known_client_mac),
+            "ssid": _merge_scope_value(skill_input.ssid, scope_summary.ssid),
+            "wired_also_affected": skill_input.wired_also_affected,
+            "reconnect_helps": skill_input.reconnect_helps,
+            "impacted_apps": list(skill_input.impacted_apps),
+            "occurred_at": skill_input.occurred_at,
+            "notes": list(skill_input.notes),
         }
     )
 
@@ -510,6 +547,68 @@ def _manual_stop_reason(message: str, state: IncidentState) -> StopReason:
     )
 
 
+def _replay_result(
+    skill_input: DiagnoseIncidentInput,
+    *,
+    state: IncidentState,
+    incident_record: IncidentRecord,
+) -> SkillResult:
+    replay_state = state.model_copy(deep=True)
+    ranked_causes = _ranked_causes(replay_state)
+    result_status = _result_status(replay_state, ranked_causes)
+    summary = _report_summary(replay_state, ranked_causes)
+    scope_type, scope_id = _result_scope(skill_input, incident_record)
+    report = _build_report(
+        replay_state,
+        ranked_causes=ranked_causes,
+        summary=summary,
+        result_status=result_status,
+    )
+
+    raw_refs: list[Any] = []
+    seen_raw_refs: set[str] = set()
+    for entry in replay_state.evidence_log:
+        for raw_ref in entry.raw_refs:
+            raw_ref_key = str(raw_ref)
+            if raw_ref_key in seen_raw_refs:
+                continue
+            seen_raw_refs.add(raw_ref_key)
+            raw_refs.append(raw_ref)
+
+    return SkillResult(
+        status=result_status,
+        skill_name="net.diagnose_incident",
+        scope_type=scope_type,
+        scope_id=scope_id,
+        summary=summary,
+        confidence=(ranked_causes[0].confidence if ranked_causes else Confidence.LOW),
+        observed_at=replay_state.updated_at,
+        time_window=TimeWindow(start=replay_state.created_at, end=replay_state.updated_at),
+        evidence={
+            "incident_record": incident_record.model_dump(mode="json", exclude_none=True),
+            "diagnosis_report": report,
+            "incident_state": replay_state.model_dump(mode="json", exclude_none=True),
+            "replay_debug": {
+                "enabled": True,
+                "source": "incident_state",
+                "replayed_skill_count": len(replay_state.skill_trace),
+            },
+        },
+        findings=[],
+        next_actions=(
+            [
+                NextAction(
+                    skill=replay_state.recommended_next_skill,
+                    reason="Additional automated follow-up remains available in replay state.",
+                )
+            ]
+            if replay_state.recommended_next_skill is not None
+            else []
+        ),
+        raw_refs=raw_refs,
+    )
+
+
 def evaluate_diagnose_incident(
     skill_input: DiagnoseIncidentInput,
     adapters: AdapterBundle,
@@ -518,6 +617,19 @@ def evaluate_diagnose_incident(
     logger: StructuredLogger | None = None,
     stop_config: StopConditionConfig | None = None,
 ) -> SkillResult:
+    if skill_input.replay_state is not None:
+        replay_state = skill_input.replay_state
+        incident_record = (
+            _incident_record_from_input(skill_input)
+            if skill_input.incident_record is not None
+            else _incident_record_from_replay_state(skill_input, replay_state)
+        )
+        return _replay_result(
+            skill_input,
+            state=replay_state,
+            incident_record=incident_record,
+        )
+
     state = IncidentState(incident_id=_state_incident_id(skill_input))
     incident_record = _bootstrap_incident_record(
         skill_input,
@@ -716,6 +828,8 @@ def build_diagnose_incident_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--candidate-area", action="append", dest="candidate_areas")
     parser.add_argument("--comparison-area", action="append", dest="comparison_areas")
+    parser.add_argument("--replay-state-file")
+    parser.add_argument("--replay-incident-record-file")
     parser.add_argument("--playbook-override")
     parser.add_argument("--max-steps", type=int)
     return parser
@@ -727,6 +841,14 @@ def _parse_input(arguments: argparse.Namespace) -> DiagnoseIncidentInput:
         for key, value in vars(arguments).items()
         if key in DiagnoseIncidentInput.model_fields and value is not None
     }
+    replay_state_file = getattr(arguments, "replay_state_file", None)
+    if replay_state_file:
+        with open(replay_state_file, encoding="utf-8") as handle:
+            payload["replay_state"] = IncidentState.model_validate_json(handle.read())
+    replay_incident_record_file = getattr(arguments, "replay_incident_record_file", None)
+    if replay_incident_record_file:
+        with open(replay_incident_record_file, encoding="utf-8") as handle:
+            payload["incident_record"] = IncidentRecord.model_validate_json(handle.read())
     return DiagnoseIncidentInput.model_validate(payload)
 
 

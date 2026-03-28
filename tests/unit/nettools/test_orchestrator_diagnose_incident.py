@@ -14,9 +14,20 @@ from nettools.models import (
     Status,
     TimeWindow,
 )
-from nettools.orchestrator import SkillExecutionRecord
+from nettools.orchestrator import (
+    DiagnosticDomain,
+    IncidentState,
+    IncidentType,
+    InvestigationStatus,
+    ScopeSummary,
+    SkillExecutionRecord,
+    StopReason,
+    StopReasonCode,
+)
 from nettools.orchestrator.diagnose_incident import (
     DiagnoseIncidentInput,
+    _parse_input,
+    build_diagnose_incident_parser,
     evaluate_diagnose_incident,
 )
 from nettools.priority1 import AdapterBundle
@@ -230,6 +241,115 @@ def test_diagnose_incident_runs_single_client_dns_path_end_to_end(
     assert report["stop_reason"]["code"] == "high_confidence_diagnosis"
     assert report["ranked_causes"][0]["domain"] == "dns_issue"
     assert report["recommended_followup_skills"] == []
+
+
+def test_diagnose_incident_replays_serialized_state_without_live_execution(
+    monkeypatch: Any,
+) -> None:
+    state = IncidentState(
+        incident_id="inc-replay-1",
+        incident_type=IncidentType.SINGLE_CLIENT,
+        playbook_used="single_client_wifi_issue",
+        status=InvestigationStatus.COMPLETED,
+        scope_summary=ScopeSummary(
+            site_id="hq-1",
+            ssid="CorpWiFi",
+            known_client_ids=["client-42"],
+        ),
+    )
+    state.append_execution(
+        _skill_record(
+            "net.client_health",
+            scope_type=ScopeType.CLIENT,
+            scope_id="client-42",
+            status=Status.WARN,
+            findings=[_finding("HIGH_PACKET_LOSS")],
+        )
+    )
+    state.append_execution(
+        _skill_record(
+            "net.dns_latency",
+            scope_type=ScopeType.CLIENT,
+            scope_id="client-42",
+            status=Status.WARN,
+            findings=[_finding("HIGH_DNS_LATENCY"), _finding("DNS_TIMEOUT_RATE")],
+        )
+    )
+    state.set_domain_score(
+        DiagnosticDomain.DNS_ISSUE,
+        score=0.78,
+        confidence=Confidence.HIGH,
+        supporting_findings=["HIGH_DNS_LATENCY", "DNS_TIMEOUT_RATE"],
+    )
+    state.set_stop_reason(
+        StopReason(
+            code=StopReasonCode.HIGH_CONFIDENCE_DIAGNOSIS,
+            message="High-confidence diagnosis points to dns_issue with high confidence.",
+            related_domains=[DiagnosticDomain.DNS_ISSUE],
+            supporting_context={"replay": True},
+        )
+    )
+
+    def fail_invoke(*args: Any, **kwargs: Any) -> Any:
+        raise AssertionError("replay mode should not invoke primitive skills")
+
+    monkeypatch.setattr("nettools.orchestrator.diagnose_incident.invoke_skill", fail_invoke)
+
+    result = evaluate_diagnose_incident(
+        DiagnoseIncidentInput(replay_state=state, site_id="hq-1"),
+        AdapterBundle(),
+    )
+
+    report = result.evidence["diagnosis_report"]
+
+    assert result.status is Status.WARN
+    assert result.summary == "High-confidence diagnosis points to dns_issue with high confidence."
+    assert report["incident_type"] == "single_client"
+    assert report["playbook_used"] == "single_client_wifi_issue"
+    assert report["ranked_causes"][0]["domain"] == "dns_issue"
+    assert report["stop_reason"]["code"] == "high_confidence_diagnosis"
+    assert result.evidence["replay_debug"] == {
+        "enabled": True,
+        "source": "incident_state",
+        "replayed_skill_count": 2,
+    }
+    assert result.evidence["incident_record"]["incident_id"] == "inc-replay-1"
+    assert result.evidence["incident_record"]["site_id"] == "hq-1"
+
+
+def test_parse_input_loads_replay_state_and_incident_record_files(tmp_path: Any) -> None:
+    state = IncidentState(
+        incident_id="inc-replay-parse",
+        incident_type=IncidentType.SINGLE_CLIENT,
+        playbook_used="single_client_wifi_issue",
+        scope_summary=ScopeSummary(site_id="hq-1"),
+    )
+    incident_record = IncidentRecord(
+        incident_id="inc-replay-parse",
+        summary="Replay me",
+        site_id="hq-1",
+        client_id="client-88",
+    )
+    state_path = tmp_path / "state.json"
+    record_path = tmp_path / "incident.json"
+    state_path.write_text(state.model_dump_json(indent=2), encoding="utf-8")
+    record_path.write_text(incident_record.model_dump_json(indent=2), encoding="utf-8")
+
+    parser = build_diagnose_incident_parser()
+    arguments = parser.parse_args(
+        [
+            "--replay-state-file",
+            str(state_path),
+            "--replay-incident-record-file",
+            str(record_path),
+        ]
+    )
+    skill_input = _parse_input(arguments)
+
+    assert skill_input.replay_state is not None
+    assert skill_input.replay_state.incident_id == "inc-replay-parse"
+    assert skill_input.incident_record is not None
+    assert skill_input.incident_record.client_id == "client-88"
 
 
 def test_diagnose_incident_uses_pre_normalized_record_without_intake(
