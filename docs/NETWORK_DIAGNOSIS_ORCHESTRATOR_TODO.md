@@ -410,24 +410,24 @@ Notes:
 ## 14. Phase 12 - Configuration and policy controls
 
 ### 14.1 Orchestrator config schema
-- [ ] playbook mapping
-- [ ] branch rules
-- [ ] stop thresholds
-- [ ] domain score thresholds
-- [ ] investigation budgets
-- [ ] sampling defaults
-- [ ] allowed optional branches
+- [x] playbook mapping
+- [x] branch rules
+- [x] stop thresholds
+- [x] domain score thresholds
+- [x] investigation budgets
+- [x] sampling defaults
+- [x] allowed optional branches
 
 ### 14.2 Policy controls
-- [ ] gate active probes if needed
-- [ ] gate capture triggers
-- [ ] gate external resolver comparisons
-- [ ] gate optional expensive branches
+- [x] gate active probes if needed
+- [x] gate capture triggers
+- [x] gate external resolver comparisons
+- [x] gate optional expensive branches
 
 ### 14.3 Tests
-- [ ] default config load test
-- [ ] invalid config test
-- [ ] policy-gated branch suppression test
+- [x] default config load test
+- [x] invalid config test
+- [x] policy-gated branch suppression test
 
 ---
 

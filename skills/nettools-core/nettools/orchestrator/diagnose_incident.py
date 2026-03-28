@@ -25,6 +25,7 @@ from ..priority1 import AdapterBundle, load_stub_adapter_bundle
 from ..priority3 import IncidentIntakeInput
 from .branch_rules import BranchSelectionDecision, select_next_branch
 from .classification import classify_and_select_playbook, intake_input_to_incident_record
+from .config import OrchestratorConfig
 from .execution import get_skill_definition, invoke_skill
 from .playbooks import PlaybookDefinition
 from .sampling import build_sampling_plan
@@ -76,7 +77,9 @@ class DiagnoseIncidentInput(SharedInputBase):
     capture_protocol: str = "auto"
     capture_target_host: str | None = None
     capture_interface_scope: str | None = None
+    path_probe_external_target: str | None = None
     playbook_override: str | None = None
+    orchestrator_config: OrchestratorConfig | None = None
     max_steps: int | None = Field(default=None, ge=1)
 
     @model_validator(mode="after")
@@ -292,6 +295,7 @@ def _build_skill_payload(
     *,
     skill_input: DiagnoseIncidentInput,
     incident_record: IncidentRecord,
+    orchestrator_config: OrchestratorConfig,
 ) -> dict[str, Any]:
     payload = _scope_payload(skill_input, incident_record)
     if skill_name == "net.incident_correlation":
@@ -299,6 +303,12 @@ def _build_skill_payload(
         payload["reporter"] = incident_record.reporter
     elif skill_name == "net.change_detection":
         payload["incident_summary"] = incident_record.summary
+    elif skill_name == "net.path_probe":
+        if (
+            skill_input.path_probe_external_target is not None
+            and orchestrator_config.allows_external_resolver_comparisons()
+        ):
+            payload["external_target"] = skill_input.path_probe_external_target
     elif skill_name == "net.capture_trigger":
         payload["reason"] = incident_record.summary or "Automated orchestration follow-up"
         payload["authorized"] = skill_input.capture_authorized
@@ -316,6 +326,7 @@ def _build_skill_payloads(
     state: IncidentState,
     skill_input: DiagnoseIncidentInput,
     incident_record: IncidentRecord,
+    orchestrator_config: OrchestratorConfig,
 ) -> list[dict[str, Any]]:
     definition = get_skill_definition(skill_name)
     if definition is None:
@@ -325,6 +336,7 @@ def _build_skill_payloads(
         skill_name,
         skill_input=skill_input,
         incident_record=incident_record,
+        orchestrator_config=orchestrator_config,
     )
     try:
         definition.input_model.model_validate(base_payload)
@@ -356,7 +368,15 @@ def _is_skill_runnable(
     state: IncidentState,
     skill_input: DiagnoseIncidentInput,
     incident_record: IncidentRecord,
+    orchestrator_config: OrchestratorConfig,
 ) -> bool:
+    if not orchestrator_config.allows_active_probe_skill(skill_name):
+        return False
+    if not orchestrator_config.allows_optional_expensive_branch(
+        skill_name,
+        playbook=playbook,
+    ):
+        return False
     return bool(
         _build_skill_payloads(
             skill_name,
@@ -364,6 +384,7 @@ def _is_skill_runnable(
             state=state,
             skill_input=skill_input,
             incident_record=incident_record,
+            orchestrator_config=orchestrator_config,
         )
     )
 
@@ -374,6 +395,7 @@ def _initial_skill(
     state: IncidentState,
     skill_input: DiagnoseIncidentInput,
     incident_record: IncidentRecord,
+    orchestrator_config: OrchestratorConfig,
 ) -> str | None:
     executed = {record.skill_name for record in state.skill_trace}
     blocked = {failure.skill_name for failure in state.dependency_failures}
@@ -388,6 +410,7 @@ def _initial_skill(
             state=state,
             skill_input=skill_input,
             incident_record=incident_record,
+            orchestrator_config=orchestrator_config,
         ):
             continue
         return skill_name
@@ -401,6 +424,7 @@ def _expected_default_followup(
     current_source: str | None,
     skill_input: DiagnoseIncidentInput,
     incident_record: IncidentRecord,
+    orchestrator_config: OrchestratorConfig,
 ) -> str | None:
     if current_source is None:
         return _initial_skill(
@@ -408,6 +432,7 @@ def _expected_default_followup(
             state=state,
             skill_input=skill_input,
             incident_record=incident_record,
+            orchestrator_config=orchestrator_config,
         )
     blocked = {failure.skill_name for failure in state.dependency_failures}
     executed = {record.skill_name for record in state.skill_trace}
@@ -419,6 +444,7 @@ def _expected_default_followup(
             state=state,
             skill_input=skill_input,
             incident_record=incident_record,
+            orchestrator_config=orchestrator_config,
         )
 
     for skill_name in playbook.default_sequence[source_index + 1 :]:
@@ -432,6 +458,7 @@ def _expected_default_followup(
             state=state,
             skill_input=skill_input,
             incident_record=incident_record,
+            orchestrator_config=orchestrator_config,
         ):
             continue
         return skill_name
@@ -445,8 +472,15 @@ def _select_runnable_branch(
     source_skill: str,
     skill_input: DiagnoseIncidentInput,
     incident_record: IncidentRecord,
+    orchestrator_config: OrchestratorConfig,
+    branch_rules: Mapping[str, Sequence[Any]] | None = None,
 ) -> BranchSelectionDecision:
-    decision = select_next_branch(state, playbook=playbook, source_skill=source_skill)
+    decision = select_next_branch(
+        state,
+        playbook=playbook,
+        source_skill=source_skill,
+        branch_rules=branch_rules,
+    )
     if not decision.candidate_scores:
         return decision
 
@@ -462,6 +496,7 @@ def _select_runnable_branch(
             state=state,
             skill_input=skill_input,
             incident_record=incident_record,
+            orchestrator_config=orchestrator_config,
         ):
             if skill_name == decision.selected_skill:
                 return decision
@@ -867,6 +902,7 @@ def _followup_recommendations(
     *,
     skill_input: DiagnoseIncidentInput,
     ranked_causes: Sequence[RankedCause],
+    orchestrator_config: OrchestratorConfig,
 ) -> list[NextAction]:
     recommendations: list[NextAction] = []
     if state.recommended_next_skill is not None:
@@ -878,9 +914,13 @@ def _followup_recommendations(
         )
         return recommendations
 
-    if _capture_trigger_is_authorized(skill_input) and _capture_trigger_is_useful(
-        state,
-        ranked_causes,
+    if (
+        orchestrator_config.allows_capture_triggers()
+        and _capture_trigger_is_authorized(skill_input)
+        and _capture_trigger_is_useful(
+            state,
+            ranked_causes,
+        )
     ):
         recommendations.append(
             NextAction(
@@ -899,6 +939,7 @@ def _build_report(
     ranked_causes: Sequence[RankedCause],
     summary: str,
     result_status: Status,
+    orchestrator_config: OrchestratorConfig,
 ) -> dict[str, Any]:
     recommended_human_actions = _generate_human_actions(
         state,
@@ -909,6 +950,7 @@ def _build_report(
         state,
         skill_input=skill_input,
         ranked_causes=ranked_causes,
+        orchestrator_config=orchestrator_config,
     )
     report = DiagnoseIncidentReport.from_incident_state(
         state,
@@ -959,6 +1001,7 @@ def _replay_result(
     replay_source: str,
 ) -> SkillResult:
     replay_state = state.model_copy(deep=True)
+    orchestrator_config = skill_input.orchestrator_config or OrchestratorConfig()
     ranked_causes = _ranked_causes(replay_state)
     result_status = _result_status(replay_state, ranked_causes)
     summary = _report_summary(replay_state, ranked_causes)
@@ -970,11 +1013,13 @@ def _replay_result(
         ranked_causes=ranked_causes,
         summary=summary,
         result_status=result_status,
+        orchestrator_config=orchestrator_config,
     )
     followup_recommendations = _followup_recommendations(
         replay_state,
         skill_input=skill_input,
         ranked_causes=ranked_causes,
+        orchestrator_config=orchestrator_config,
     )
 
     raw_refs: list[Any] = []
@@ -1056,6 +1101,11 @@ def evaluate_diagnose_incident(
             replay_source="incident_state",
         )
 
+    orchestrator_config = skill_input.orchestrator_config or OrchestratorConfig()
+    scoring_config = orchestrator_config.resolved_scoring_config()
+    resolved_stop_config = stop_config or orchestrator_config.build_stop_condition_config()
+    branch_rules = orchestrator_config.merged_branch_rules()
+
     state = IncidentState(incident_id=_state_incident_id(skill_input))
     incident_record = _bootstrap_incident_record(
         skill_input,
@@ -1068,9 +1118,10 @@ def evaluate_diagnose_incident(
     _classification, selection = classify_and_select_playbook(
         incident_record,
         override=skill_input.playbook_override,
+        playbook_map=orchestrator_config.resolved_playbook_mapping(),
         state=state,
     )
-    playbook = selection.playbook
+    playbook = orchestrator_config.resolve_playbook_definition(selection.playbook_name)
     state.append_trace(
         InvestigationTraceEventType.PLAYBOOK_SELECTION,
         f"Selected playbook {selection.playbook_name} for {state.incident_type.value}.",
@@ -1088,6 +1139,7 @@ def evaluate_diagnose_incident(
         state=state,
         skill_input=skill_input,
         incident_record=incident_record,
+        orchestrator_config=orchestrator_config,
     )
     state.recommend_next(next_skill)
 
@@ -1103,6 +1155,7 @@ def evaluate_diagnose_incident(
             state=state,
             skill_input=skill_input,
             incident_record=incident_record,
+            orchestrator_config=orchestrator_config,
         )
         if not payloads:
             break
@@ -1125,13 +1178,15 @@ def evaluate_diagnose_incident(
             state.append_execution(record)
         step_count += 1
 
-        score_incident_hypotheses(state)
+        score_incident_hypotheses(state, config=scoring_config)
         branch_decision = _select_runnable_branch(
             state,
             playbook=playbook,
             source_skill=next_skill,
             skill_input=skill_input,
             incident_record=incident_record,
+            orchestrator_config=orchestrator_config,
+            branch_rules=branch_rules,
         )
         state.append_trace(
             InvestigationTraceEventType.BRANCH_DECISION,
@@ -1153,6 +1208,7 @@ def evaluate_diagnose_incident(
             current_source=next_skill,
             skill_input=skill_input,
             incident_record=incident_record,
+            orchestrator_config=orchestrator_config,
         )
         if (
             selected_skill is not None
@@ -1165,7 +1221,7 @@ def evaluate_diagnose_incident(
             state,
             playbook=playbook,
             branch_depth=branch_depth,
-            config=stop_config,
+            config=resolved_stop_config,
             previous_score_snapshots=score_snapshots,
         )
         if stop_decision.should_stop:
@@ -1208,11 +1264,13 @@ def evaluate_diagnose_incident(
         ranked_causes=ranked_causes,
         summary=summary,
         result_status=result_status,
+        orchestrator_config=orchestrator_config,
     )
     followup_recommendations = _followup_recommendations(
         state,
         skill_input=skill_input,
         ranked_causes=ranked_causes,
+        orchestrator_config=orchestrator_config,
     )
 
     raw_refs: list[Any] = []

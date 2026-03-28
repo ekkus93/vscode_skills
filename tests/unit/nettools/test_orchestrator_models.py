@@ -14,20 +14,28 @@ from nettools.models import (
 )
 from nettools.orchestrator import (
     DEFAULT_PLAYBOOKS,
+    BranchRule,
+    ConfidenceThresholds,
     DiagnoseIncidentAuditTrail,
     DiagnoseIncidentReport,
     DiagnosticDomain,
     DomainScore,
+    HypothesisScoringConfig,
     IncidentState,
     IncidentType,
+    InvestigationBudgetConfig,
     InvestigationMetricsSummary,
     InvestigationStatus,
     InvestigationTraceEventType,
+    OrchestratorConfig,
     PlaybookDefinition,
+    PolicyControlConfig,
     RankedCause,
+    SamplingDefaultsConfig,
     SkillExecutionRecord,
     StopReason,
     StopReasonCode,
+    StopThresholdConfig,
     get_playbook_definition,
 )
 from pydantic import ValidationError
@@ -275,6 +283,103 @@ def test_investigation_metrics_summary_formats_counts() -> None:
         "diagnosis_domains_by_outcome": {"warn": {"dns_issue": 1}},
         "average_skill_count_per_investigation": 2.0,
     }
+
+
+def test_orchestrator_config_resolves_runtime_overrides() -> None:
+    config = OrchestratorConfig(
+        playbook_mapping={IncidentType.SINGLE_CLIENT: "auth_or_onboarding_issue"},
+        branch_rules={
+            "net.client_health": [
+                BranchRule(
+                    source_skill="net.client_health",
+                    triggering_findings=["LOW_RSSI"],
+                    candidate_next_skills=["net.path_probe"],
+                    branch_priority=7,
+                )
+            ]
+        },
+        stop_thresholds=StopThresholdConfig(
+            high_confidence_threshold=0.91,
+            ambiguity_gap=0.05,
+            ambiguity_min_score=0.51,
+            no_new_information_delta=0.02,
+            no_new_information_window=3,
+        ),
+        domain_score_thresholds=HypothesisScoringConfig(
+            suspected_threshold=0.25,
+            confidence_thresholds=ConfidenceThresholds(
+                medium_min=0.35,
+                high_min=0.8,
+            ),
+        ),
+        investigation_budgets=InvestigationBudgetConfig(
+            max_skill_invocations=3,
+            max_elapsed_seconds=120,
+            max_branch_depth=1,
+        ),
+        sampling_defaults=SamplingDefaultsConfig(
+            max_sampled_clients=2,
+            max_sampled_aps=4,
+            allow_client_sampling=True,
+            allow_ap_sampling=True,
+        ),
+        allowed_optional_branches={
+            "single_client_wifi_issue": {
+                "net.client_health": ["net.dns_latency", "net.ap_rf_health"]
+            }
+        },
+    )
+
+    resolved_mapping = config.resolved_playbook_mapping()
+    resolved_playbook = config.resolve_playbook_definition("single_client_wifi_issue")
+    stop_config = config.build_stop_condition_config()
+    branch_rules = config.merged_branch_rules()
+
+    assert resolved_mapping[IncidentType.SINGLE_CLIENT] == "auth_or_onboarding_issue"
+    assert resolved_playbook.stop_settings.max_skill_invocations == 3
+    assert resolved_playbook.stop_settings.max_elapsed_seconds == 120
+    assert resolved_playbook.stop_settings.max_branch_depth == 1
+    assert resolved_playbook.stop_settings.high_confidence_threshold == 0.91
+    assert resolved_playbook.sampling_settings.max_sampled_clients == 2
+    assert resolved_playbook.sampling_settings.max_sampled_aps == 4
+    assert resolved_playbook.sampling_settings.allow_client_sampling is True
+    assert resolved_playbook.sampling_settings.allow_ap_sampling is True
+    assert resolved_playbook.allowed_branch_transitions["net.client_health"] == [
+        "net.dns_latency",
+        "net.ap_rf_health",
+    ]
+    assert stop_config.ambiguity_gap == 0.05
+    assert stop_config.ambiguity_min_score == 0.51
+    assert stop_config.no_new_information_window == 3
+    assert stop_config.scoring.suspected_threshold == 0.25
+    assert stop_config.scoring.confidence_thresholds.high_min == 0.8
+    assert branch_rules["net.client_health"][0].candidate_next_skills == ["net.path_probe"]
+
+
+def test_orchestrator_config_loads_default_policy_controls() -> None:
+    config = OrchestratorConfig()
+
+    assert config.policy_controls.allow_active_probes is True
+    assert config.policy_controls.allow_capture_triggers is True
+    assert config.policy_controls.allow_external_resolver_comparisons is True
+    assert config.policy_controls.allow_optional_expensive_branches is True
+    assert config.policy_controls.expensive_branch_skills == []
+
+
+def test_orchestrator_config_rejects_unknown_playbook_mapping() -> None:
+    with pytest.raises(ValidationError, match="unknown playbooks"):
+        OrchestratorConfig(
+            playbook_mapping={IncidentType.SINGLE_CLIENT: "not_a_real_playbook"}
+        )
+
+
+def test_orchestrator_config_rejects_unknown_expensive_branch_skill() -> None:
+    with pytest.raises(ValidationError, match="unknown skills"):
+        OrchestratorConfig(
+            policy_controls=PolicyControlConfig(
+                expensive_branch_skills=["net.not_a_real_skill"]
+            )
+        )
 
 
 def test_diagnose_incident_report_formats_ranked_causes() -> None:

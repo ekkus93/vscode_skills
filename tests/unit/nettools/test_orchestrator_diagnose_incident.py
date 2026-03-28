@@ -21,6 +21,8 @@ from nettools.orchestrator import (
     IncidentType,
     InvestigationStatus,
     InvestigationTraceEventType,
+    OrchestratorConfig,
+    PolicyControlConfig,
     ScopeSummary,
     SkillExecutionRecord,
     StopReason,
@@ -200,6 +202,57 @@ def test_diagnose_incident_runs_intake_then_high_confidence_auth_path(
         "diagnosis_domains_by_outcome": {"warn": {"auth_issue": 1}},
         "average_skill_count_per_investigation": 2.0,
     }
+
+
+def test_diagnose_incident_uses_orchestrator_config_playbook_mapping(
+    monkeypatch: Any,
+) -> None:
+    calls: list[str] = []
+    records = {
+        "net.incident_intake": [
+            _skill_record(
+                "net.incident_intake",
+                scope_type=ScopeType.CLIENT,
+                scope_id="client-1",
+                evidence={
+                    "incident_record": {
+                        "incident_id": "inc-config-1",
+                        "summary": "Laptop sees weak Wi-Fi near the lobby",
+                        "site_id": "hq-1",
+                        "client_id": "client-1",
+                    }
+                },
+            )
+        ],
+        "net.auth_8021x_radius": [
+            _skill_record(
+                "net.auth_8021x_radius",
+                scope_type=ScopeType.CLIENT,
+                scope_id="client-1",
+            )
+        ],
+    }
+    monkeypatch.setattr(
+        "nettools.orchestrator.diagnose_incident.invoke_skill",
+        _fake_invoke(records, calls),
+    )
+
+    result = evaluate_diagnose_incident(
+        DiagnoseIncidentInput(
+            site_id="hq-1",
+            client_id="client-1",
+            complaint="My laptop has weak Wi-Fi near the lobby",
+            max_steps=1,
+            orchestrator_config=OrchestratorConfig(
+                playbook_mapping={IncidentType.SINGLE_CLIENT: "auth_or_onboarding_issue"}
+            ),
+        ),
+        AdapterBundle(),
+    )
+
+    assert calls == ["net.incident_intake", "net.auth_8021x_radius"]
+    assert result.evidence["incident_state"]["playbook_used"] == "auth_or_onboarding_issue"
+    assert result.evidence["diagnosis_report"]["playbook_used"] == "auth_or_onboarding_issue"
 
 
 def test_diagnose_incident_records_investigation_trace(
@@ -622,6 +675,103 @@ def test_diagnose_incident_does_not_recommend_capture_trigger_without_authorizat
 
     report = result.evidence["diagnosis_report"]
 
+    assert report["stop_reason"]["code"] == "two_domain_bounded_ambiguity"
+    assert report["recommended_followup_skills"] == []
+    assert result.next_actions == []
+
+
+def test_diagnose_incident_policy_disables_capture_trigger_recommendation(
+    monkeypatch: Any,
+) -> None:
+    calls: list[str] = []
+    records = {
+        "net.incident_intake": [
+            _skill_record(
+                "net.incident_intake",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                evidence={
+                    "incident_record": {
+                        "incident_id": "inc-capture-policy-1",
+                        "summary": (
+                            "Onboarding intermittently fails and clients stall "
+                            "after connect"
+                        ),
+                        "site_id": "hq-1",
+                        "ssid": "CorpWiFi",
+                    }
+                },
+            )
+        ],
+        "net.auth_8021x_radius": [
+            _skill_record(
+                "net.auth_8021x_radius",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                status=Status.WARN,
+                findings=[
+                    _finding("LOW_AUTH_SUCCESS_RATE"),
+                    _finding("AUTH_TIMEOUTS"),
+                ],
+            )
+        ],
+        "net.dhcp_path": [
+            _skill_record(
+                "net.dhcp_path",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                status=Status.WARN,
+                findings=[
+                    _finding("HIGH_DHCP_OFFER_LATENCY"),
+                    _finding("HIGH_DHCP_ACK_LATENCY"),
+                ],
+            )
+        ],
+        "net.dns_latency": [
+            _skill_record(
+                "net.dns_latency",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                status=Status.OK,
+            )
+        ],
+        "net.incident_correlation": [
+            _skill_record(
+                "net.incident_correlation",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                status=Status.OK,
+            )
+        ],
+    }
+    monkeypatch.setattr(
+        "nettools.orchestrator.diagnose_incident.invoke_skill",
+        _fake_invoke(records, calls),
+    )
+
+    result = evaluate_diagnose_incident(
+        DiagnoseIncidentInput(
+            site_id="hq-1",
+            ssid="CorpWiFi",
+            complaint="Onboarding intermittently fails and clients stall after connect",
+            capture_authorized=True,
+            capture_approval_ticket="CHG-1234",
+            orchestrator_config=OrchestratorConfig(
+                policy_controls=PolicyControlConfig(allow_capture_triggers=False)
+            ),
+        ),
+        AdapterBundle(),
+    )
+
+    report = result.evidence["diagnosis_report"]
+
+    assert calls == [
+        "net.incident_intake",
+        "net.auth_8021x_radius",
+        "net.dhcp_path",
+        "net.dns_latency",
+        "net.incident_correlation",
+    ]
     assert report["stop_reason"]["code"] == "two_domain_bounded_ambiguity"
     assert report["recommended_followup_skills"] == []
     assert result.next_actions == []
@@ -1101,6 +1251,177 @@ def test_diagnose_incident_uses_pre_normalized_record_without_intake(
     assert report["playbook_used"] == "site_wide_internal_slowdown"
     assert report["stop_reason"]["code"] == "no_new_information"
     assert report["recommended_followup_skills"] == []
+
+
+def test_diagnose_incident_policy_disables_active_probes(
+    monkeypatch: Any,
+) -> None:
+    calls: list[str] = []
+    records = {
+        "net.change_detection": [
+            _skill_record(
+                "net.change_detection",
+                scope_type=ScopeType.SITE,
+                scope_id="hq-1",
+            )
+        ],
+        "net.stp_loop_anomaly": [
+            _skill_record(
+                "net.stp_loop_anomaly",
+                scope_type=ScopeType.SITE,
+                scope_id="hq-1",
+            )
+        ],
+    }
+    monkeypatch.setattr(
+        "nettools.orchestrator.diagnose_incident.invoke_skill",
+        _fake_invoke(records, calls),
+    )
+
+    result = evaluate_diagnose_incident(
+        DiagnoseIncidentInput(
+            incident_record=IncidentRecord(
+                incident_id="inc-site-no-probes",
+                summary="Everyone on site says the network is slow",
+                site_id="hq-1",
+                wired_also_affected=True,
+            ),
+            max_steps=2,
+            orchestrator_config=OrchestratorConfig(
+                policy_controls=PolicyControlConfig(allow_active_probes=False)
+            ),
+        ),
+        AdapterBundle(),
+    )
+
+    report = result.evidence["diagnosis_report"]
+
+    assert calls == ["net.change_detection", "net.stp_loop_anomaly"]
+    assert "net.path_probe" not in calls
+    assert report["playbook_used"] == "site_wide_internal_slowdown"
+
+
+def test_diagnose_incident_policy_omits_external_resolver_target(
+    monkeypatch: Any,
+) -> None:
+    calls: list[str] = []
+    payloads: list[tuple[str, dict[str, Any]]] = []
+    records = {
+        "net.change_detection": [
+            _skill_record(
+                "net.change_detection",
+                scope_type=ScopeType.SITE,
+                scope_id="hq-1",
+            )
+        ],
+        "net.path_probe": [
+            _skill_record(
+                "net.path_probe",
+                scope_type=ScopeType.SITE,
+                scope_id="hq-1",
+            )
+        ],
+    }
+    monkeypatch.setattr(
+        "nettools.orchestrator.diagnose_incident.invoke_skill",
+        _fake_invoke(records, calls, payloads),
+    )
+
+    evaluate_diagnose_incident(
+        DiagnoseIncidentInput(
+            incident_record=IncidentRecord(
+                incident_id="inc-site-no-external",
+                summary="Everyone on site says the network is slow",
+                site_id="hq-1",
+                wired_also_affected=True,
+            ),
+            path_probe_external_target="1.1.1.1",
+            max_steps=2,
+            orchestrator_config=OrchestratorConfig(
+                policy_controls=PolicyControlConfig(
+                    allow_external_resolver_comparisons=False
+                )
+            ),
+        ),
+        AdapterBundle(),
+    )
+
+    assert calls == ["net.change_detection", "net.path_probe"]
+    assert _payload_subset(payloads, "net.path_probe", "external_target") == [{}]
+
+
+def test_diagnose_incident_policy_disables_optional_expensive_branch(
+    monkeypatch: Any,
+) -> None:
+    calls: list[str] = []
+    records = {
+        "net.change_detection": [
+            _skill_record(
+                "net.change_detection",
+                scope_type=ScopeType.SITE,
+                scope_id="hq-1",
+            )
+        ],
+        "net.path_probe": [
+            _skill_record(
+                "net.path_probe",
+                scope_type=ScopeType.SITE,
+                scope_id="hq-1",
+                status=Status.WARN,
+                findings=[_finding("SITE_WIDE_PATH_LOSS")],
+            )
+        ],
+        "net.stp_loop_anomaly": [
+            _skill_record(
+                "net.stp_loop_anomaly",
+                scope_type=ScopeType.SITE,
+                scope_id="hq-1",
+                status=Status.WARN,
+                findings=[_finding("TOPOLOGY_CHURN")],
+            )
+        ],
+        "net.incident_correlation": [
+            _skill_record(
+                "net.incident_correlation",
+                scope_type=ScopeType.SITE,
+                scope_id="hq-1",
+            )
+        ],
+    }
+    monkeypatch.setattr(
+        "nettools.orchestrator.diagnose_incident.invoke_skill",
+        _fake_invoke(records, calls),
+    )
+
+    result = evaluate_diagnose_incident(
+        DiagnoseIncidentInput(
+            incident_record=IncidentRecord(
+                incident_id="inc-site-expensive-branch",
+                summary="Everyone on site says the network is slow",
+                site_id="hq-1",
+                wired_also_affected=True,
+            ),
+            max_steps=4,
+            orchestrator_config=OrchestratorConfig(
+                policy_controls=PolicyControlConfig(
+                    allow_optional_expensive_branches=False,
+                    expensive_branch_skills=["net.ap_uplink_health"],
+                )
+            ),
+        ),
+        AdapterBundle(),
+    )
+
+    report = result.evidence["diagnosis_report"]
+
+    assert calls == [
+        "net.change_detection",
+        "net.path_probe",
+        "net.stp_loop_anomaly",
+        "net.incident_correlation",
+    ]
+    assert "net.ap_uplink_health" not in calls
+    assert report["playbook_used"] == "site_wide_internal_slowdown"
 
 
 def test_diagnose_incident_formats_unresolved_report_when_no_runnable_skills_exist(

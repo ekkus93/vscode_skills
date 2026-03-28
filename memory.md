@@ -318,6 +318,21 @@
 - Pushed `master` to `origin/master`, advancing the remote from `057ef16` to `cbb0c93`.
 - Verified the post-push worktree was clean before recording this checkpoint.
 
+## 2026-03-28T20:04:35Z - GPT-5.4 - Refreshed full repo validation baseline after Phase 14 policy controls
+- Ran `/home/phil/.local/bin/ruff check .` from the repo root; Ruff passed cleanly.
+- Ran `/home/phil/work/vscode_skills/.venv/bin/python -m mypy .`; MyPy reported success with no issues in 121 source files.
+- Ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest`; the full suite passed with 280 tests.
+
+## 2026-03-28T20:02:28Z - GPT-5.4 - Added orchestrator policy controls on top of the unified config schema
+- Extended `skills/nettools-core/nettools/orchestrator/config.py` with `PolicyControlConfig`, including permissive defaults plus validation for configured expensive optional branch skills.
+- Wired `net.diagnose_incident` to enforce policy gates for active probes, capture-trigger follow-up recommendations, external resolver comparison payloads, and optional expensive branch execution, while preserving existing behavior when no policy overrides are supplied.
+- Added focused model and runtime coverage in `tests/unit/nettools/test_orchestrator_models.py` and `tests/unit/nettools/test_orchestrator_diagnose_incident.py` for default config loading, invalid policy config, capture-trigger suppression, active-probe suppression, external-target omission, and optional expensive-branch suppression; validation passed with `/home/phil/.local/bin/ruff check`, `.venv/bin/python -m mypy`, and `.venv/bin/python -m pytest tests/unit/nettools/test_orchestrator_diagnose_incident.py tests/unit/nettools/test_orchestrator_models.py` (41 passed).
+
+## 2026-03-28T19:53:38Z - GPT-5.4 - Added unified orchestrator config schema
+- Added `skills/nettools-core/nettools/orchestrator/config.py` with a typed `OrchestratorConfig` surface covering playbook mapping, branch-rule overrides, stop thresholds, domain score thresholds, investigation budgets, sampling defaults, and allowed optional branches.
+- Wired `DiagnoseIncidentInput.orchestrator_config` through `net.diagnose_incident` so the unified schema now affects playbook selection, resolved playbook budgets and sampling defaults, hypothesis scoring, branch selection, and stop-condition evaluation.
+- Added focused model and runtime coverage in `tests/unit/nettools/test_orchestrator_models.py` and `tests/unit/nettools/test_orchestrator_diagnose_incident.py`; validation passed with `/home/phil/.local/bin/ruff check` on the touched files, `.venv/bin/python -m mypy` on 4 source files, and `.venv/bin/python -m pytest tests/unit/nettools/test_orchestrator_models.py tests/unit/nettools/test_orchestrator_diagnose_incident.py` (35 passed).
+
 ## 2026-03-28T18:40:47Z - GPT-5.4 - Pushed orchestrator report improvements to origin/master
 - Committed the human-action generator, report-formatting coverage, and roadmap updates as `40b984e` with the message `Improve orchestrator report actions and tests`.
 - Pushed `master` to `origin/master` after a clean validation baseline: Ruff passed, MyPy passed on 120 source files, and pytest passed with 261 tests.
