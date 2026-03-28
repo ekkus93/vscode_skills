@@ -183,6 +183,11 @@
 
 ## 2026-03-28T07:43:32Z - GPT-5.4 - Completed NETTOOLS Phase 0 scaffolding
 - Added repo-level `pyproject.toml` with Ruff, MyPy, and pytest configuration targeting Python 3.10, plus a root `.env.example` with NETTOOLS-specific placeholders.
+
+## 2026-03-28T20:39:32Z - GPT-5.4 - Pushed Phase 17 documentation updates to origin/master
+- Committed the Phase 17 documentation and playbook slice as `e39080f` with the message `Document orchestrator playbooks and extension guide`.
+- Pushed `master` to `origin/master`, advancing the remote from `2506ca2` to `e39080f`.
+- Verified the worktree was clean immediately after the push before recording this checkpoint.
 - Added `skills/nettools-core/` with bootstrap docs (`README.md`, `ARCHITECTURE.md`, `CONFIGURATION.md`, `TESTING.md`), a shared `nettools/` package skeleton, a minimal scaffold CLI, and stdlib JSON logging support.
 - Added Phase 0 `SKILL.md` wrappers and Python helper entrypoints for all planned `net-*` skills: `net-client-health`, `net-ap-rf-health`, `net-roaming-analysis`, `net-dhcp-path`, `net-dns-latency`, `net-auth-8021x-radius`, `net-ap-uplink-health`, `net-stp-loop-anomaly`, `net-path-probe`, `net-segmentation-policy`, `net-incident-intake`, `net-incident-correlation`, `net-change-detection`, and `net-capture-trigger`.
 - Added `tests/unit/nettools/`, `tests/integration/nettools/`, and `tests/fixtures/nettools/` bootstrap directories with placeholder README files.
