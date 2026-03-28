@@ -68,138 +68,138 @@ Implementation assumption for v1:
 ## 3. Phase 1 - Common contracts and shared infrastructure
 
 ### 3.1 Define common enums and constants
-- [ ] Create status enum
-  - [ ] `ok`
-  - [ ] `warn`
-  - [ ] `fail`
-  - [ ] `unknown`
-- [ ] Create confidence enum
-  - [ ] `low`
-  - [ ] `medium`
-  - [ ] `high`
-- [ ] Create scope type enum
-  - [ ] `client`
-  - [ ] `ap`
-  - [ ] `ssid`
-  - [ ] `switch_port`
-  - [ ] `vlan`
-  - [ ] `site`
-  - [ ] `service`
-  - [ ] `path`
-- [ ] Define stable finding code naming convention and registry location
+- [x] Create status enum
+  - [x] `ok`
+  - [x] `warn`
+  - [x] `fail`
+  - [x] `unknown`
+- [x] Create confidence enum
+  - [x] `low`
+  - [x] `medium`
+  - [x] `high`
+- [x] Create scope type enum
+  - [x] `client`
+  - [x] `ap`
+  - [x] `ssid`
+  - [x] `switch_port`
+  - [x] `vlan`
+  - [x] `site`
+  - [x] `service`
+  - [x] `path`
+- [x] Define stable finding code naming convention and registry location
 
 ### 3.2 Implement common output models
-- [ ] Create Pydantic `Finding` model
-  - [ ] code
-  - [ ] severity
-  - [ ] message
-  - [ ] metric
-  - [ ] value
-  - [ ] threshold
-- [ ] Create Pydantic `NextAction` model
-  - [ ] skill
-  - [ ] reason
-- [ ] Create Pydantic `TimeWindow` model
-- [ ] Create Pydantic `SkillResult` model
-  - [ ] status
-  - [ ] skill_name
-  - [ ] scope_type
-  - [ ] scope_id
-  - [ ] summary
-  - [ ] confidence
-  - [ ] observed_at
-  - [ ] time_window
-  - [ ] evidence
-  - [ ] findings
-  - [ ] next_actions
-  - [ ] raw_refs
+- [x] Create Pydantic `Finding` model
+  - [x] code
+  - [x] severity
+  - [x] message
+  - [x] metric
+  - [x] value
+  - [x] threshold
+- [x] Create Pydantic `NextAction` model
+  - [x] skill
+  - [x] reason
+- [x] Create Pydantic `TimeWindow` model
+- [x] Create Pydantic `SkillResult` model
+  - [x] status
+  - [x] skill_name
+  - [x] scope_type
+  - [x] scope_id
+  - [x] summary
+  - [x] confidence
+  - [x] observed_at
+  - [x] time_window
+  - [x] evidence
+  - [x] findings
+  - [x] next_actions
+  - [x] raw_refs
 
 ### 3.3 Implement common input models
-- [ ] Create shared Pydantic input base model
-- [ ] Add validators for:
-  - [ ] time window defaults
-  - [ ] start/end coherence
-  - [ ] mutually helpful identifier resolution hooks
-- [ ] Add optional fields for:
-  - [ ] site_id
-  - [ ] client_id
-  - [ ] client_mac
-  - [ ] ap_id
-  - [ ] ap_name
-  - [ ] ssid
-  - [ ] switch_id
-  - [ ] switch_port
-  - [ ] vlan_id
-  - [ ] include_raw
+- [x] Create shared Pydantic input base model
+- [x] Add validators for:
+  - [x] time window defaults
+  - [x] start/end coherence
+  - [x] mutually helpful identifier resolution hooks
+- [x] Add optional fields for:
+  - [x] site_id
+  - [x] client_id
+  - [x] client_mac
+  - [x] ap_id
+  - [x] ap_name
+  - [x] ssid
+  - [x] switch_id
+  - [x] switch_port
+  - [x] vlan_id
+  - [x] include_raw
 
 ### 3.4 Implement error taxonomy
-- [ ] Create domain error classes
-  - [ ] bad input
-  - [ ] dependency timeout
-  - [ ] dependency unavailable
-  - [ ] insufficient evidence
-  - [ ] unsupported provider operation
-- [ ] Define error-to-result translation helpers
+- [x] Create domain error classes
+  - [x] bad input
+  - [x] dependency timeout
+  - [x] dependency unavailable
+  - [x] insufficient evidence
+  - [x] unsupported provider operation
+- [x] Define error-to-result translation helpers
 
 ### 3.5 Implement logging helpers
-- [ ] Create invocation ID generator
-- [ ] Create structured logging wrapper around stdlib logging
-- [ ] Add JSON formatter for log output
-- [ ] Standardize log fields
-- [ ] Add redaction helpers for secrets / sensitive data
+- [x] Create invocation ID generator
+- [x] Create structured logging wrapper around stdlib logging
+- [x] Add JSON formatter for log output
+- [x] Standardize log fields
+- [x] Add redaction helpers for secrets / sensitive data
 
 ### 3.6 Implement threshold config framework
-- [ ] Create threshold config schema
-- [ ] Define default thresholds for:
-  - [ ] RSSI
-  - [ ] SNR
-  - [ ] retry rate
-  - [ ] channel utilization
-  - [ ] DHCP latency
-  - [ ] DNS latency
-  - [ ] auth timeout
-  - [ ] CRC errors
-  - [ ] topology change churn
+- [x] Create threshold config schema
+- [x] Define default thresholds for:
+  - [x] RSSI
+  - [x] SNR
+  - [x] retry rate
+  - [x] channel utilization
+  - [x] DHCP latency
+  - [x] DNS latency
+  - [x] auth timeout
+  - [x] CRC errors
+  - [x] topology change churn
 
 ---
 
 ## 4. Phase 2 - Normalized data models
 
 ### 4.1 Client and wireless models
-- [ ] Create `ClientSession`
-  - [ ] client identifiers
-  - [ ] AP association
-  - [ ] RSSI / SNR
-  - [ ] retry/loss
-  - [ ] PHY details
-  - [ ] timestamps
-- [ ] Create `AccessPointState`
-- [ ] Create `RadioState`
-- [ ] Create `RoamEvent`
+- [x] Create `ClientSession`
+  - [x] client identifiers
+  - [x] AP association
+  - [x] RSSI / SNR
+  - [x] retry/loss
+  - [x] PHY details
+  - [x] timestamps
+- [x] Create `AccessPointState`
+- [x] Create `RadioState`
+- [x] Create `RoamEvent`
 
 ### 4.2 Wired network models
-- [ ] Create `SwitchPortState`
-- [ ] Create `StpSummary`
-- [ ] Create `MacFlapEvent`
+- [x] Create `SwitchPortState`
+- [x] Create `StpSummary`
+- [x] Create `MacFlapEvent`
 
 ### 4.3 Service models
-- [ ] Create `DhcpSummary`
-- [ ] Create `DnsSummary`
-- [ ] Create `AuthSummary`
-- [ ] Create `SegmentationSummary`
-- [ ] Create `PathProbeResult`
+- [x] Create `DhcpSummary`
+- [x] Create `DnsSummary`
+- [x] Create `AuthSummary`
+- [x] Create `SegmentationSummary`
+- [x] Create `PathProbeResult`
 
 ### 4.4 Support models
-- [ ] Create `IncidentRecord`
-- [ ] Create `ChangeRecord`
-- [ ] Add source metadata fields to every normalized model
-- [ ] Add version field to every normalized model
+- [x] Create `IncidentRecord`
+- [x] Create `ChangeRecord`
+- [x] Add source metadata fields to every normalized model
+- [x] Add version field to every normalized model
 
 ### 4.5 Model tests
-- [ ] Add validation tests for each model
-- [ ] Add partial-data tolerance tests
-- [ ] Add serialization tests
-- [ ] Add contract tests confirming the Pydantic models serialize to the expected skill output shape
+- [x] Add validation tests for each model
+- [x] Add partial-data tolerance tests
+- [x] Add serialization tests
+- [x] Add contract tests confirming the Pydantic models serialize to the expected skill output shape
 
 ---
 

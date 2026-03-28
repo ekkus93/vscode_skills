@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import argparse
-import json
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from nettools.logging import configure_logging
+from pydantic import ValidationError
+
+from .errors import BadInputError, error_to_skill_result
+from .findings import NOT_IMPLEMENTED
+from .logging import configure_logging
+from .models import Confidence, Finding, FindingSeverity, ScopeType, SharedInputBase, SkillResult
 
 
 def utc_now() -> datetime:
@@ -36,99 +40,76 @@ def build_common_parser(skill_name: str, description: str) -> argparse.ArgumentP
     return parser
 
 
-def detect_scope_id(arguments: argparse.Namespace) -> str:
-    for candidate in (
-        arguments.client_id,
-        arguments.client_mac,
-        arguments.ap_id,
-        arguments.ap_name,
-        arguments.switch_port,
-        arguments.switch_id,
-        arguments.ssid,
-        arguments.vlan_id,
-        arguments.site_id,
-    ):
-        if candidate:
-            return str(candidate)
-    return "unscoped"
-
-
-def build_time_window(arguments: argparse.Namespace) -> dict[str, str]:
-    end = utc_now()
-    if arguments.start_time and arguments.end_time:
-        return {
-            "start": arguments.start_time,
-            "end": arguments.end_time,
-        }
-
-    start = end - timedelta(minutes=arguments.time_window_minutes)
-    return {
-        "start": isoformat_utc(start),
-        "end": isoformat_utc(end),
-    }
-
-
-def filtered_inputs(arguments: argparse.Namespace) -> dict[str, Any]:
-    return {
-        key: value
-        for key, value in vars(arguments).items()
-        if key not in {"skill_name", "scope_type"} and value not in (None, False)
-    }
-
-
 def build_placeholder_result(
     *,
     skill_name: str,
-    scope_type: str,
-    arguments: argparse.Namespace,
-) -> dict[str, Any]:
-    return {
-        "status": "unknown",
-        "skill_name": skill_name,
-        "scope_type": scope_type,
-        "scope_id": detect_scope_id(arguments),
-        "summary": f"{skill_name} is scaffolded but not implemented yet.",
-        "confidence": "low",
-        "observed_at": isoformat_utc(utc_now()),
-        "time_window": build_time_window(arguments),
-        "evidence": {
+    scope_type: ScopeType,
+    shared_input: SharedInputBase,
+) -> SkillResult:
+    return SkillResult(
+        status="unknown",
+        skill_name=skill_name,
+        scope_type=scope_type,
+        scope_id=shared_input.scope_id,
+        summary=f"{skill_name} is scaffolded but not implemented yet.",
+        confidence=Confidence.LOW,
+        observed_at=utc_now(),
+        time_window=shared_input.time_window,
+        evidence={
             "scaffold": True,
-            "inputs": filtered_inputs(arguments),
+            "inputs": shared_input.to_input_summary(),
         },
-        "findings": [
-            {
-                "code": "NOT_IMPLEMENTED",
-                "severity": "info",
-                "message": "Phase 0 scaffold only; analysis logic is not implemented yet.",
-                "metric": None,
-                "value": None,
-                "threshold": None,
-            }
+        findings=[
+            Finding(
+                code=NOT_IMPLEMENTED,
+                severity=FindingSeverity.INFO,
+                message="Phase 1 shared contracts are in place, but the skill analysis logic is not implemented yet.",
+            )
         ],
-        "next_actions": [],
-        "raw_refs": [],
-    }
+        next_actions=[],
+        raw_refs=[],
+    )
 
 
 def run_placeholder_skill(skill_name: str, scope_type: str, description: str) -> int:
     logger = configure_logging(skill_name)
     parser = build_common_parser(skill_name, description)
     arguments = parser.parse_args()
+    requested_scope_type = ScopeType(scope_type)
+
+    try:
+        shared_input = SharedInputBase.model_validate(
+            {
+                key: value
+                for key, value in vars(arguments).items()
+                if key not in {"skill_name", "scope_type"}
+            }
+        )
+    except ValidationError as exc:
+        error_result = error_to_skill_result(
+            error=BadInputError(str(exc)),
+            skill_name=skill_name,
+            scope_type=requested_scope_type,
+            scope_id="unscoped",
+            time_window=SharedInputBase().time_window,
+        )
+        print(error_result.model_dump_json(indent=2))
+        return 2
+
     result = build_placeholder_result(
         skill_name=skill_name,
-        scope_type=scope_type,
-        arguments=arguments,
+        scope_type=requested_scope_type,
+        shared_input=shared_input,
     )
 
     logger.info(
         "placeholder skill invoked",
-        extra={
-            "skill_name": skill_name,
-            "scope_type": scope_type,
-            "scope_id": result["scope_id"],
-        },
+        skill_name=skill_name,
+        scope_type=requested_scope_type.value,
+        scope_id=result.scope_id,
+        inputs=shared_input.to_input_summary(),
     )
-    print(json.dumps(result, indent=2))
+    print(result.model_dump_json(indent=2))
     return 0
 
 

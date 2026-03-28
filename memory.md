@@ -143,3 +143,21 @@
 - Added `tests/unit/nettools/`, `tests/integration/nettools/`, and `tests/fixtures/nettools/` bootstrap directories with placeholder README files.
 - Validated the new Python scaffolding with `python -m compileall` and editor diagnostics; smoke-tested `skills/net-client-health/net_client_health.py`, which successfully imported `nettools-core` and emitted structured placeholder output.
 - Marked all Phase 0 items as complete in `docs/NETTOOLS_TODO.md`; the new skill folders are scaffolded but not yet registered in `skills/SKILL_LIST.md` because the actual diagnostic implementations are still pending.
+
+## 2026-03-28T07:52:02Z - GPT-5.4 - Completed NETTOOLS Phase 1 common contracts and shared infrastructure
+- Added a stable finding-code registry in `skills/nettools-core/nettools/findings/registry.py` with uppercase snake-case validation and base codes for `NOT_IMPLEMENTED`, bad input, dependency failures, insufficient evidence, and unsupported provider operations.
+- Added Pydantic Phase 1 contract models in `skills/nettools-core/nettools/models/common.py` and `skills/nettools-core/nettools/models/inputs.py`, covering status/confidence/scope enums, `Finding`, `NextAction`, `TimeWindow`, `SkillResult`, and a shared validated input model with default time-window handling and scope-resolution helpers.
+- Added Phase 1 error taxonomy and error-to-result translation in `skills/nettools-core/nettools/errors.py`.
+- Upgraded logging in `skills/nettools-core/nettools/logging/json_formatter.py` from a raw formatter to a structured stdlib logging wrapper with invocation IDs, standardized fields, and secret redaction helpers.
+- Added threshold configuration defaults in `skills/nettools-core/nettools/config/thresholds.py` for RF, service, and wired diagnostics.
+- Refactored `skills/nettools-core/nettools/cli.py` so scaffolded skill entrypoints now validate inputs through the shared Pydantic model and emit `SkillResult` JSON rather than raw dict payloads.
+- Installed `pydantic` and `pytest` into the repo venv to support the new contracts and test pass.
+- Added Phase 1 unit coverage in `tests/unit/nettools/` for contract serialization, input validation, finding-code validation, error translation, logging redaction, and threshold defaults; `/home/phil/work/vscode_skills/.venv/bin/python -m pytest tests/unit/nettools` passed with 13 tests.
+
+## 2026-03-28T08:00:13Z - GPT-5.4 - Completed NETTOOLS Phase 2 normalized data models
+- Extended `skills/nettools-core/nettools/models/common.py` with `SourceMetadata` and `NormalizedModel` so every normalized entity carries source, version, and observation metadata in a consistent shape.
+- Added Phase 2 normalized model modules for clients, APs, radios, switch ports, STP summaries, MAC flaps, DHCP, DNS, auth, path probes, segmentation, incidents, and changes under `skills/nettools-core/nettools/models/`.
+- Updated `skills/nettools-core/nettools/models/__init__.py` so the shared package exports the full normalized model surface for later adapter and skill phases.
+- Added `tests/unit/nettools/test_phase2_models.py` to cover partial-data tolerance, nested serialization, and source/version metadata behavior across the new models.
+- Re-ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest tests/unit/nettools`; the full NETTOOLS unit suite passed with 16 tests.
+- Marked all Phase 2 items complete in `docs/NETTOOLS_TODO.md`.
