@@ -282,6 +282,7 @@ class DiagnoseIncidentReport(BaseModel):
         result_status: Status,
         summary: str,
         ranked_causes: list[RankedCause] | None = None,
+        recommended_human_actions: list[str] | None = None,
     ) -> DiagnoseIncidentReport:
         ranked = list(ranked_causes or [])
         return cls(
@@ -306,11 +307,7 @@ class DiagnoseIncidentReport(BaseModel):
                 if state.stop_reason is not None
                 else None
             ),
-            recommended_human_actions=(
-                list(state.stop_reason.recommended_human_actions)
-                if state.stop_reason is not None
-                else []
-            ),
+            recommended_human_actions=list(recommended_human_actions or []),
             recommended_followup_skills=(
                 [state.recommended_next_skill]
                 if state.recommended_next_skill is not None

@@ -14,6 +14,7 @@ from nettools.models import (
 )
 from nettools.orchestrator import (
     DEFAULT_PLAYBOOKS,
+    DiagnoseIncidentReport,
     DiagnosticDomain,
     DomainScore,
     IncidentState,
@@ -176,6 +177,71 @@ def test_incident_state_serializes_expected_shape() -> None:
     assert payload["skill_trace"][0]["skill_name"] == "net.client_health"
     assert payload["skill_trace"][0]["raw_result"]["skill_name"] == "net.client_health"
     assert payload["evidence_log"][0]["status"] == "ok"
+
+
+def test_diagnose_incident_report_formats_ranked_causes() -> None:
+    state = IncidentState(
+        incident_id="inc-report-ranked",
+        incident_type=IncidentType.SINGLE_CLIENT,
+        playbook_used="single_client_wifi_issue",
+    )
+    ranked_causes = [
+        RankedCause(
+            domain=DiagnosticDomain.DNS_ISSUE,
+            score=0.82,
+            confidence=Confidence.HIGH,
+            rationale="dns_issue is supported by HIGH_DNS_LATENCY, DNS_TIMEOUT_RATE.",
+            supporting_findings=["HIGH_DNS_LATENCY", "DNS_TIMEOUT_RATE"],
+        ),
+        RankedCause(
+            domain=DiagnosticDomain.AUTH_ISSUE,
+            score=0.41,
+            confidence=Confidence.MEDIUM,
+            rationale="auth_issue remains weakly plausible despite contradicting signals.",
+            supporting_findings=["AUTH_TIMEOUTS"],
+        ),
+    ]
+
+    report = DiagnoseIncidentReport.from_incident_state(
+        state,
+        result_status=Status.WARN,
+        summary="Investigation narrowed the issue to dns_issue with high confidence.",
+        ranked_causes=ranked_causes,
+        recommended_human_actions=["Check DNS resolver latency for client client-42."],
+    )
+    payload = report.model_dump(mode="json")
+
+    assert payload["ranked_causes"][0] == {
+        "domain": "dns_issue",
+        "score": 0.82,
+        "confidence": "high",
+        "rationale": "dns_issue is supported by HIGH_DNS_LATENCY, DNS_TIMEOUT_RATE.",
+        "supporting_findings": ["HIGH_DNS_LATENCY", "DNS_TIMEOUT_RATE"],
+    }
+    assert payload["ranked_causes"][1]["domain"] == "auth_issue"
+    assert payload["confidence"] == "high"
+
+
+def test_diagnose_incident_report_formats_eliminated_domains() -> None:
+    state = IncidentState(
+        incident_id="inc-report-eliminated",
+        incident_type=IncidentType.SITE_WIDE,
+        playbook_used="site_wide_internal_slowdown",
+    )
+    state.eliminate_domain(DiagnosticDomain.ROAMING_ISSUE)
+    state.eliminate_domain(DiagnosticDomain.UNKNOWN)
+
+    report = DiagnoseIncidentReport.from_incident_state(
+        state,
+        result_status=Status.UNKNOWN,
+        summary="Investigation completed without a strong automated diagnosis.",
+        ranked_causes=[],
+        recommended_human_actions=["Pause automation and gather new external evidence."],
+    )
+    payload = report.model_dump(mode="json")
+
+    assert payload["eliminated_domains"] == ["roaming_issue", "unknown"]
+    assert payload["ranked_causes"] == []
 
 
 def test_default_playbooks_load_from_registry() -> None:

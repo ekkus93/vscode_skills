@@ -31,6 +31,7 @@ from .sampling import build_sampling_plan
 from .scoring import score_incident_hypotheses
 from .state import (
     DiagnoseIncidentReport,
+    DiagnosticDomain,
     IncidentState,
     InvestigationStatus,
     RankedCause,
@@ -514,18 +515,267 @@ def _report_summary(
     return "Investigation completed without a strong automated diagnosis."
 
 
+def _append_unique_strings(target: list[str], *values: str | None) -> None:
+    for value in values:
+        if value is None:
+            continue
+        normalized = value.strip()
+        if normalized and normalized not in target:
+            target.append(normalized)
+
+
+def _evidence_values(state: IncidentState, *keys: str) -> list[str]:
+    values: list[str] = []
+    for entry in state.evidence_log:
+        if not isinstance(entry.evidence, dict):
+            continue
+        for key in keys:
+            raw_value = entry.evidence.get(key)
+            if isinstance(raw_value, str):
+                _append_unique_strings(values, raw_value)
+    return values
+
+
+def _scope_context(state: IncidentState, incident_record: IncidentRecord) -> str:
+    parts: list[str] = []
+    if incident_record.site_id:
+        _append_unique_strings(parts, f"site {incident_record.site_id}")
+    if incident_record.ssid:
+        _append_unique_strings(parts, f"SSID {incident_record.ssid}")
+
+    client_targets: list[str] = []
+    _append_unique_strings(
+        client_targets,
+        incident_record.client_id,
+        *state.scope_summary.known_client_ids,
+        *_evidence_values(state, "client_id"),
+    )
+    if client_targets:
+        parts.append(f"client {client_targets[0]}")
+
+    ap_targets: list[str] = []
+    _append_unique_strings(
+        ap_targets,
+        *state.scope_summary.known_ap_names,
+        *state.scope_summary.known_ap_ids,
+        *_evidence_values(state, "ap_name", "ap_id"),
+    )
+    if ap_targets:
+        parts.append(f"AP {ap_targets[0]}")
+
+    switch_ids = _evidence_values(state, "switch_id")
+    switch_ports = _evidence_values(state, "switch_port")
+    if switch_ids and switch_ports:
+        parts.append(f"switch port {switch_ids[0]}:{switch_ports[0]}")
+
+    vlans = _evidence_values(state, "vlan_id")
+    if vlans:
+        parts.append(f"VLAN {vlans[0]}")
+
+    areas: list[str] = []
+    _append_unique_strings(areas, incident_record.location, *state.scope_summary.affected_areas)
+    if areas:
+        parts.append(f"area {areas[0]}")
+    return ", ".join(parts)
+
+
+def _format_findings(findings: Sequence[str], *, limit: int = 4) -> str:
+    unique_findings: list[str] = []
+    _append_unique_strings(unique_findings, *findings)
+    if not unique_findings:
+        return ""
+    return ", ".join(unique_findings[:limit])
+
+
+def _action_findings_for_domain(
+    domain: DiagnosticDomain,
+    findings: Sequence[str],
+) -> list[str]:
+    domain_tokens: dict[DiagnosticDomain, tuple[str, ...]] = {
+        DiagnosticDomain.DNS_ISSUE: ("DNS",),
+        DiagnosticDomain.AUTH_ISSUE: ("AUTH", "RADIUS"),
+        DiagnosticDomain.DHCP_ISSUE: ("DHCP", "SCOPE"),
+        DiagnosticDomain.AP_UPLINK_ISSUE: ("CRC", "FLAP", "UPLINK", "PORT"),
+        DiagnosticDomain.L2_TOPOLOGY_ISSUE: ("STP", "MAC_FLAP", "TOPOLOGY"),
+        DiagnosticDomain.SEGMENTATION_POLICY_ISSUE: ("VLAN", "SEGMENT", "POLICY"),
+        DiagnosticDomain.SITE_WIDE_INTERNAL_LAN_ISSUE: ("PATH", "LAN"),
+        DiagnosticDomain.WAN_OR_EXTERNAL_ISSUE: ("WAN", "EXTERNAL"),
+        DiagnosticDomain.ROAMING_ISSUE: ("ROAM",),
+        DiagnosticDomain.SINGLE_AP_RF: ("CHANNEL", "INTERFERENCE", "SNR", "RSSI"),
+        DiagnosticDomain.SINGLE_CLIENT_RF: (
+            "PACKET_LOSS",
+            "INTERFERENCE",
+            "RETRY",
+            "RSSI",
+            "SNR",
+        ),
+    }
+    tokens = domain_tokens.get(domain)
+    if tokens is None:
+        return list(findings)
+    filtered = [
+        finding for finding in findings if any(token in finding for token in tokens)
+    ]
+    return filtered or list(findings)
+
+
+def _domain_action(
+    domain: DiagnosticDomain,
+    *,
+    context: str,
+    findings: Sequence[str],
+) -> str:
+    evidence = _format_findings(_action_findings_for_domain(domain, findings))
+    context_suffix = f" for {context}" if context else ""
+    evidence_suffix = f"; supporting evidence: {evidence}" if evidence else ""
+
+    if domain is DiagnosticDomain.DNS_ISSUE:
+        return (
+            f"Check DNS resolver latency and timeout path{context_suffix}"
+            f"{evidence_suffix}."
+        )
+    if domain is DiagnosticDomain.AUTH_ISSUE:
+        return (
+            f"Check 802.1X and RADIUS authentication failures{context_suffix}"
+            f"{evidence_suffix}."
+        )
+    if domain is DiagnosticDomain.DHCP_ISSUE:
+        return (
+            f"Check DHCP scope capacity and offer or ack latency{context_suffix}"
+            f"{evidence_suffix}."
+        )
+    if domain is DiagnosticDomain.AP_UPLINK_ISSUE:
+        return (
+            f"Inspect AP uplink errors and switch-port health{context_suffix}"
+            f"{evidence_suffix}."
+        )
+    if domain is DiagnosticDomain.L2_TOPOLOGY_ISSUE:
+        return (
+            f"Inspect STP topology changes and MAC flap activity{context_suffix}"
+            f"{evidence_suffix}."
+        )
+    if domain is DiagnosticDomain.SEGMENTATION_POLICY_ISSUE:
+        return (
+            f"Validate VLAN and segmentation-policy placement{context_suffix}"
+            f"{evidence_suffix}."
+        )
+    if domain is DiagnosticDomain.SITE_WIDE_INTERNAL_LAN_ISSUE:
+        return (
+            f"Inspect internal LAN path loss and site uplinks{context_suffix}"
+            f"{evidence_suffix}."
+        )
+    if domain is DiagnosticDomain.WAN_OR_EXTERNAL_ISSUE:
+        return (
+            f"Check upstream WAN and external reachability{context_suffix}"
+            f"{evidence_suffix}."
+        )
+    if domain is DiagnosticDomain.ROAMING_ISSUE:
+        return (
+            f"Review roaming transitions and neighbor coverage{context_suffix}"
+            f"{evidence_suffix}."
+        )
+    if domain is DiagnosticDomain.SINGLE_AP_RF:
+        return (
+            f"Inspect AP radio utilization and interference{context_suffix}"
+            f"{evidence_suffix}."
+        )
+    if domain is DiagnosticDomain.SINGLE_CLIENT_RF:
+        return (
+            f"Check client RF retries and local interference{context_suffix}"
+            f"{evidence_suffix}."
+        )
+    return f"Review the strongest remaining evidence{context_suffix}{evidence_suffix}."
+
+
+def _ambiguity_action(
+    ranked_causes: Sequence[RankedCause],
+    *,
+    context: str,
+) -> str | None:
+    if len(ranked_causes) < 2:
+        return None
+    lead = ranked_causes[0]
+    runner_up = ranked_causes[1]
+    findings = _format_findings(
+        [
+            *lead.supporting_findings,
+            *runner_up.supporting_findings,
+        ]
+    )
+    context_suffix = f" for {context}" if context else ""
+    evidence_suffix = f"; current evidence: {findings}" if findings else ""
+    return (
+        f"Collect one discriminator between {lead.domain.value} and {runner_up.domain.value}"
+        f"{context_suffix}{evidence_suffix}."
+    )
+
+
+def _dependency_action(state: IncidentState, *, context: str) -> str | None:
+    if not state.dependency_failures:
+        return None
+    failure = state.dependency_failures[-1]
+    context_suffix = f" for {context}" if context else ""
+    error_suffix = f" ({failure.error_type})" if failure.error_type else ""
+    return (
+        f"Restore or bypass the dependency behind {failure.skill_name}{error_suffix}"
+        f"{context_suffix} and rerun the investigation."
+    )
+
+
+def _generate_human_actions(
+    state: IncidentState,
+    *,
+    incident_record: IncidentRecord,
+    ranked_causes: Sequence[RankedCause],
+) -> list[str]:
+    actions: list[str] = []
+    context = _scope_context(state, incident_record)
+
+    if state.stop_reason is not None:
+        if state.stop_reason.code is StopReasonCode.DEPENDENCY_BLOCKED:
+            dependency_action = _dependency_action(state, context=context)
+            if dependency_action is not None:
+                _append_unique_strings(actions, dependency_action)
+        elif state.stop_reason.code is StopReasonCode.TWO_DOMAIN_BOUNDED_AMBIGUITY:
+            ambiguity_action = _ambiguity_action(ranked_causes, context=context)
+            if ambiguity_action is not None:
+                _append_unique_strings(actions, ambiguity_action)
+
+    if not actions and ranked_causes:
+        lead = ranked_causes[0]
+        _append_unique_strings(
+            actions,
+            _domain_action(
+                lead.domain,
+                context=context,
+                findings=lead.supporting_findings,
+            ),
+        )
+
+    if not actions and state.stop_reason is not None:
+        _append_unique_strings(actions, *state.stop_reason.recommended_human_actions)
+    return actions
+
+
 def _build_report(
     state: IncidentState,
     *,
+    incident_record: IncidentRecord,
     ranked_causes: Sequence[RankedCause],
     summary: str,
     result_status: Status,
 ) -> dict[str, Any]:
+    recommended_human_actions = _generate_human_actions(
+        state,
+        incident_record=incident_record,
+        ranked_causes=ranked_causes,
+    )
     report = DiagnoseIncidentReport.from_incident_state(
         state,
         result_status=result_status,
         summary=summary,
         ranked_causes=list(ranked_causes),
+        recommended_human_actions=recommended_human_actions,
     )
     return report.model_dump(mode="json")
 
@@ -560,6 +810,7 @@ def _replay_result(
     scope_type, scope_id = _result_scope(skill_input, incident_record)
     report = _build_report(
         replay_state,
+        incident_record=incident_record,
         ranked_causes=ranked_causes,
         summary=summary,
         result_status=result_status,
@@ -751,6 +1002,7 @@ def evaluate_diagnose_incident(
     scope_type, scope_id = _result_scope(skill_input, incident_record)
     report = _build_report(
         state,
+        incident_record=incident_record,
         ranked_causes=ranked_causes,
         summary=summary,
         result_status=result_status,

@@ -363,20 +363,20 @@ Notes:
 - [x] include confidence
 
 ### 12.2 Implement human action generator
-- [ ] generate evidence-linked actions
-- [ ] prefer narrow, operationally useful actions
-- [ ] avoid vague actions
-- [ ] include specific APs / ports / services when available
+- [x] generate evidence-linked actions
+- [x] prefer narrow, operationally useful actions
+- [x] avoid vague actions
+- [x] include specific APs / ports / services when available
 
 ### 12.3 Implement follow-up skill recommendations
 - [x] suggest next primitive skills if unresolved
 - [ ] suggest capture trigger only when authorized and useful
 
 ### 12.4 Tests
-- [ ] ranked cause formatting test
-- [ ] eliminated domain formatting test
-- [ ] human action specificity test
-- [ ] unresolved report formatting test
+- [x] ranked cause formatting test
+- [x] eliminated domain formatting test
+- [x] human action specificity test
+- [x] unresolved report formatting test
 
 ---
 

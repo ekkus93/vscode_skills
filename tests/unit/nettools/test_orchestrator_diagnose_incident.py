@@ -173,6 +173,13 @@ def test_diagnose_incident_runs_intake_then_high_confidence_auth_path(
     assert report["stop_reason"]["code"] == "high_confidence_diagnosis"
     assert report["ranked_causes"][0]["domain"] == "auth_issue"
     assert report["recommended_followup_skills"] == []
+    assert len(report["recommended_human_actions"]) == 1
+    assert report["recommended_human_actions"][0].startswith(
+        "Check 802.1X and RADIUS authentication failures for site hq-1, client client-1"
+    )
+    assert "LOW_AUTH_SUCCESS_RATE" in report["recommended_human_actions"][0]
+    assert "AUTH_TIMEOUTS" in report["recommended_human_actions"][0]
+    assert "RADIUS_UNREACHABLE" in report["recommended_human_actions"][0]
 
 
 def test_diagnose_incident_runs_single_client_dns_path_end_to_end(
@@ -241,6 +248,13 @@ def test_diagnose_incident_runs_single_client_dns_path_end_to_end(
     assert report["stop_reason"]["code"] == "high_confidence_diagnosis"
     assert report["ranked_causes"][0]["domain"] == "dns_issue"
     assert report["recommended_followup_skills"] == []
+    assert len(report["recommended_human_actions"]) == 1
+    assert report["recommended_human_actions"][0].startswith(
+        "Check DNS resolver latency and timeout path for site hq-1, client client-42"
+    )
+    assert "HIGH_DNS_LATENCY" in report["recommended_human_actions"][0]
+    assert "DNS_TIMEOUT_RATE" in report["recommended_human_actions"][0]
+    assert "HIGH_PACKET_LOSS" not in report["recommended_human_actions"][0]
 
 
 def test_diagnose_incident_reports_unresolved_two_domain_ambiguity(
@@ -336,9 +350,14 @@ def test_diagnose_incident_reports_unresolved_two_domain_ambiguity(
     assert report["ranked_causes"][0]["domain"] == "auth_issue"
     assert report["ranked_causes"][1]["domain"] == "dhcp_issue"
     assert "recommended_next_skill" not in result.evidence["incident_state"]
-    assert report["recommended_human_actions"] == [
-        "Review both candidate domains and collect targeted operator evidence.",
-    ]
+    assert len(report["recommended_human_actions"]) == 1
+    assert report["recommended_human_actions"][0].startswith(
+        "Collect one discriminator between auth_issue and dhcp_issue for site hq-1, SSID CorpWiFi"
+    )
+    assert "LOW_AUTH_SUCCESS_RATE" in report["recommended_human_actions"][0]
+    assert "AUTH_TIMEOUTS" in report["recommended_human_actions"][0]
+    assert "HIGH_DHCP_OFFER_LATENCY" in report["recommended_human_actions"][0]
+    assert "HIGH_DHCP_ACK_LATENCY" in report["recommended_human_actions"][0]
 
 
 def test_diagnose_incident_reports_blocked_dependency_end_to_end(
@@ -434,7 +453,11 @@ def test_diagnose_incident_reports_blocked_dependency_end_to_end(
     assert incident_state["status"] == "blocked"
     assert report["dependency_failures"][0]["skill_name"] == "net.incident_correlation"
     assert report["recommended_human_actions"] == [
-        "Restore or bypass the dependency used by net.incident_correlation before retrying.",
+        (
+            "Restore or bypass the dependency behind net.incident_correlation "
+            "(DependencyUnavailableError) for site hq-1, SSID CorpWiFi "
+            "and rerun the investigation."
+        ),
     ]
 
 
@@ -599,6 +622,63 @@ def test_diagnose_incident_uses_pre_normalized_record_without_intake(
     assert report["playbook_used"] == "site_wide_internal_slowdown"
     assert report["stop_reason"]["code"] == "no_new_information"
     assert report["recommended_followup_skills"] == []
+
+
+def test_diagnose_incident_formats_unresolved_report_when_no_runnable_skills_exist(
+    monkeypatch: Any,
+) -> None:
+    calls: list[str] = []
+    records = {
+        "net.change_detection": [
+            _skill_record(
+                "net.change_detection",
+                scope_type=ScopeType.SITE,
+                scope_id="hq-1",
+            )
+        ],
+    }
+    monkeypatch.setattr(
+        "nettools.orchestrator.diagnose_incident.invoke_skill",
+        _fake_invoke(records, calls),
+    )
+
+    result = evaluate_diagnose_incident(
+        DiagnoseIncidentInput(
+            incident_record=IncidentRecord(
+                incident_id="inc-unresolved-1",
+                summary="Everyone on site reports intermittent slowdown",
+                site_id="hq-1",
+                wired_also_affected=True,
+            ),
+            max_steps=1,
+        ),
+        AdapterBundle(),
+    )
+
+    report = result.evidence["diagnosis_report"]
+    incident_state = result.evidence["incident_state"]
+
+    assert calls == ["net.change_detection"]
+    assert result.status is Status.UNKNOWN
+    assert result.summary == (
+        "Investigation narrowed the issue to unknown with low confidence."
+    )
+    assert report["incident_type"] == "site_wide"
+    assert report["playbook_used"] == "site_wide_internal_slowdown"
+    assert report["summary"] == "Investigation narrowed the issue to unknown with low confidence."
+    assert report["ranked_causes"][0]["domain"] == "unknown"
+    assert report["ranked_causes"][0]["confidence"] == "low"
+    assert "single_client_rf" in report["eliminated_domains"]
+    assert "unknown" not in report["eliminated_domains"]
+    assert report["stop_reason"] == {
+        "code": "human_action_required",
+        "message": "The requested max_steps limit was reached before the investigation converged.",
+    }
+    assert report["recommended_followup_skills"] == []
+    assert report["recommended_human_actions"] == [
+        "Review the strongest remaining evidence for site hq-1.",
+    ]
+    assert incident_state["status"] == "completed"
 
 
 def test_diagnose_incident_samples_area_playbook_targets_from_candidates(

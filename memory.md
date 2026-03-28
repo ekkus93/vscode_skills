@@ -258,6 +258,17 @@
 ## 2026-03-28T09:08:54Z - GPT-5.4 - Fixed shared NETTOOLS MyPy status typing
 - Updated `skills/nettools-core/nettools/cli.py` to pass `Status.UNKNOWN` into scaffold `SkillResult` construction instead of a raw string.
 - Updated `skills/nettools-core/nettools/priority1.py` so `_status_from_findings` returns the `Status` enum rather than raw string values, resolving the remaining shared MyPy `arg-type` errors.
+
+## 2026-03-28T18:27:39Z - GPT-5.4 - Added orchestrator human action generator
+- Updated `skills/nettools-core/nettools/orchestrator/diagnose_incident.py` so `diagnosis_report.recommended_human_actions` is generated from ranked causes, stop reason, dependency failures, and concrete scope identifiers instead of copying generic stop-condition text.
+- Added domain-specific action wording for DNS, auth, DHCP, uplink, topology, segmentation, WAN, roaming, and RF cases, plus dedicated ambiguity and dependency-blocked action generation.
+- Narrowed action evidence to domain-relevant finding codes so resolved DNS actions do not inherit unrelated packet-loss evidence.
+- Validated the checkpoint with focused Ruff, MyPy, and `pytest tests/unit/nettools/test_orchestrator_diagnose_incident.py` (12 passed).
+
+## 2026-03-28T18:32:33Z - GPT-5.4 - Added remaining Phase 12.4 report-formatting tests
+- Added focused `DiagnoseIncidentReport` model coverage in `tests/unit/nettools/test_orchestrator_models.py` for ranked-cause serialization and eliminated-domain formatting.
+- Added an unresolved manual-stop report-formatting case in `tests/unit/nettools/test_orchestrator_diagnose_incident.py` to lock the final report shape for `human_action_required` investigations, including `unknown` ranked-cause formatting and propagated eliminated domains.
+- Validated the touched test modules with focused Ruff, MyPy, and `pytest tests/unit/nettools/test_orchestrator_models.py tests/unit/nettools/test_orchestrator_diagnose_incident.py` (23 passed).
 - Re-ran `mypy --python-executable /home/phil/work/vscode_skills/.venv/bin/python skills/nettools-core/nettools/cli.py skills/nettools-core/nettools/priority1.py skills/nettools-core/nettools/priority3.py`; it passed with no issues in 3 files.
 - Re-ran `pytest tests/unit/nettools -q`; the NETTOOLS unit suite passed with 76 tests.
 
