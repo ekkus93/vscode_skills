@@ -411,3 +411,20 @@
 ## 2026-03-28T14:52:14Z - GPT-5.4 - Prepared NETTOOLS integration-testing and MyPy package-resolution fixes for check-in
 - The pending change set includes the new Phase 9 end-to-end NETTOOLS integration suite, the corresponding checklist updates in `docs/NETTOOLS_TODO.md`, and the minimal `tests/**/__init__.py` package markers required to keep repo-wide MyPy clean with both unit and integration `conftest.py` files present.
 - This exact pending set has already been validated repo-wide with Ruff, MyPy, and pytest before check-in.
+
+## 2026-03-28T14:58:45Z - GPT-5.4 - Added NETTOOLS Phase 9 failure-mode coverage for partial and contradictory evidence
+- Added `tests/integration/nettools/test_failure_modes.py` to verify two partial-data return paths still emit valid results through the shared `invoke_skill(...)` wrapper: history-only client health and expected-mapping-only segmentation policy.
+- Extended `tests/unit/nettools/test_orchestrator_scoring.py` with contradictory multi-source evidence coverage showing that AP-uplink evidence is reduced and annotated with conflicting L2 signals instead of being silently overwritten.
+- Updated `docs/NETTOOLS_TODO.md` so the remaining unchecked Phase 9 failure-mode items are now marked complete.
+- Validation is green both for the focused slice and repo-wide: focused pytest passed with 9 tests, repo-wide Ruff passed, repo-wide MyPy passed on 119 source files, and repo-wide pytest passed with 246 tests.
+
+## 2026-03-28T15:17:00Z - GPT-5.4 - Completed NETTOOLS Phase 9 finding-code documentation coverage
+- Added `docs/NETTOOLS_FINDING_CODES.md` as the checked-in registry for emitted NETTOOLS finding codes, including severity semantics and producer-skill summaries.
+- Added `tests/unit/nettools/test_findings_registry.py` to scan emitted codes from `priority1.py`, `priority2.py`, and `priority3.py` and fail if the documentation registry drifts from the implemented finding set.
+- Updated `docs/NETTOOLS_TODO.md` so the final unchecked Phase 9 output-contract item, verifying that finding codes are stable and documented, is now marked complete.
+- Validation is green for the focused slice and repo-wide: focused pytest passed with 2 tests, repo-wide Ruff passed, repo-wide MyPy passed on 120 source files, and repo-wide pytest passed with 248 tests.
+
+## 2026-03-28T15:20:47Z - GPT-5.4 - Reconfirmed full repo validation after completing NETTOOLS Phase 9
+- Ran `ruff check .` across the repository with no lint findings.
+- Ran `mypy --python-executable /home/phil/work/vscode_skills/.venv/bin/python .` successfully on 120 source files.
+- Ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest` and the full suite passed with 248 tests.

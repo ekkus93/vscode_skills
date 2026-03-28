@@ -157,3 +157,33 @@ def test_confidence_mapping_is_configurable() -> None:
 
     assert confidence_from_score(0.31, thresholds) == Confidence.MEDIUM
     assert decision.domain_scores[DiagnosticDomain.AP_UPLINK_ISSUE].confidence == Confidence.MEDIUM
+
+
+def test_contradictory_multi_source_evidence_reduces_and_records_conflicting_domain() -> None:
+    state = IncidentState(incident_id="inc-score-7")
+    state.skill_trace.extend(
+        [
+            _execution_record(
+                "net.ap_uplink_health",
+                finding_codes=["UPLINK_ERROR_RATE"],
+                status=Status.WARN,
+            ),
+            _execution_record(
+                "net.stp_loop_anomaly",
+                finding_codes=["TOPOLOGY_CHURN", "MAC_FLAP_LOOP_SIGNATURE"],
+                status=Status.FAIL,
+            ),
+        ]
+    )
+
+    decision = score_incident_hypotheses(state)
+
+    uplink_score = decision.domain_scores[DiagnosticDomain.AP_UPLINK_ISSUE]
+    l2_score = decision.domain_scores[DiagnosticDomain.L2_TOPOLOGY_ISSUE]
+
+    assert l2_score.score >= 0.68
+    assert DiagnosticDomain.L2_TOPOLOGY_ISSUE in state.suspected_domains
+    assert DiagnosticDomain.AP_UPLINK_ISSUE not in state.suspected_domains
+    assert "UPLINK_ERROR_RATE" in uplink_score.supporting_findings
+    assert "MAC_FLAP_LOOP_SIGNATURE" in uplink_score.contradicting_findings
+    assert "suppressed_by:l2_topology_issue" in uplink_score.contradicting_findings

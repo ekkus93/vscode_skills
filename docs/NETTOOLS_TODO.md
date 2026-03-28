@@ -697,13 +697,13 @@ Implementation assumption for v1:
 
 ### 11.3 Failure mode testing
 - [x] Test source adapter timeouts
-- [ ] Test partial data returns
+- [x] Test partial data returns
 - [x] Test missing identifiers
-- [ ] Test contradictory data from multiple sources
+- [x] Test contradictory data from multiple sources
 
 ### 11.4 Output contract testing
 - [x] Verify every skill returns valid `SkillResult`
-- [ ] Verify every finding code is stable and documented
+- [x] Verify every finding code is stable and documented
 - [x] Verify all timestamps are ISO-8601
 - [x] Verify `next_actions` reference valid skill names
 
