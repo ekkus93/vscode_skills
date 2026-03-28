@@ -198,6 +198,46 @@
 - Marked all Phase 6 Priority 2 items complete in `docs/NETTOOLS_TODO.md`.
 
 ## 2026-03-28T09:00:11Z - GPT-5.4 - Completed NETTOOLS Phase 7 Priority 3 supporting skills
+
+## 2026-03-28T12:56:59Z - GPT-5.4 - Added orchestrator sampling for area and site playbooks
+- Added `skills/nettools-core/nettools/orchestrator/sampling.py` and wired `net.diagnose_incident` to derive deterministic AP and client samples from explicit candidate pools, accumulated scope state, and evidence such as ranked change records and prior AP/client findings.
+- Extended `ScopeSummary` with structured discovered and sampled client/AP fields plus sampling rationale so broader playbooks can record what they selected instead of only skipping unrunnable branches.
+- Extended `DiagnoseIncidentInput` and the CLI with optional candidate and comparison AP/client lists, and added focused orchestrator tests covering explicit area-playbook sampling and evidence-derived site-wide AP sampling.
+
+## 2026-03-28T13:04:18Z - GPT-5.4 - Strengthened implicit site-wide control AP sampling
+- Updated the AP sampler so `site_wide_internal_slowdown` can reserve an implicit comparison AP when no explicit comparison input is supplied, preferring observed-but-not-directly-implicated APs and falling back to the least implicated candidate only when there are enough APs to keep affected samples.
+- Extended `ScopeSummary` and the diagnosis report sampling summary with `sampled_comparison_aps` so control selections are visible to callers and tests.
+- Added a focused orchestrator test that proves an observed site-wide AP can be promoted to an implicit comparison sample while preserving deterministic ordering of the remaining AP checks.
+
+## 2026-03-28T13:09:07Z - GPT-5.4 - Added implicit comparison area reservation for area-heavy site-wide evidence
+- Extended scope sampling state and the diagnosis report sampling summary with `sampled_comparison_areas`.
+- Updated sampling discovery to harvest area hints from evidence such as `probe_locations`, top-level `source_location`, and resolver result `source_location` fields.
+- The site-wide sampler now reserves one implicit comparison area when it sees at least two distinct areas and the evidence mix is more area-heavy than AP-heavy, while keeping the existing implicit comparison AP behavior intact.
+
+## 2026-03-28T13:13:00Z - GPT-5.4 - Added explicit candidate and comparison area inputs to orchestrator sampling
+- Extended `DiagnoseIncidentInput` and the CLI with `candidate_areas` and `comparison_areas` so operators can seed or override area sampling directly.
+- Extended scope state and diagnosis-report sampling summaries with `sampled_areas`, and updated the sampler so explicit comparison areas override implicit area-control selection while explicit candidate areas become the reported area sample set.
+- Added focused orchestrator coverage for both evidence-driven implicit comparison-area selection and explicit candidate/comparison area inputs; the full NETTOOLS unit suite still passes.
+
+## 2026-03-28T13:18:21Z - GPT-5.4 - Refactored area sampling onto the shared pool structure
+- Added a dedicated internal `AreaSamplingSelection` helper/model in `skills/nettools-core/nettools/orchestrator/sampling.py` so area selection is no longer embedded in the AP sampling path.
+- Added a shared `_SamplingPools` structure so client, AP, and area sampling all follow the same primary-candidate, explicit-control, and implicit-control pattern.
+- Preserved existing visible behavior, including explicit-area precedence and discovered-area ordering, while keeping the full NETTOOLS unit suite green.
+
+## 2026-03-28T13:25:19Z - GPT-5.4 - Added a public validated sampling summary model for reports
+- Added `SamplingSummary` to `skills/nettools-core/nettools/orchestrator/state.py` with all sampled client, AP, area, comparison, and rationale fields validated together.
+- Updated both `IncidentState.build_report(...)` and `net.diagnose_incident` report assembly to populate sampling state through `SamplingSummary.from_scope_summary(...)` instead of constructing raw sampling-summary dicts inline.
+- Added focused model coverage for typed sampling-summary serialization and confirmed the full NETTOOLS unit suite still passes.
+
+## 2026-03-28T13:35:01Z - GPT-5.4 - Replaced the ad hoc top-level diagnose report dict with a typed public model
+- Added a public `DiagnoseIncidentReport` model plus typed `SkillTraceSummaryEntry`, `EvidenceSummaryEntry`, and `StopReasonSummary` helpers in `skills/nettools-core/nettools/orchestrator/state.py`.
+- Updated `net.diagnose_incident` to build the emitted `diagnosis_report` payload through `DiagnoseIncidentReport.from_incident_state(...)` rather than constructing the top-level report as an inline dict.
+- Added focused model coverage for the typed public report assembly and revalidated the full NETTOOLS unit suite successfully.
+
+## 2026-03-28T13:42:26Z - GPT-5.4 - Renamed the older state-level report model to IncidentStateReport
+- Replaced the overlapping `DiagnosisReport` name with `IncidentStateReport` in `skills/nettools-core/nettools/orchestrator/state.py` and updated orchestrator and top-level package exports.
+- Kept `IncidentState.build_report(...)` as the state-snapshot helper, but its return type is now clearly separated from the emitted `DiagnoseIncidentReport` payload model.
+- Added test coverage asserting the renamed state-snapshot type and revalidated the full NETTOOLS unit suite.
 - Added `skills/nettools-core/nettools/priority3.py` with first-pass implementations for `net.incident_intake`, `net.incident_correlation`, `net.change_detection`, and `net.capture_trigger`, including complaint parsing, evidence correlation, recent-change ranking, and gated manual capture-plan generation.
 - Replaced the four Phase 0 placeholder wrapper scripts with real entrypoints wired to the shared Priority 3 runtime and updated their `SKILL.md` files to describe implemented behavior and fixture-backed usage.
 - Added `tests/unit/nettools/test_priority3_skills.py` covering intake parsing, multi-source correlation, recent-change detection, unauthorized versus authorized capture planning, and a CLI smoke case.
@@ -218,6 +258,55 @@
 
 ## 2026-03-28T09:16:05Z - GPT-5.4 - Cleared remaining NETTOOLS Ruff and MyPy backlog
 - Reformatted `tests/unit/nettools/test_priority1_skills.py`, `tests/unit/nettools/test_priority2_skills.py`, and `tests/unit/nettools/test_priority3_skills.py` to eliminate the remaining NETTOOLS Ruff issues in the priority skill test modules.
+
+## 2026-03-28T11:47:11Z - GPT-5.4 - Added NETTOOLS orchestrator branch-rule and branch-selection layer
+- Added `skills/nettools-core/nettools/orchestrator/branch_rules.py` with a validated `BranchRule` model, a `BranchSelectionDecision` model, and deterministic default branch rules grounded in live finding codes from `net.client_health`, `net.ap_rf_health`, `net.path_probe`, `net.stp_loop_anomaly`, `net.auth_8021x_radius`, and `net.segmentation_policy`.
+- Extended `IncidentState` in `skills/nettools-core/nettools/orchestrator/state.py` with `branch_selection_rationale` plus `set_branch_recommendation(...)`, so branch decisions are persisted alongside classification and playbook-selection rationale.
+- Added `tests/unit/nettools/test_orchestrator_branching.py` covering explicit-rule precedence over raw `next_actions`, fallback to playbook order, exhausted-skill avoidance, dependency-failure blocking, and illegal-transition prevention.
+- Validation for this slice is green: focused branching tests pass, `pytest -q tests/unit/nettools` passes with 106 tests, and Ruff is clean on the changed branching files after auto-fixing the top-level NETTOOLS import ordering.
+
+## 2026-03-28T11:51:58Z - GPT-5.4 - Completed remaining explicit NETTOOLS branch rules
+- Extended `skills/nettools-core/nettools/orchestrator/branch_rules.py` with the remaining explicit rules for `net.roaming_analysis`, `net.dhcp_path`, `net.dns_latency`, and `net.ap_uplink_health`, using live finding codes and only legal playbook targets after selector filtering.
+- Added four more selector tests in `tests/unit/nettools/test_orchestrator_branching.py` to cover roaming failure follow-up, DHCP scope-driven segmentation follow-up, DNS-driven legal service follow-up, and AP uplink VLAN mismatch follow-up.
+- Updated `docs/NETWORK_DIAGNOSIS_ORCHESTRATOR_TODO.md` so the remaining explicit-rule items are marked complete and the DHCP branching test item is now done.
+- Validation after the extension is green: `pytest -q tests/unit/nettools/test_orchestrator_branching.py` passes with 10 tests, `pytest -q tests/unit/nettools` passes with 111 tests, and full repo `pytest -q` passes with 199 tests; Ruff and MyPy are clean on the updated branching files.
+
+## 2026-03-28T12:03:24Z - GPT-5.4 - Added NETTOOLS orchestrator hypothesis scoring engine
+- Added `skills/nettools-core/nettools/orchestrator/scoring.py` with configurable confidence thresholds, finding-to-domain scoring rules, clean-skill contradiction rules, cross-domain suppression, deterministic state updates, and ambiguity-preserving scoring via `score_incident_hypotheses(...)`.
+- Extended `IncidentState.set_domain_score(...)` in `skills/nettools-core/nettools/orchestrator/state.py` to accept explicit confidence values so the scoring engine can use configurable thresholds instead of the model defaults.
+- Added `tests/unit/nettools/test_orchestrator_scoring.py` covering DNS score increases, RF score suppression from clean AP/client results, AP uplink score increases from CRC/flap findings, L2 score increases from MAC flap findings, mixed-evidence ambiguity, and configurable confidence thresholds.
+- Updated `docs/NETWORK_DIAGNOSIS_ORCHESTRATOR_TODO.md` so Phase 6 hypothesis scoring tasks are marked complete. Validation is green at `pytest -q tests/unit/nettools/test_orchestrator_scoring.py` with 6 passed, `pytest -q tests/unit/nettools` with 117 passed, and full repo `pytest -q` with 205 passed; Ruff and MyPy are clean on the updated scoring files.
+
+## 2026-03-28T12:17:40Z - GPT-5.4 - Added NETTOOLS orchestrator stop-condition engine
+- Added `skills/nettools-core/nettools/orchestrator/stop_conditions.py` with deterministic stop evaluation for high-confidence diagnosis, two-domain bounded ambiguity, investigation budget exhaustion, dependency blocking, and no-new-information stalls.
+- Expanded `StopReason` in `skills/nettools-core/nettools/orchestrator/state.py` to carry `supporting_context`, `uncertainty_summary`, and `recommended_human_actions`, and added the `NO_NEW_INFORMATION` stop code.
+- Added `tests/unit/nettools/test_orchestrator_stop_conditions.py` covering the five required stop paths and verified compatibility with the existing orchestrator model tests.
+- Updated `docs/NETWORK_DIAGNOSIS_ORCHESTRATOR_TODO.md` so the Phase 7 stop-condition items are marked complete. Validation is green at `pytest -q tests/unit/nettools/test_orchestrator_stop_conditions.py` with 5 passed, `pytest -q tests/unit/nettools` with 122 passed, and full repo `pytest -q` with 210 passed; Ruff and MyPy are clean on the updated stop-condition files.
+
+## 2026-03-28T11:32:06Z - GPT-5.4 - Completed NETTOOLS Phase 8 orchestration utilities
+- Added `skills/nettools-core/nettools/orchestrator/` with a skill registry, shared invocation wrapper, identifier resolution with TTL caching, and deterministic single-user and site-wide chain helpers.
+- Exported the new orchestration utilities from `skills/nettools-core/nettools/__init__.py` so later orchestrator work can reuse the same wrapper and resolver surface.
+- Added `tests/unit/nettools/test_orchestration.py` covering wrapper success and bad-input handling, identifier-resolution caching, and deterministic chain ordering.
+- Marked Phase 8 complete in `docs/NETTOOLS_TODO.md` and revalidated the repo: `ruff check .`, `.venv/bin/python -m mypy .`, and `.venv/bin/python -m pytest -q` all passed, with pytest now at 170 passed.
+
+## 2026-03-28T11:36:41Z - GPT-5.4 - Added orchestrator incident-state and playbook models
+- Added `skills/nettools-core/nettools/orchestrator/state.py` with incident classification enums, diagnostic domains, execution/evidence/dependency models, `IncidentState`, and `DiagnosisReport` built to consume the existing `SkillExecutionRecord` wrapper output.
+- Added `skills/nettools-core/nettools/orchestrator/playbooks.py` with validated `PlaybookDefinition`, stop/sampling settings, and five default playbooks aligned to `NETWORK_DIAGNOSIS_ORCHESTRATOR_SPECS.md`.
+- Re-exported the new orchestrator model layer from both `skills/nettools-core/nettools/orchestrator/__init__.py` and `skills/nettools-core/nettools/__init__.py`.
+- Added `tests/unit/nettools/test_orchestrator_models.py` for serialization, validation, state updates, and playbook loading/invalid-definition cases.
+- Revalidated the repo after the model layer landed: `ruff check .`, `.venv/bin/python -m mypy .`, and `.venv/bin/python -m pytest -q` all passed, with pytest now at 178 passed.
+
+## 2026-03-28T11:41:03Z - GPT-5.4 - Added orchestrator incident classification and playbook selection
+- Added `skills/nettools-core/nettools/orchestrator/classification.py` with normalized intake-to-incident conversion, incident classification heuristics, default playbook mapping, explicit override support, config-driven mapping overrides, and state-updating `classify_and_select_playbook(...)`.
+
+## 2026-03-28T12:39:36Z - GPT-5.4 - Added NETTOOLS main diagnose_incident orchestrator loop
+- Added `skills/nettools-core/nettools/orchestrator/diagnose_incident.py` with `DiagnoseIncidentInput`, optional intake bootstrapping, deterministic playbook execution, runnable-branch filtering for missing identifiers, score snapshot tracking, stop-condition evaluation, and spec-aligned diagnosis report assembly inside the final `SkillResult` evidence.
+- Added the thin wrapper skill under `skills/net-diagnose-incident/` with `net_diagnose_incident.py` and `SKILL.md`.
+- Added `tests/unit/nettools/test_orchestrator_diagnose_incident.py`; validation is green at `ruff check --no-cache` on the changed files, `mypy` on the changed runtime/tests, `pytest -q tests/unit/nettools` with 124 passed, and full repo `pytest -q` with 212 passed.
+- Extended `IncidentState` in `skills/nettools-core/nettools/orchestrator/state.py` with `classification_rationale` and `playbook_selection_rationale` plus helper mutators so selection reasoning is recorded in state.
+- Re-exported the classification/selection helpers from both orchestrator package init modules and added `tests/unit/nettools/test_orchestrator_classification.py` for single-user, single-area, site-wide, auth/onboarding, ambiguous, override, and state-update cases.
+- Updated `docs/NETWORK_DIAGNOSIS_ORCHESTRATOR_TODO.md` to mark the Phase 5 classification and playbook-selection tasks complete.
+- Revalidated the repo after the classification layer landed: `ruff check .`, `.venv/bin/python -m mypy .`, and `.venv/bin/python -m pytest -q` all passed, with pytest now at 189 passed.
 
 ## 2026-03-28T09:58:40Z - GPT-5.4 - Added generated requirements workflow for repo-wide and per-skill installs
 - Added `tools/generate_requirements.py` to derive Python dependency files from `skills/install-manifest.json`, including a root `requirements.txt`, `requirements/README.md`, and per-skill files under `requirements/skills/`.
@@ -249,6 +338,12 @@
 
 ## 2026-03-28T10:00:37Z - GPT-5.4 - Added CI freshness guard for generated requirements outputs
 - Extended `tests/test_generate_requirements.py` with a deterministic freshness check that regenerates outputs into a temp directory and compares them to the committed `requirements.txt` and `requirements/` tree.
+
+## 2026-03-28T13:59:33Z - GPT-5.4 - Repo-wide Ruff, MyPy, and pytest baseline is clean again
+- Fixed the remaining repo-wide Ruff issues by applying import sorting in `skills/nettools-core/nettools/__init__.py` and `skills/nettools-core/nettools/orchestrator/__init__.py`, then wrapping the remaining overlong lines in `skills/nettools-core/nettools/orchestrator/sampling.py` and `tests/unit/nettools/test_orchestrator_diagnose_incident.py`.
+- Re-ran `/home/phil/.local/bin/ruff check .`; it now passes cleanly.
+- Re-ran `/home/phil/.local/bin/mypy --python-executable /home/phil/work/vscode_skills/.venv/bin/python .`; it reports success with no issues in 110 source files.
+- Re-ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest`; the full repository suite passes with 217 tests.
 - The new test fails with an explicit message instructing the developer to run `python3 tools/generate_requirements.py` whenever generated requirements files are stale.
 - There is currently no checked-in `.github/workflows/` file in this repo, so this guard is designed to run inside any CI job or local validation path that already executes pytest.
 - Validation for this change: `/home/phil/work/vscode_skills/.venv/bin/python -m pytest -q tests/test_generate_requirements.py`, `ruff check tests/test_generate_requirements.py`, and `mypy tests/test_generate_requirements.py` all passed.

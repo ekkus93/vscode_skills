@@ -658,21 +658,21 @@ Implementation assumption for v1:
 ## 10. Phase 8 - Orchestration and chaining
 
 ### 10.1 Shared skill execution wrapper
-- [ ] Implement common invocation wrapper
-- [ ] Add logging, timing, and standardized error handling
-- [ ] Ensure every skill emits `next_actions`
+- [x] Implement common invocation wrapper
+- [x] Add logging, timing, and standardized error handling
+- [x] Ensure every skill emits `next_actions`
 
 ### 10.2 Skill chaining examples
-- [ ] Implement single-user complaint chain helper
-- [ ] Implement site-wide slowdown chain helper
-- [ ] Ensure follow-up suggestions are deterministic and testable
+- [x] Implement single-user complaint chain helper
+- [x] Implement site-wide slowdown chain helper
+- [x] Ensure follow-up suggestions are deterministic and testable
 
 ### 10.3 Identifier resolution
-- [ ] Build helper to resolve:
-  - [ ] client MAC ↔ client ID
-  - [ ] AP name ↔ AP ID
-  - [ ] AP ↔ switch port
-- [ ] Add caching for common lookups
+- [x] Build helper to resolve:
+  - [x] client MAC ↔ client ID
+  - [x] AP name ↔ AP ID
+  - [x] AP ↔ switch port
+- [x] Add caching for common lookups
 
 ---
 
