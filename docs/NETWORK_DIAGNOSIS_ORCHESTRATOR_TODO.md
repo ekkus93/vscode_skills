@@ -346,8 +346,8 @@ Notes:
 - [x] single-client end-to-end path test
 - [x] site-wide end-to-end path test
 - [x] auth/onboarding end-to-end path test
-- [ ] unresolved ambiguous end-to-end test
-- [ ] blocked dependency end-to-end test
+- [x] unresolved ambiguous end-to-end test
+- [x] blocked dependency end-to-end test
 
 ---
 

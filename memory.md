@@ -522,3 +522,16 @@
 - When replay input does not include an `incident_record`, the orchestrator now synthesizes a minimal debug incident record from `IncidentState.scope_summary` and the recorded stop/result summaries so replay remains usable from state alone.
 - Added unit tests covering replay execution without live skill calls and CLI replay-file parsing in `tests/unit/nettools/test_orchestrator_diagnose_incident.py`.
 - Revalidated the full repository successfully: `/home/phil/.local/bin/ruff check .` passed, `/home/phil/work/vscode_skills/.venv/bin/python -m mypy .` passed on 120 source files, and `/home/phil/work/vscode_skills/.venv/bin/python -m pytest` passed with 256 tests.
+
+## 2026-03-28T18:06:26Z - GPT-5.4 - Added the unresolved ambiguous end-to-end orchestrator test
+- Added a new end-to-end case in `tests/unit/nettools/test_orchestrator_diagnose_incident.py` covering the `auth_or_onboarding_issue` route `net.incident_intake -> net.auth_8021x_radius -> net.dhcp_path -> net.dns_latency -> net.incident_correlation`.
+- The scenario uses auth and DHCP findings that leave `auth_issue` and `dhcp_issue` at equal plausible scores while the final branch selector has no runnable follow-up left, triggering the `two_domain_bounded_ambiguity` stop condition.
+- Focused validation is green: `/home/phil/work/vscode_skills/.venv/bin/python -m pytest -q tests/unit/nettools/test_orchestrator_diagnose_incident.py` passed with 11 tests, `/home/phil/work/vscode_skills/.venv/bin/python -m mypy tests/unit/nettools/test_orchestrator_diagnose_incident.py` passed, and `/home/phil/.local/bin/ruff check tests/unit/nettools/test_orchestrator_diagnose_incident.py` passed.
+- Updated `docs/NETWORK_DIAGNOSIS_ORCHESTRATOR_TODO.md` so the remaining unresolved ambiguous end-to-end test item is now marked complete.
+
+## 2026-03-28T18:14:05Z - GPT-5.4 - Added the blocked dependency end-to-end orchestrator test
+- Added a new end-to-end case in `tests/unit/nettools/test_orchestrator_diagnose_incident.py` covering the `auth_or_onboarding_issue` route `net.incident_intake -> net.auth_8021x_radius -> net.dhcp_path -> net.dns_latency -> net.incident_correlation` with a terminal dependency failure on `net.incident_correlation`.
+- The scenario relies on the current runnable-branch behavior: `net.segmentation_policy` is skipped because it is not runnable without a client identifier, so the playbook falls through to `net.dns_latency` before the terminal blocked dependency stop.
+- The new test proves the orchestrator reports `dependency_blocked`, emits a blocked final result status, records the dependency failure for `net.incident_correlation`, and returns no further automated follow-up skills.
+- Focused validation is green: `/home/phil/work/vscode_skills/.venv/bin/python -m pytest -q tests/unit/nettools/test_orchestrator_diagnose_incident.py` passed with 12 tests, `/home/phil/work/vscode_skills/.venv/bin/python -m mypy tests/unit/nettools/test_orchestrator_diagnose_incident.py` passed, and `/home/phil/.local/bin/ruff check tests/unit/nettools/test_orchestrator_diagnose_incident.py` passed.
+- Updated `docs/NETWORK_DIAGNOSIS_ORCHESTRATOR_TODO.md` so the remaining blocked dependency end-to-end test item is now marked complete.

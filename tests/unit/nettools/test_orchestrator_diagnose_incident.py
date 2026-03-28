@@ -243,6 +243,201 @@ def test_diagnose_incident_runs_single_client_dns_path_end_to_end(
     assert report["recommended_followup_skills"] == []
 
 
+def test_diagnose_incident_reports_unresolved_two_domain_ambiguity(
+    monkeypatch: Any,
+) -> None:
+    calls: list[str] = []
+    records = {
+        "net.incident_intake": [
+            _skill_record(
+                "net.incident_intake",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                evidence={
+                    "incident_record": {
+                        "incident_id": "inc-ambiguous-1",
+                        "summary": "Cannot connect sometimes and onboarding fails intermittently",
+                        "site_id": "hq-1",
+                        "ssid": "CorpWiFi",
+                        "reconnect_helps": True,
+                    }
+                },
+            )
+        ],
+        "net.auth_8021x_radius": [
+            _skill_record(
+                "net.auth_8021x_radius",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                status=Status.WARN,
+                findings=[
+                    _finding("LOW_AUTH_SUCCESS_RATE"),
+                    _finding("AUTH_TIMEOUTS"),
+                ],
+            )
+        ],
+        "net.dhcp_path": [
+            _skill_record(
+                "net.dhcp_path",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                status=Status.WARN,
+                findings=[
+                    _finding("HIGH_DHCP_OFFER_LATENCY"),
+                    _finding("HIGH_DHCP_ACK_LATENCY"),
+                ],
+            )
+        ],
+        "net.dns_latency": [
+            _skill_record(
+                "net.dns_latency",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                status=Status.OK,
+            )
+        ],
+        "net.incident_correlation": [
+            _skill_record(
+                "net.incident_correlation",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                status=Status.OK,
+            )
+        ],
+    }
+    monkeypatch.setattr(
+        "nettools.orchestrator.diagnose_incident.invoke_skill",
+        _fake_invoke(records, calls),
+    )
+
+    result = evaluate_diagnose_incident(
+        DiagnoseIncidentInput(
+            site_id="hq-1",
+            ssid="CorpWiFi",
+            complaint="Cannot connect sometimes and onboarding fails intermittently",
+        ),
+        AdapterBundle(),
+    )
+
+    report = result.evidence["diagnosis_report"]
+
+    assert calls == [
+        "net.incident_intake",
+        "net.auth_8021x_radius",
+        "net.dhcp_path",
+        "net.dns_latency",
+        "net.incident_correlation",
+    ]
+    assert result.status is Status.WARN
+    assert report["incident_type"] == "auth_or_onboarding"
+    assert report["playbook_used"] == "auth_or_onboarding_issue"
+    assert report["stop_reason"]["code"] == "two_domain_bounded_ambiguity"
+    assert report["recommended_followup_skills"] == []
+    assert report["ranked_causes"][0]["domain"] == "auth_issue"
+    assert report["ranked_causes"][1]["domain"] == "dhcp_issue"
+    assert "recommended_next_skill" not in result.evidence["incident_state"]
+    assert report["recommended_human_actions"] == [
+        "Review both candidate domains and collect targeted operator evidence.",
+    ]
+
+
+def test_diagnose_incident_reports_blocked_dependency_end_to_end(
+    monkeypatch: Any,
+) -> None:
+    calls: list[str] = []
+    records = {
+        "net.incident_intake": [
+            _skill_record(
+                "net.incident_intake",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                evidence={
+                    "incident_record": {
+                        "incident_id": "inc-blocked-1",
+                        "summary": "Cannot connect sometimes and reconnect helps",
+                        "site_id": "hq-1",
+                        "ssid": "CorpWiFi",
+                        "reconnect_helps": True,
+                    }
+                },
+            )
+        ],
+        "net.auth_8021x_radius": [
+            _skill_record(
+                "net.auth_8021x_radius",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                status=Status.WARN,
+                findings=[
+                    _finding("LOW_AUTH_SUCCESS_RATE"),
+                    _finding("AUTH_TIMEOUTS"),
+                ],
+            )
+        ],
+        "net.dhcp_path": [
+            _skill_record(
+                "net.dhcp_path",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                status=Status.WARN,
+                findings=[_finding("SCOPE_UTILIZATION_HIGH")],
+            )
+        ],
+        "net.dns_latency": [
+            _skill_record(
+                "net.dns_latency",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                status=Status.WARN,
+                findings=[_finding("HIGH_DNS_LATENCY")],
+            )
+        ],
+        "net.incident_correlation": [
+            _skill_record(
+                "net.incident_correlation",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                status=Status.UNKNOWN,
+                error_type="DependencyUnavailableError",
+            )
+        ],
+    }
+    monkeypatch.setattr(
+        "nettools.orchestrator.diagnose_incident.invoke_skill",
+        _fake_invoke(records, calls),
+    )
+
+    result = evaluate_diagnose_incident(
+        DiagnoseIncidentInput(
+            site_id="hq-1",
+            ssid="CorpWiFi",
+            complaint="Cannot connect sometimes and reconnect helps",
+        ),
+        AdapterBundle(),
+    )
+
+    report = result.evidence["diagnosis_report"]
+    incident_state = result.evidence["incident_state"]
+
+    assert calls == [
+        "net.incident_intake",
+        "net.auth_8021x_radius",
+        "net.dhcp_path",
+        "net.dns_latency",
+        "net.incident_correlation",
+    ]
+    assert result.status is Status.FAIL
+    assert report["incident_type"] == "auth_or_onboarding"
+    assert report["playbook_used"] == "auth_or_onboarding_issue"
+    assert report["stop_reason"]["code"] == "dependency_blocked"
+    assert report["recommended_followup_skills"] == []
+    assert incident_state["status"] == "blocked"
+    assert report["dependency_failures"][0]["skill_name"] == "net.incident_correlation"
+    assert report["recommended_human_actions"] == [
+        "Restore or bypass the dependency used by net.incident_correlation before retrying.",
+    ]
+
+
 def test_diagnose_incident_replays_serialized_state_without_live_execution(
     monkeypatch: Any,
 ) -> None:
