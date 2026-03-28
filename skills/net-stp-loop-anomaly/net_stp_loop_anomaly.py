@@ -8,14 +8,8 @@ CORE_DIR = Path(__file__).resolve().parents[1] / "nettools-core"
 if str(CORE_DIR) not in sys.path:
     sys.path.insert(0, str(CORE_DIR))
 
-from nettools.cli import run_placeholder_skill
+from nettools.priority1 import main_stp_loop_anomaly
 
 
 if __name__ == "__main__":
-    raise SystemExit(
-        run_placeholder_skill(
-            skill_name="net.stp_loop_anomaly",
-            scope_type="site",
-            description="Detect STP instability and switching-loop symptoms.",
-        )
-    )
+    raise SystemExit(main_stp_loop_anomaly())

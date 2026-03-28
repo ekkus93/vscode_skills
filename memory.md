@@ -179,3 +179,12 @@
 - Added `tests/fixtures/nettools/phase4_scenarios.json` with representative weak-signal, overloaded-AP, DHCP, DNS, auth, uplink, STP, and VLAN/policy scenarios for shared fixture reuse.
 - Added `tests/unit/nettools/test_phase4_analysis.py` and re-ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest tests/unit/nettools`; the full NETTOOLS unit suite passed with 24 tests.
 - Marked all Phase 4 items complete in `docs/NETTOOLS_TODO.md`.
+
+## 2026-03-28T08:27:15Z - GPT-5.4 - Completed NETTOOLS Phase 5 Priority 1 skills
+- Replaced the six Phase 0 placeholder Priority 1 wrappers with real first-pass implementations for `net.client_health`, `net.ap_rf_health`, `net.dhcp_path`, `net.dns_latency`, `net.ap_uplink_health`, and `net.stp_loop_anomaly` using a shared `nettools.priority1` runtime module.
+- Added validated skill-specific input models, fixture-backed stub adapter loading, structured error-to-result handling, and deterministic `SkillResult` generation for all six skills.
+- Implemented evidence collection, threshold-driven findings, and follow-up `next_actions` using the shared Phase 1-4 contracts, adapters, and analysis utilities instead of scaffold output.
+- Added comprehensive Phase 5 unit coverage in `tests/unit/nettools/test_priority1_skills.py`, including healthy, degraded, missing-data, dependency-failure, and CLI smoke-test cases across the six Priority 1 skills.
+- Updated the six Priority 1 `SKILL.md` files so they no longer describe the helpers as scaffolds and now document fixture-backed execution when no live provider implementation is configured yet.
+- Re-ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest tests/unit/nettools`; the full NETTOOLS unit suite passed with 51 tests.
+- Marked all Phase 5 Priority 1 items complete in `docs/NETTOOLS_TODO.md`.

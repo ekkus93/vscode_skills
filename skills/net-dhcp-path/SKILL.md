@@ -13,16 +13,18 @@ Use this skill to determine whether DHCP is slow, failing, or unstable for a cli
 
 ## Status
 
-Phase 0 scaffold. The wrapper and helper entrypoint exist, but the diagnostic implementation is not complete yet.
+Implemented first-pass Priority 1 skill. The helper now evaluates DHCP latency, timeouts, missing ACKs, scope pressure, and relay mismatches using the shared NETTOOLS contracts and analysis utilities.
 
 ## Commands
 
 ```bash
 python3 "{baseDir}/net_dhcp_path.py" --client-id "client-123"
 python3 "{baseDir}/net_dhcp_path.py" --ssid "CorpWiFi" --vlan-id "110" --site-id "hq-1"
+python3 "{baseDir}/net_dhcp_path.py" --client-id "client-123" --fixture-file "/path/to/fixtures.json"
 ```
 
 ## Constraints
 
 - Use the bundled helper.
 - Do not guess DHCP transaction data or relay-path findings.
+- If no provider implementation is configured, use fixture-backed test mode rather than inventing data.

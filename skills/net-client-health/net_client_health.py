@@ -8,14 +8,8 @@ CORE_DIR = Path(__file__).resolve().parents[1] / "nettools-core"
 if str(CORE_DIR) not in sys.path:
     sys.path.insert(0, str(CORE_DIR))
 
-from nettools.cli import run_placeholder_skill
+from nettools.priority1 import main_client_health
 
 
 if __name__ == "__main__":
-    raise SystemExit(
-        run_placeholder_skill(
-            skill_name="net.client_health",
-            scope_type="client",
-            description="Assess Wi-Fi client session health using normalized RF and retry telemetry.",
-        )
-    )
+    raise SystemExit(main_client_health())

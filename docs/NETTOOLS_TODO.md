@@ -317,193 +317,193 @@ Implementation assumption for v1:
 ## 7.1 Implement `net.client_health`
 
 ### 7.1.1 Input/output plumbing
-- [ ] Create `skills/net-client-health/SKILL.md`
-- [ ] Create `skills/net-client-health/net_client_health.py`
-- [ ] Create client health input model
-- [ ] Wire shared result model
-- [ ] Validate client identifier resolution path
+- [x] Create `skills/net-client-health/SKILL.md`
+- [x] Create `skills/net-client-health/net_client_health.py`
+- [x] Create client health input model
+- [x] Wire shared result model
+- [x] Validate client identifier resolution path
 
 ### 7.1.2 Data collection
-- [ ] Query wireless adapter for current client session
-- [ ] Query historical session data if available
-- [ ] Resolve associated AP and channel details
+- [x] Query wireless adapter for current client session
+- [x] Query historical session data if available
+- [x] Resolve associated AP and channel details
 
 ### 7.1.3 Analysis logic
-- [ ] Evaluate RSSI against threshold
-- [ ] Evaluate SNR against threshold
-- [ ] Evaluate retry rate
-- [ ] Evaluate packet loss
-- [ ] Evaluate disconnect/reconnect frequency
-- [ ] Evaluate possible sticky-client clues if neighbor/roam context exists
+- [x] Evaluate RSSI against threshold
+- [x] Evaluate SNR against threshold
+- [x] Evaluate retry rate
+- [x] Evaluate packet loss
+- [x] Evaluate disconnect/reconnect frequency
+- [x] Evaluate possible sticky-client clues if neighbor/roam context exists
 
 ### 7.1.4 Findings and recommendations
-- [ ] Emit finding codes for each issue type
-- [ ] Recommend `net.ap_rf_health` for AP/channel issues
-- [ ] Recommend `net.roaming_analysis` for movement-related issues
-- [ ] Recommend `net.ap_uplink_health` if AP-side pattern suspected
+- [x] Emit finding codes for each issue type
+- [x] Recommend `net.ap_rf_health` for AP/channel issues
+- [x] Recommend `net.roaming_analysis` for movement-related issues
+- [x] Recommend `net.ap_uplink_health` if AP-side pattern suspected
 
 ### 7.1.5 Tests
-- [ ] Healthy client test
-- [ ] Weak signal test
-- [ ] High retry test
-- [ ] Missing client test
-- [ ] Adapter timeout test
+- [x] Healthy client test
+- [x] Weak signal test
+- [x] High retry test
+- [x] Missing client test
+- [x] Adapter timeout test
 
 ## 7.2 Implement `net.ap_rf_health`
 
 ### 7.2.1 Input/output plumbing
-- [ ] Create `skills/net-ap-rf-health/SKILL.md`
-- [ ] Create `skills/net-ap-rf-health/net_ap_rf_health.py`
-- [ ] Create AP RF health input model
+- [x] Create `skills/net-ap-rf-health/SKILL.md`
+- [x] Create `skills/net-ap-rf-health/net_ap_rf_health.py`
+- [x] Create AP RF health input model
 
 ### 7.2.2 Data collection
-- [ ] Query AP state
-- [ ] Query radio state
-- [ ] Query neighbor overlap / surrounding AP data if available
-- [ ] Query AP event history for radio resets
+- [x] Query AP state
+- [x] Query radio state
+- [x] Query neighbor overlap / surrounding AP data if available
+- [x] Query AP event history for radio resets
 
 ### 7.2.3 Analysis logic
-- [ ] Check channel utilization
-- [ ] Check radio client load
-- [ ] Check channel width suitability
-- [ ] Check radio reset frequency
-- [ ] Check overlap/interference indicators if data exists
+- [x] Check channel utilization
+- [x] Check radio client load
+- [x] Check channel width suitability
+- [x] Check radio reset frequency
+- [x] Check overlap/interference indicators if data exists
 
 ### 7.2.4 Findings and recommendations
-- [ ] Emit channel utilization findings
-- [ ] Emit overload findings
-- [ ] Emit radio instability findings
-- [ ] Recommend client follow-up or site-wide RF follow-up
+- [x] Emit channel utilization findings
+- [x] Emit overload findings
+- [x] Emit radio instability findings
+- [x] Recommend client follow-up or site-wide RF follow-up
 
 ### 7.2.5 Tests
-- [ ] Healthy AP test
-- [ ] High utilization test
-- [ ] Radio reset test
-- [ ] Missing AP test
+- [x] Healthy AP test
+- [x] High utilization test
+- [x] Radio reset test
+- [x] Missing AP test
 
 ## 7.3 Implement `net.dhcp_path`
 
 ### 7.3.1 Input/output plumbing
-- [ ] Create `skills/net-dhcp-path/SKILL.md`
-- [ ] Create `skills/net-dhcp-path/net_dhcp_path.py`
-- [ ] Create DHCP path input model
+- [x] Create `skills/net-dhcp-path/SKILL.md`
+- [x] Create `skills/net-dhcp-path/net_dhcp_path.py`
+- [x] Create DHCP path input model
 
 ### 7.3.2 Data collection
-- [ ] Query DHCP adapter for transaction summaries
-- [ ] Query scope utilization if available
-- [ ] Query relay metadata if available
+- [x] Query DHCP adapter for transaction summaries
+- [x] Query scope utilization if available
+- [x] Query relay metadata if available
 
 ### 7.3.3 Analysis logic
-- [ ] Evaluate success rate
-- [ ] Evaluate discover→offer latency
-- [ ] Evaluate request→ack latency
-- [ ] Detect missing offer / missing ACK patterns
-- [ ] Detect scope exhaustion / relay mismatch if data allows
+- [x] Evaluate success rate
+- [x] Evaluate discover→offer latency
+- [x] Evaluate request→ack latency
+- [x] Detect missing offer / missing ACK patterns
+- [x] Detect scope exhaustion / relay mismatch if data allows
 
 ### 7.3.4 Findings and recommendations
-- [ ] Emit latency findings
-- [ ] Emit timeout findings
-- [ ] Emit scope exhaustion findings
-- [ ] Recommend segmentation or service follow-up as needed
+- [x] Emit latency findings
+- [x] Emit timeout findings
+- [x] Emit scope exhaustion findings
+- [x] Recommend segmentation or service follow-up as needed
 
 ### 7.3.5 Tests
-- [ ] Healthy DHCP path test
-- [ ] Slow offer test
-- [ ] Missing ACK test
-- [ ] Scope exhaustion warning test
+- [x] Healthy DHCP path test
+- [x] Slow offer test
+- [x] Missing ACK test
+- [x] Scope exhaustion warning test
 
 ## 7.4 Implement `net.dns_latency`
 
 ### 7.4.1 Input/output plumbing
-- [ ] Create `skills/net-dns-latency/SKILL.md`
-- [ ] Create `skills/net-dns-latency/net_dns_latency.py`
-- [ ] Create DNS latency input model
+- [x] Create `skills/net-dns-latency/SKILL.md`
+- [x] Create `skills/net-dns-latency/net_dns_latency.py`
+- [x] Create DNS latency input model
 
 ### 7.4.2 Data collection
-- [ ] Query DNS adapter or run probe-based lookups
-- [ ] Support resolver-by-resolver results
-- [ ] Support optional comparison across source locations
+- [x] Query DNS adapter or run probe-based lookups
+- [x] Support resolver-by-resolver results
+- [x] Support optional comparison across source locations
 
 ### 7.4.3 Analysis logic
-- [ ] Compute average latency
-- [ ] Compute timeout rate
-- [ ] Distinguish slow DNS from general IP reachability issues
-- [ ] Support sample query set
+- [x] Compute average latency
+- [x] Compute timeout rate
+- [x] Distinguish slow DNS from general IP reachability issues
+- [x] Support sample query set
 
 ### 7.4.4 Findings and recommendations
-- [ ] Emit slow resolver findings
-- [ ] Emit timeout findings
-- [ ] Recommend path probe if service reachability is suspect
+- [x] Emit slow resolver findings
+- [x] Emit timeout findings
+- [x] Recommend path probe if service reachability is suspect
 
 ### 7.4.5 Tests
-- [ ] Healthy DNS test
-- [ ] Slow DNS test
-- [ ] Timeout-heavy DNS test
-- [ ] Resolver unavailable test
+- [x] Healthy DNS test
+- [x] Slow DNS test
+- [x] Timeout-heavy DNS test
+- [x] Resolver unavailable test
 
 ## 7.5 Implement `net.ap_uplink_health`
 
 ### 7.5.1 Input/output plumbing
-- [ ] Create `skills/net-ap-uplink-health/SKILL.md`
-- [ ] Create `skills/net-ap-uplink-health/net_ap_uplink_health.py`
-- [ ] Create AP uplink input model
+- [x] Create `skills/net-ap-uplink-health/SKILL.md`
+- [x] Create `skills/net-ap-uplink-health/net_ap_uplink_health.py`
+- [x] Create AP uplink input model
 
 ### 7.5.2 Data collection
-- [ ] Resolve AP to switch and port
-- [ ] Query port operational status
-- [ ] Query speed / duplex
-- [ ] Query error counters
-- [ ] Query PoE status
-- [ ] Query flap history
-- [ ] Query VLAN/trunk/access state
+- [x] Resolve AP to switch and port
+- [x] Query port operational status
+- [x] Query speed / duplex
+- [x] Query error counters
+- [x] Query PoE status
+- [x] Query flap history
+- [x] Query VLAN/trunk/access state
 
 ### 7.5.3 Analysis logic
-- [ ] Detect under-speed link
-- [ ] Detect CRC or input/output errors
-- [ ] Detect flapping
-- [ ] Detect PoE instability
-- [ ] Detect VLAN mismatch
+- [x] Detect under-speed link
+- [x] Detect CRC or input/output errors
+- [x] Detect flapping
+- [x] Detect PoE instability
+- [x] Detect VLAN mismatch
 
 ### 7.5.4 Findings and recommendations
-- [ ] Emit switch-port problem findings
-- [ ] Recommend AP RF follow-up if uplink looks clean but user symptoms persist
+- [x] Emit switch-port problem findings
+- [x] Recommend AP RF follow-up if uplink looks clean but user symptoms persist
 
 ### 7.5.5 Tests
-- [ ] Healthy uplink test
-- [ ] 100 Mbps mismatch test
-- [ ] CRC-heavy test
-- [ ] flapping test
-- [ ] AP-to-port resolution failure test
+- [x] Healthy uplink test
+- [x] 100 Mbps mismatch test
+- [x] CRC-heavy test
+- [x] flapping test
+- [x] AP-to-port resolution failure test
 
 ## 7.6 Implement `net.stp_loop_anomaly`
 
 ### 7.6.1 Input/output plumbing
-- [ ] Create `skills/net-stp-loop-anomaly/SKILL.md`
-- [ ] Create `skills/net-stp-loop-anomaly/net_stp_loop_anomaly.py`
-- [ ] Create STP anomaly input model
+- [x] Create `skills/net-stp-loop-anomaly/SKILL.md`
+- [x] Create `skills/net-stp-loop-anomaly/net_stp_loop_anomaly.py`
+- [x] Create STP anomaly input model
 
 ### 7.6.2 Data collection
-- [ ] Query STP/topology event summaries
-- [ ] Query MAC flap events
-- [ ] Query suspect interface data if available
+- [x] Query STP/topology event summaries
+- [x] Query MAC flap events
+- [x] Query suspect interface data if available
 
 ### 7.6.3 Analysis logic
-- [ ] Detect unusual topology churn
-- [ ] Detect root changes
-- [ ] Detect MAC flap severity
-- [ ] Surface suspect ports
-- [ ] Score likely loop severity
+- [x] Detect unusual topology churn
+- [x] Detect root changes
+- [x] Detect MAC flap severity
+- [x] Surface suspect ports
+- [x] Score likely loop severity
 
 ### 7.6.4 Findings and recommendations
-- [ ] Emit topology churn findings
-- [ ] Emit probable loop findings
-- [ ] Recommend operator review and targeted switch investigation
+- [x] Emit topology churn findings
+- [x] Emit probable loop findings
+- [x] Recommend operator review and targeted switch investigation
 
 ### 7.6.5 Tests
-- [ ] Stable topology test
-- [ ] topology churn warning test
-- [ ] MAC flap failure test
-- [ ] missing switch data test
+- [x] Stable topology test
+- [x] topology churn warning test
+- [x] MAC flap failure test
+- [x] missing switch data test
 
 ---
 
