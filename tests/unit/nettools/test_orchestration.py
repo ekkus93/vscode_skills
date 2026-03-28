@@ -276,7 +276,7 @@ def test_invoke_skill_normalizes_malformed_result(
 ) -> None:
     def fake_handler(skill_input: ClientHealthInput, adapters: AdapterBundle) -> SkillResult:
         del skill_input, adapters
-        return cast(Any, {"skill_name": "net.client_health"})
+        return cast(SkillResult, {"skill_name": "net.client_health"})
 
     monkeypatch.setitem(
         SKILL_REGISTRY,

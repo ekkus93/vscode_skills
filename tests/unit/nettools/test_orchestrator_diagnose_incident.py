@@ -164,6 +164,74 @@ def test_diagnose_incident_runs_intake_then_high_confidence_auth_path(
     assert report["recommended_followup_skills"] == []
 
 
+def test_diagnose_incident_runs_single_client_dns_path_end_to_end(
+    monkeypatch: Any,
+) -> None:
+    calls: list[str] = []
+    records = {
+        "net.incident_intake": [
+            _skill_record(
+                "net.incident_intake",
+                scope_type=ScopeType.CLIENT,
+                scope_id="client-42",
+                evidence={
+                    "incident_record": {
+                        "incident_id": "inc-single-1",
+                        "summary": "A single laptop has intermittent access failures",
+                        "site_id": "hq-1",
+                        "client_id": "client-42",
+                    }
+                },
+            )
+        ],
+        "net.client_health": [
+            _skill_record(
+                "net.client_health",
+                scope_type=ScopeType.CLIENT,
+                scope_id="client-42",
+                status=Status.WARN,
+                findings=[_finding("HIGH_PACKET_LOSS")],
+            )
+        ],
+        "net.dns_latency": [
+            _skill_record(
+                "net.dns_latency",
+                scope_type=ScopeType.CLIENT,
+                scope_id="client-42",
+                status=Status.WARN,
+                findings=[
+                    _finding("HIGH_DNS_LATENCY"),
+                    _finding("DNS_TIMEOUT_RATE"),
+                ],
+            )
+        ],
+    }
+    monkeypatch.setattr(
+        "nettools.orchestrator.diagnose_incident.invoke_skill",
+        _fake_invoke(records, calls),
+    )
+
+    result = evaluate_diagnose_incident(
+        DiagnoseIncidentInput(
+            site_id="hq-1",
+            client_id="client-42",
+            complaint="One laptop keeps timing out on web lookups and general browsing",
+        ),
+        AdapterBundle(),
+    )
+
+    report = result.evidence["diagnosis_report"]
+
+    assert calls == ["net.incident_intake", "net.client_health", "net.dns_latency"]
+    assert result.skill_name == "net.diagnose_incident"
+    assert result.status is Status.WARN
+    assert report["incident_type"] == "single_client"
+    assert report["playbook_used"] == "single_client_wifi_issue"
+    assert report["stop_reason"]["code"] == "high_confidence_diagnosis"
+    assert report["ranked_causes"][0]["domain"] == "dns_issue"
+    assert report["recommended_followup_skills"] == []
+
+
 def test_diagnose_incident_uses_pre_normalized_record_without_intake(
     monkeypatch: Any,
 ) -> None:

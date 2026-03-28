@@ -343,7 +343,7 @@ Notes:
 - [ ] support replay/debug mode
 
 ### 11.4 Tests
-- [ ] single-client end-to-end path test
+- [x] single-client end-to-end path test
 - [x] site-wide end-to-end path test
 - [x] auth/onboarding end-to-end path test
 - [ ] unresolved ambiguous end-to-end test
