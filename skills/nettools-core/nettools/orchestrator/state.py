@@ -283,6 +283,7 @@ class DiagnoseIncidentReport(BaseModel):
         summary: str,
         ranked_causes: list[RankedCause] | None = None,
         recommended_human_actions: list[str] | None = None,
+        recommended_followup_skills: list[str] | None = None,
     ) -> DiagnoseIncidentReport:
         ranked = list(ranked_causes or [])
         return cls(
@@ -308,11 +309,7 @@ class DiagnoseIncidentReport(BaseModel):
                 else None
             ),
             recommended_human_actions=list(recommended_human_actions or []),
-            recommended_followup_skills=(
-                [state.recommended_next_skill]
-                if state.recommended_next_skill is not None
-                else []
-            ),
+            recommended_followup_skills=list(recommended_followup_skills or []),
             sampling_summary=SamplingSummary.from_scope_summary(state.scope_summary),
             confidence=(ranked[0].confidence if ranked else Confidence.LOW),
         )

@@ -360,6 +360,186 @@ def test_diagnose_incident_reports_unresolved_two_domain_ambiguity(
     assert "HIGH_DHCP_ACK_LATENCY" in report["recommended_human_actions"][0]
 
 
+def test_diagnose_incident_recommends_capture_trigger_when_authorized_and_useful(
+    monkeypatch: Any,
+) -> None:
+    calls: list[str] = []
+    records = {
+        "net.incident_intake": [
+            _skill_record(
+                "net.incident_intake",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                evidence={
+                    "incident_record": {
+                        "incident_id": "inc-capture-1",
+                        "summary": (
+                            "Onboarding intermittently fails and clients stall "
+                            "after connect"
+                        ),
+                        "site_id": "hq-1",
+                        "ssid": "CorpWiFi",
+                    }
+                },
+            )
+        ],
+        "net.auth_8021x_radius": [
+            _skill_record(
+                "net.auth_8021x_radius",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                status=Status.WARN,
+                findings=[
+                    _finding("LOW_AUTH_SUCCESS_RATE"),
+                    _finding("AUTH_TIMEOUTS"),
+                ],
+            )
+        ],
+        "net.dhcp_path": [
+            _skill_record(
+                "net.dhcp_path",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                status=Status.WARN,
+                findings=[
+                    _finding("HIGH_DHCP_OFFER_LATENCY"),
+                    _finding("HIGH_DHCP_ACK_LATENCY"),
+                ],
+            )
+        ],
+        "net.dns_latency": [
+            _skill_record(
+                "net.dns_latency",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                status=Status.OK,
+            )
+        ],
+        "net.incident_correlation": [
+            _skill_record(
+                "net.incident_correlation",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                status=Status.OK,
+            )
+        ],
+    }
+    monkeypatch.setattr(
+        "nettools.orchestrator.diagnose_incident.invoke_skill",
+        _fake_invoke(records, calls),
+    )
+
+    result = evaluate_diagnose_incident(
+        DiagnoseIncidentInput(
+            site_id="hq-1",
+            ssid="CorpWiFi",
+            complaint="Onboarding intermittently fails and clients stall after connect",
+            capture_authorized=True,
+            capture_approval_ticket="CHG-1234",
+        ),
+        AdapterBundle(),
+    )
+
+    report = result.evidence["diagnosis_report"]
+
+    assert calls == [
+        "net.incident_intake",
+        "net.auth_8021x_radius",
+        "net.dhcp_path",
+        "net.dns_latency",
+        "net.incident_correlation",
+    ]
+    assert report["stop_reason"]["code"] == "two_domain_bounded_ambiguity"
+    assert report["recommended_followup_skills"] == ["net.capture_trigger"]
+    assert [action.skill for action in result.next_actions] == ["net.capture_trigger"]
+    assert "Authorized packet capture could help discriminate" in result.next_actions[0].reason
+
+
+def test_diagnose_incident_does_not_recommend_capture_trigger_without_authorization(
+    monkeypatch: Any,
+) -> None:
+    calls: list[str] = []
+    records = {
+        "net.incident_intake": [
+            _skill_record(
+                "net.incident_intake",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                evidence={
+                    "incident_record": {
+                        "incident_id": "inc-capture-2",
+                        "summary": (
+                            "Onboarding intermittently fails and clients stall "
+                            "after connect"
+                        ),
+                        "site_id": "hq-1",
+                        "ssid": "CorpWiFi",
+                    }
+                },
+            )
+        ],
+        "net.auth_8021x_radius": [
+            _skill_record(
+                "net.auth_8021x_radius",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                status=Status.WARN,
+                findings=[
+                    _finding("LOW_AUTH_SUCCESS_RATE"),
+                    _finding("AUTH_TIMEOUTS"),
+                ],
+            )
+        ],
+        "net.dhcp_path": [
+            _skill_record(
+                "net.dhcp_path",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                status=Status.WARN,
+                findings=[
+                    _finding("HIGH_DHCP_OFFER_LATENCY"),
+                    _finding("HIGH_DHCP_ACK_LATENCY"),
+                ],
+            )
+        ],
+        "net.dns_latency": [
+            _skill_record(
+                "net.dns_latency",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                status=Status.OK,
+            )
+        ],
+        "net.incident_correlation": [
+            _skill_record(
+                "net.incident_correlation",
+                scope_type=ScopeType.SERVICE,
+                scope_id="hq-1",
+                status=Status.OK,
+            )
+        ],
+    }
+    monkeypatch.setattr(
+        "nettools.orchestrator.diagnose_incident.invoke_skill",
+        _fake_invoke(records, calls),
+    )
+
+    result = evaluate_diagnose_incident(
+        DiagnoseIncidentInput(
+            site_id="hq-1",
+            ssid="CorpWiFi",
+            complaint="Onboarding intermittently fails and clients stall after connect",
+        ),
+        AdapterBundle(),
+    )
+
+    report = result.evidence["diagnosis_report"]
+
+    assert report["stop_reason"]["code"] == "two_domain_bounded_ambiguity"
+    assert report["recommended_followup_skills"] == []
+    assert result.next_actions == []
+
+
 def test_diagnose_incident_reports_blocked_dependency_end_to_end(
     monkeypatch: Any,
 ) -> None:

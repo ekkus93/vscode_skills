@@ -67,6 +67,11 @@ class DiagnoseIncidentInput(SharedInputBase):
     comparison_areas: list[str] = Field(default_factory=list)
     incident_record: IncidentRecord | None = None
     replay_state: IncidentState | None = None
+    capture_authorized: bool = False
+    capture_approval_ticket: str | None = None
+    capture_protocol: str = "auto"
+    capture_target_host: str | None = None
+    capture_interface_scope: str | None = None
     playbook_override: str | None = None
     max_steps: int | None = Field(default=None, ge=1)
 
@@ -246,6 +251,11 @@ def _build_skill_payload(
         payload["incident_summary"] = incident_record.summary
     elif skill_name == "net.capture_trigger":
         payload["reason"] = incident_record.summary or "Automated orchestration follow-up"
+        payload["authorized"] = skill_input.capture_authorized
+        payload["approval_ticket"] = skill_input.capture_approval_ticket
+        payload["protocol"] = skill_input.capture_protocol
+        payload["target_host"] = skill_input.capture_target_host
+        payload["interface_scope"] = skill_input.capture_interface_scope
     return {key: value for key, value in payload.items() if value is not None}
 
 
@@ -757,9 +767,84 @@ def _generate_human_actions(
     return actions
 
 
+def _capture_trigger_is_authorized(skill_input: DiagnoseIncidentInput) -> bool:
+    return skill_input.capture_authorized and bool(skill_input.capture_approval_ticket)
+
+
+def _capture_trigger_is_useful(
+    state: IncidentState,
+    ranked_causes: Sequence[RankedCause],
+) -> bool:
+    if state.recommended_next_skill is not None:
+        return False
+    if state.stop_reason is None:
+        return False
+    if state.stop_reason.code in {
+        StopReasonCode.HIGH_CONFIDENCE_DIAGNOSIS,
+        StopReasonCode.DEPENDENCY_BLOCKED,
+    }:
+        return False
+
+    useful_domains = {
+        DiagnosticDomain.AUTH_ISSUE,
+        DiagnosticDomain.DHCP_ISSUE,
+        DiagnosticDomain.DNS_ISSUE,
+        DiagnosticDomain.AP_UPLINK_ISSUE,
+        DiagnosticDomain.L2_TOPOLOGY_ISSUE,
+        DiagnosticDomain.SEGMENTATION_POLICY_ISSUE,
+        DiagnosticDomain.SITE_WIDE_INTERNAL_LAN_ISSUE,
+        DiagnosticDomain.WAN_OR_EXTERNAL_ISSUE,
+    }
+    return any(cause.domain in useful_domains for cause in ranked_causes[:2])
+
+
+def _capture_trigger_reason(ranked_causes: Sequence[RankedCause]) -> str:
+    if len(ranked_causes) >= 2:
+        return (
+            "Authorized packet capture could help discriminate between "
+            f"{ranked_causes[0].domain.value} and {ranked_causes[1].domain.value}."
+        )
+    if ranked_causes:
+        return (
+            "Authorized packet capture could gather additional evidence for "
+            f"{ranked_causes[0].domain.value}."
+        )
+    return "Authorized packet capture could gather additional evidence for the unresolved issue."
+
+
+def _followup_recommendations(
+    state: IncidentState,
+    *,
+    skill_input: DiagnoseIncidentInput,
+    ranked_causes: Sequence[RankedCause],
+) -> list[NextAction]:
+    recommendations: list[NextAction] = []
+    if state.recommended_next_skill is not None:
+        recommendations.append(
+            NextAction(
+                skill=state.recommended_next_skill,
+                reason="Additional automated follow-up remains available.",
+            )
+        )
+        return recommendations
+
+    if _capture_trigger_is_authorized(skill_input) and _capture_trigger_is_useful(
+        state,
+        ranked_causes,
+    ):
+        recommendations.append(
+            NextAction(
+                skill="net.capture_trigger",
+                reason=_capture_trigger_reason(ranked_causes),
+            )
+        )
+    return recommendations
+
+
 def _build_report(
     state: IncidentState,
     *,
+    skill_input: DiagnoseIncidentInput,
     incident_record: IncidentRecord,
     ranked_causes: Sequence[RankedCause],
     summary: str,
@@ -770,12 +855,18 @@ def _build_report(
         incident_record=incident_record,
         ranked_causes=ranked_causes,
     )
+    followup_recommendations = _followup_recommendations(
+        state,
+        skill_input=skill_input,
+        ranked_causes=ranked_causes,
+    )
     report = DiagnoseIncidentReport.from_incident_state(
         state,
         result_status=result_status,
         summary=summary,
         ranked_causes=list(ranked_causes),
         recommended_human_actions=recommended_human_actions,
+        recommended_followup_skills=[action.skill for action in followup_recommendations],
     )
     return report.model_dump(mode="json")
 
@@ -810,10 +901,16 @@ def _replay_result(
     scope_type, scope_id = _result_scope(skill_input, incident_record)
     report = _build_report(
         replay_state,
+        skill_input=skill_input,
         incident_record=incident_record,
         ranked_causes=ranked_causes,
         summary=summary,
         result_status=result_status,
+    )
+    followup_recommendations = _followup_recommendations(
+        replay_state,
+        skill_input=skill_input,
+        ranked_causes=ranked_causes,
     )
 
     raw_refs: list[Any] = []
@@ -846,16 +943,7 @@ def _replay_result(
             },
         },
         findings=[],
-        next_actions=(
-            [
-                NextAction(
-                    skill=replay_state.recommended_next_skill,
-                    reason="Additional automated follow-up remains available in replay state.",
-                )
-            ]
-            if replay_state.recommended_next_skill is not None
-            else []
-        ),
+        next_actions=followup_recommendations,
         raw_refs=raw_refs,
     )
 
@@ -1002,10 +1090,16 @@ def evaluate_diagnose_incident(
     scope_type, scope_id = _result_scope(skill_input, incident_record)
     report = _build_report(
         state,
+        skill_input=skill_input,
         incident_record=incident_record,
         ranked_causes=ranked_causes,
         summary=summary,
         result_status=result_status,
+    )
+    followup_recommendations = _followup_recommendations(
+        state,
+        skill_input=skill_input,
+        ranked_causes=ranked_causes,
     )
 
     raw_refs: list[Any] = []
@@ -1033,16 +1127,7 @@ def evaluate_diagnose_incident(
             "incident_state": state.model_dump(mode="json", exclude_none=True),
         },
         findings=[],
-        next_actions=(
-            [
-                NextAction(
-                    skill=state.recommended_next_skill,
-                    reason="Additional automated follow-up remains available.",
-                )
-            ]
-            if state.recommended_next_skill is not None
-            else []
-        ),
+        next_actions=followup_recommendations,
         raw_refs=raw_refs,
     )
 
@@ -1082,6 +1167,11 @@ def build_diagnose_incident_parser() -> argparse.ArgumentParser:
     parser.add_argument("--comparison-area", action="append", dest="comparison_areas")
     parser.add_argument("--replay-state-file")
     parser.add_argument("--replay-incident-record-file")
+    parser.add_argument("--capture-authorized", action="store_true")
+    parser.add_argument("--capture-approval-ticket")
+    parser.add_argument("--capture-protocol", default="auto")
+    parser.add_argument("--capture-target-host")
+    parser.add_argument("--capture-interface-scope")
     parser.add_argument("--playbook-override")
     parser.add_argument("--max-steps", type=int)
     return parser

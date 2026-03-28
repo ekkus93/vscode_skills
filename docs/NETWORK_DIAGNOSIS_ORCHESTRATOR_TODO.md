@@ -370,7 +370,7 @@ Notes:
 
 ### 12.3 Implement follow-up skill recommendations
 - [x] suggest next primitive skills if unresolved
-- [ ] suggest capture trigger only when authorized and useful
+- [x] suggest capture trigger only when authorized and useful
 
 ### 12.4 Tests
 - [x] ranked cause formatting test

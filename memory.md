@@ -270,6 +270,15 @@
 - Added an unresolved manual-stop report-formatting case in `tests/unit/nettools/test_orchestrator_diagnose_incident.py` to lock the final report shape for `human_action_required` investigations, including `unknown` ranked-cause formatting and propagated eliminated domains.
 - Validated the touched test modules with focused Ruff, MyPy, and `pytest tests/unit/nettools/test_orchestrator_models.py tests/unit/nettools/test_orchestrator_diagnose_incident.py` (23 passed).
 
+## 2026-03-28T18:45:26Z - GPT-5.4 - Added authorized capture-trigger follow-up recommendations
+- Extended `DiagnoseIncidentInput` and the `net.diagnose_incident` CLI with explicit capture authorization fields so the orchestrator can reason about packet-capture eligibility without inventing a separate contract.
+- Updated orchestrator report assembly to generate follow-up recommendations as a list, preserving ordinary `recommended_next_skill` behavior and adding `net.capture_trigger` only when no ordinary next skill exists, authorization is present, and the unresolved ranked causes are packet-capture-relevant.
+- Added focused diagnose-incident coverage for both authorized and unauthorized unresolved ambiguity outcomes; validated the touched orchestrator runtime/tests with focused Ruff, MyPy, and `pytest tests/unit/nettools/test_orchestrator_diagnose_incident.py tests/unit/nettools/test_orchestrator_models.py` (25 passed).
+
+## 2026-03-28T18:54:23Z - GPT-5.4 - Validated Phase 12.3 capture-trigger checkpoint
+- Re-ran repository validation before publication using `/home/phil/.local/bin/ruff check .`, `.venv/bin/python -m mypy .`, and `.venv/bin/python -m pytest`; Ruff passed, MyPy passed on 120 source files, and pytest passed with 263 tests.
+- Confirmed the remaining working tree is limited to the Phase 12.3 follow-up recommendation implementation, its focused diagnose-incident tests, the roadmap checkbox for authorized capture-trigger recommendations, and the related memory updates.
+
 ## 2026-03-28T18:40:47Z - GPT-5.4 - Pushed orchestrator report improvements to origin/master
 - Committed the human-action generator, report-formatting coverage, and roadmap updates as `40b984e` with the message `Improve orchestrator report actions and tests`.
 - Pushed `master` to `origin/master` after a clean validation baseline: Ruff passed, MyPy passed on 120 source files, and pytest passed with 261 tests.
