@@ -223,6 +223,21 @@
 - Committed the orchestrator integration coverage and execution-wrapper fix as `8dd0e00` with the message `Add orchestrator integration scenarios`.
 - Pushed `master` to `origin/master`, advancing the remote from `4f11664` to `8dd0e00`.
 - Verified the worktree was clean immediately after the push before recording this checkpoint.
+
+## 2026-03-28T21:08:26Z - GPT-5.4 - Registered NETTOOLS wrappers in the shared skill index
+- Updated `skills/SKILL_LIST.md` to add the full `net-*` wrapper set so the authoritative skill index now matches the NETTOOLS skill folders already present under `skills/`.
+- Added entries for `net-diagnose-incident`, `net-incident-intake`, the implemented Priority 1 and Priority 2 diagnostics, and the Priority 3 correlation/change/capture helpers.
+- `skills/README.md` still describes the pre-NETTOOLS registered skill set and may need a follow-up refresh if the human-readable library overview should match the updated index.
+
+## 2026-03-28T21:11:58Z - GPT-5.4 - Refreshed README files for the registered NETTOOLS skill set
+- Updated the repo `README.md` so the example skill inventory, structure snippets, setup notes, and slash-command examples now include the registered `net-*` NETTOOLS wrappers and the shared `skills/nettools-core/` runtime.
+- Updated `skills/README.md` so the directory layout, current-skills summary, and per-skill dependency matrix now reflect the NETTOOLS wrapper skills that were added to `skills/SKILL_LIST.md`.
+- Kept the dependency guidance conservative: the NETTOOLS wrappers document `python3` plus the bundled `skills/nettools-core/` runtime, with live investigations still depending on configured provider adapters or fixture files.
+
+## 2026-03-28T21:13:28Z - GPT-5.4 - Added dedicated NETTOOLS subsections to the README files
+- Updated the repo `README.md` with a short `NETTOOLS skills` subsection so the network-diagnostics wrappers are grouped separately instead of only appearing in the generic example lists.
+- Updated `skills/README.md` with a matching `NETTOOLS Skills` subsection that groups the wrappers by orchestrator, helpers, core diagnostics, and follow-up diagnostics.
+- Kept the distinction explicit that `skills/nettools-core/` is shared runtime code, while the `net-*` wrapper folders are the registered skills.
 - Added `tests/unit/nettools/test_phase2_models.py` to cover partial-data tolerance, nested serialization, and source/version metadata behavior across the new models.
 - Re-ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest tests/unit/nettools`; the full NETTOOLS unit suite passed with 16 tests.
 - Marked all Phase 2 items complete in `docs/NETTOOLS_TODO.md`.

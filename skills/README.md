@@ -65,6 +65,38 @@ skills/
 		SKILL.md
 	image-ocr/
 		SKILL.md
+	net-ap-rf-health/
+		SKILL.md
+	net-ap-uplink-health/
+		SKILL.md
+	net-auth-8021x-radius/
+		SKILL.md
+	net-capture-trigger/
+		SKILL.md
+	net-change-detection/
+		SKILL.md
+	net-client-health/
+		SKILL.md
+	net-dhcp-path/
+		SKILL.md
+	net-diagnose-incident/
+		SKILL.md
+	net-dns-latency/
+		SKILL.md
+	net-incident-correlation/
+		SKILL.md
+	net-incident-intake/
+		SKILL.md
+	net-path-probe/
+		SKILL.md
+	net-roaming-analysis/
+		SKILL.md
+	net-segmentation-policy/
+		SKILL.md
+	net-stp-loop-anomaly/
+		SKILL.md
+	nettools-core/
+		README.md
 	news-search/
 		SKILL.md
 		news_search.py
@@ -170,6 +202,21 @@ According to `SKILL_LIST.md`, the currently registered shared skills are:
 - `excel-to-delimited`: convert `.xlsx` and `.xls` workbooks into per-sheet `.csv` or `.tsv` exports
 - `hacker-news-top10`: get the current top 10 Hacker News stories with titles, URLs, and short summaries
 - `image-ocr`: extract text from image files with OCR using Tesseract
+- `net-diagnose-incident`: orchestrate a full NETTOOLS investigation and produce a structured diagnosis report with audit artifacts
+- `net-incident-intake`: normalize a freeform complaint into a structured NETTOOLS incident record
+- `net-client-health`: assess Wi-Fi client RF quality, retries, reconnects, and roam symptoms
+- `net-ap-rf-health`: evaluate AP radio utilization, load, and RF instability indicators
+- `net-dhcp-path`: assess DHCP latency, timeouts, relay behavior, and scope pressure
+- `net-dns-latency`: measure DNS latency, timeout rate, and resolver quality
+- `net-roaming-analysis`: analyze failed roams, roam latency, and sticky-client symptoms
+- `net-auth-8021x-radius`: evaluate 802.1X and RADIUS delays, timeouts, and failures
+- `net-path-probe`: compare internal path latency, jitter, and loss across service or gateway targets
+- `net-segmentation-policy`: verify VLAN, DHCP-scope, and policy alignment for a client
+- `net-ap-uplink-health`: validate AP switch-port, uplink, flap, and PoE health
+- `net-stp-loop-anomaly`: detect topology churn, root changes, MAC flaps, and loop symptoms
+- `net-incident-correlation`: correlate incident timing with network events and recent changes
+- `net-change-detection`: identify recent infrastructure or configuration changes that align with a complaint window
+- `net-capture-trigger`: prepare a gated packet-capture plan without implying execution
 - `company-research`: build a concise company profile from official-site context plus recent news
 - `news-search`: search recent distinct news coverage for a topic
 - `stock-investment-review`: build a stock review with a saved TODO checklist and Markdown report
@@ -181,6 +228,17 @@ According to `SKILL_LIST.md`, the currently registered shared skills are:
 - `wikipedia`: search Wikipedia and return a concise topic summary
 - `yahoo-finance`: fetch a concise market snapshot from Yahoo Finance via `yfinance`
 - `yahoo-finance-cli`: fetch stock prices, financial data, and market summaries with the Yahoo Finance CLI
+
+### NETTOOLS Skills
+
+The NETTOOLS portion of the library is organized as thin skill wrappers backed by the shared runtime in `skills/nettools-core/`.
+
+- Orchestrator: `net-diagnose-incident`
+- Intake and investigation helpers: `net-incident-intake`, `net-incident-correlation`, `net-change-detection`, `net-capture-trigger`
+- Core diagnostics: `net-client-health`, `net-ap-rf-health`, `net-dhcp-path`, `net-dns-latency`, `net-ap-uplink-health`, `net-stp-loop-anomaly`
+- Follow-up diagnostics: `net-roaming-analysis`, `net-auth-8021x-radius`, `net-path-probe`, `net-segmentation-policy`
+
+These are registered shared skills because each wrapper has its own `SKILL.md`, while `skills/nettools-core/` is the shared implementation package rather than a user-facing skill.
 
 ## OpenClaw Prerequisites
 
@@ -285,6 +343,21 @@ These generated files are only Python-package views. For partial OpenClaw instal
 | `excel-to-markdown` | Yes | `python3`, `openpyxl`, `xlrd` | `openpyxl` is for `.xlsx`; `xlrd` is for legacy `.xls`. |
 | `hacker-news-top10` | Yes | `curl`, `python3` | Uses the Hacker News API and linked page fetches. |
 | `image-ocr` | Yes | `tesseract` | Additional Tesseract language packs may be needed for non-English OCR. |
+| `net-diagnose-incident` | Yes | `python3` | Also needs the bundled `skills/nettools-core/` runtime; live runs depend on configured provider adapters or fixtures. |
+| `net-incident-intake` | Yes | `python3` | Uses the bundled `skills/nettools-core/` runtime; no live provider is required for normalization. |
+| `net-client-health` | Yes | `python3` | Also needs the bundled `skills/nettools-core/` runtime and a wireless adapter or fixtures. |
+| `net-ap-rf-health` | Yes | `python3` | Also needs the bundled `skills/nettools-core/` runtime and a wireless adapter or fixtures. |
+| `net-dhcp-path` | Yes | `python3` | Also needs the bundled `skills/nettools-core/` runtime and a DHCP adapter or fixtures. |
+| `net-dns-latency` | Yes | `python3` | Also needs the bundled `skills/nettools-core/` runtime and a DNS adapter or fixtures. |
+| `net-roaming-analysis` | Yes | `python3` | Also needs the bundled `skills/nettools-core/` runtime and a wireless adapter or fixtures. |
+| `net-auth-8021x-radius` | Yes | `python3` | Also needs the bundled `skills/nettools-core/` runtime and an auth adapter or fixtures. |
+| `net-path-probe` | Yes | `python3` | Also needs the bundled `skills/nettools-core/` runtime and a probe adapter or fixtures. |
+| `net-segmentation-policy` | Yes | `python3` | Also needs the bundled `skills/nettools-core/` runtime plus wireless, DHCP, and inventory adapters or fixtures. |
+| `net-ap-uplink-health` | Yes | `python3` | Also needs the bundled `skills/nettools-core/` runtime and switch or inventory data, or fixtures. |
+| `net-stp-loop-anomaly` | Yes | `python3` | Also needs the bundled `skills/nettools-core/` runtime and switch or event data, or fixtures. |
+| `net-incident-correlation` | Yes | `python3` | Also needs the bundled `skills/nettools-core/` runtime and event or change data, or fixtures. |
+| `net-change-detection` | Yes | `python3` | Also needs the bundled `skills/nettools-core/` runtime and inventory or change data, or fixtures. |
+| `net-capture-trigger` | Yes | `python3` | Uses the bundled `skills/nettools-core/` runtime to build a manual capture plan only. |
 | `news-search` | Yes | `python3` | Uses the bundled Python helper and Google News RSS. |
 | `stock-investment-review` | Yes | `python3`, `yfinance` | Also depends on the registered helper skills `stock-research`, `company-research`, `news-search`, and `yahoo-finance`. |
 | `stock-research` | Yes | `python3`, `yfinance` | Also uses the shared `company-research` and `news-search` helpers. |

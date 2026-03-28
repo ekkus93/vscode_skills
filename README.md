@@ -75,6 +75,21 @@ Examples currently in the shared library include:
 - `excel-to-markdown`
 - `hacker-news-top10`
 - `image-ocr`
+- `net-diagnose-incident`
+- `net-incident-intake`
+- `net-client-health`
+- `net-ap-rf-health`
+- `net-dhcp-path`
+- `net-dns-latency`
+- `net-roaming-analysis`
+- `net-auth-8021x-radius`
+- `net-path-probe`
+- `net-segmentation-policy`
+- `net-ap-uplink-health`
+- `net-stp-loop-anomaly`
+- `net-incident-correlation`
+- `net-change-detection`
+- `net-capture-trigger`
 - `company-research`
 - `news-search`
 - `stock-investment-review`
@@ -86,6 +101,18 @@ Examples currently in the shared library include:
 - `wikipedia`
 - `yahoo-finance`
 - `yahoo-finance-cli`
+
+#### NETTOOLS skills
+
+The shared library also includes a dedicated NETTOOLS diagnostic set:
+
+- `net-diagnose-incident`: top-level orchestrator that turns complaint intake into a structured diagnosis report and audit trail
+- `net-incident-intake`: normalizes freeform complaints into NETTOOLS incident records
+- `net-client-health`, `net-ap-rf-health`, `net-dhcp-path`, `net-dns-latency`, `net-ap-uplink-health`, `net-stp-loop-anomaly`: core diagnostic wrappers for client RF, AP RF, DHCP, DNS, AP uplinks, and L2 instability
+- `net-roaming-analysis`, `net-auth-8021x-radius`, `net-path-probe`, `net-segmentation-policy`: deeper follow-up diagnostics for mobility, auth, path quality, and placement policy
+- `net-incident-correlation`, `net-change-detection`, `net-capture-trigger`: supporting investigation helpers for event correlation, change analysis, and gated capture planning
+
+These wrappers rely on the shared runtime in `skills/nettools-core/`.
 
 The important rule is that `SKILL_LIST.md` is the source of truth. A skill folder existing on disk is not enough by itself. If it is not listed in the index, it should not be treated as officially available.
 
@@ -126,6 +153,22 @@ vscode_skills/
 		company-research/
 		excel-to-delimited/
 		excel-to-markdown/
+		net-ap-rf-health/
+		net-ap-uplink-health/
+		net-auth-8021x-radius/
+		net-capture-trigger/
+		net-change-detection/
+		net-client-health/
+		net-dhcp-path/
+		net-diagnose-incident/
+		net-dns-latency/
+		net-incident-correlation/
+		net-incident-intake/
+		net-path-probe/
+		net-roaming-analysis/
+		net-segmentation-policy/
+		net-stp-loop-anomaly/
+		nettools-core/
 		news-search/
 		stock-investment-review/
 		stock-research/
@@ -166,6 +209,38 @@ ${HOME}/work/vscode_skills/skills/
 		SKILL.md
 		company_research.py
 		test_company_research.py
+	net-ap-rf-health/
+		SKILL.md
+	net-ap-uplink-health/
+		SKILL.md
+	net-auth-8021x-radius/
+		SKILL.md
+	net-capture-trigger/
+		SKILL.md
+	net-change-detection/
+		SKILL.md
+	net-client-health/
+		SKILL.md
+	net-dhcp-path/
+		SKILL.md
+	net-diagnose-incident/
+		SKILL.md
+	net-dns-latency/
+		SKILL.md
+	net-incident-correlation/
+		SKILL.md
+	net-incident-intake/
+		SKILL.md
+	net-path-probe/
+		SKILL.md
+	net-roaming-analysis/
+		SKILL.md
+	net-segmentation-policy/
+		SKILL.md
+	net-stp-loop-anomaly/
+		SKILL.md
+	nettools-core/
+		README.md
 	list-skills/
 		SKILL.md
 	news-search/
@@ -261,6 +336,7 @@ For the skills currently in the shared library:
 - `excel-to-markdown` needs `python3` plus the `openpyxl` and `xlrd` Python packages
 - `hacker-news-top10` needs `curl` and `python3`
 - `image-ocr` needs `tesseract`
+- the `net-*` NETTOOLS wrapper skills need `python3` plus the bundled shared runtime under `skills/nettools-core/`; live investigations also need configured provider adapters or fixture files
 - `company-research` needs `python3`
 - `news-search` needs `python3`
 - `stock-investment-review` needs `python3` and the `yfinance` Python package
@@ -335,6 +411,9 @@ Current examples of slash-style skills in this library include:
 - `/excel-to-delimited /tmp/vendor-pricing.xls | format:tsv`
 - `/excel-to-markdown /path/to/research-notes.xlsx`
 - `/hacker-news-top10`
+- `/net-diagnose-incident --site-id hq-1 --client-id client-42 --complaint "My laptop cannot connect to CorpWiFi and reconnect helps"`
+- `/net-client-health --client-id client-123`
+- `/net-path-probe --site-id hq-1 --target dns-service`
 - `/news-search OpenAI | time:week | limit:3`
 - `/stock-investment-review WING | horizon:45d | company:Wingstop | site:https://www.wingstop.com`
 - `/stock-research AAPL | period:1y | news:month`

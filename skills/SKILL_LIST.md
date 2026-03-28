@@ -105,3 +105,78 @@ This file lists reusable skills available in the shared workspace skill library.
 - Path: `skills/hacker-news-top10/`
 - Use for: getting the current top 10 Hacker News stories with titles, URLs, and short summaries
 - Typical outputs: top 10 story list, article links, short story summaries
+
+### net-diagnose-incident
+- Path: `skills/net-diagnose-incident/`
+- Use for: orchestrating a full NETTOOLS incident investigation across the lower-level network skills from complaint intake through ranked diagnosis
+- Typical outputs: diagnosis report, incident state, audit trail, investigation metrics, replayable investigation artifacts
+
+### net-incident-intake
+- Path: `skills/net-incident-intake/`
+- Use for: normalizing a freeform complaint into a structured NETTOOLS incident record with follow-up skill hints
+- Typical outputs: incident record, extracted scope hints, recommended next-step skills
+
+### net-client-health
+- Path: `skills/net-client-health/`
+- Use for: assessing one Wi-Fi client session for RF quality, retries, reconnects, and roam symptoms
+- Typical outputs: client RF findings, retry and loss evidence, connected AP context, follow-up skill recommendations
+
+### net-ap-rf-health
+- Path: `skills/net-ap-rf-health/`
+- Use for: evaluating AP radio conditions, utilization, load, resets, and RF instability indicators
+- Typical outputs: AP RF findings, utilization and client-load evidence, neighboring AP context
+
+### net-dhcp-path
+- Path: `skills/net-dhcp-path/`
+- Use for: checking DHCP latency, timeouts, relay behavior, and address-allocation symptoms for a client, SSID, VLAN, or site scope
+- Typical outputs: DHCP path findings, offer and ACK latency evidence, scope-utilization context, follow-up recommendations
+
+### net-dns-latency
+- Path: `skills/net-dns-latency/`
+- Use for: measuring internal DNS latency, timeout rate, and resolver quality for a client, SSID, or site scope
+- Typical outputs: DNS findings, resolver latency evidence, timeout-rate evidence, follow-up recommendations
+
+### net-roaming-analysis
+- Path: `skills/net-roaming-analysis/`
+- Use for: analyzing Wi-Fi roaming behavior, failed roams, latency, and sticky-client symptoms for one client
+- Typical outputs: roam-history findings, failed-roam evidence, latency summaries, AP-transition context
+
+### net-auth-8021x-radius
+- Path: `skills/net-auth-8021x-radius/`
+- Use for: evaluating 802.1X and RADIUS delays, timeouts, reachability, and repeated authentication failures
+- Typical outputs: auth findings, success-rate and timeout evidence, RADIUS reachability metrics, follow-up recommendations
+
+### net-path-probe
+- Path: `skills/net-path-probe/`
+- Use for: probing internal paths to compare latency, jitter, and loss across key service or gateway targets
+- Typical outputs: degraded-target findings, per-target path evidence, service or site-wide path classification
+
+### net-segmentation-policy
+- Path: `skills/net-segmentation-policy/`
+- Use for: verifying VLAN, DHCP-scope, gateway, and policy alignment for a client against expected segmentation
+- Typical outputs: policy-placement findings, observed versus expected VLAN evidence, follow-up recommendations
+
+### net-ap-uplink-health
+- Path: `skills/net-ap-uplink-health/`
+- Use for: validating the switch-port, uplink speed, errors, flaps, and PoE state behind an access point
+- Typical outputs: uplink findings, switch-port evidence, PoE and configuration mismatch context
+
+### net-stp-loop-anomaly
+- Path: `skills/net-stp-loop-anomaly/`
+- Use for: detecting topology churn, root changes, MAC flaps, and switching-loop symptoms that can cause widespread slowness
+- Typical outputs: L2 instability findings, topology-change evidence, suspect-port context
+
+### net-incident-correlation
+- Path: `skills/net-incident-correlation/`
+- Use for: correlating incident timing with network events, anomalies, and recent change windows
+- Typical outputs: correlated-event evidence, ranked anomaly context, suggested follow-up skills
+
+### net-change-detection
+- Path: `skills/net-change-detection/`
+- Use for: identifying recent infrastructure or configuration changes that align with a complaint window
+- Typical outputs: ranked recent changes, change-correlation findings, likely review or rollback targets
+
+### net-capture-trigger
+- Path: `skills/net-capture-trigger/`
+- Use for: preparing a gated packet-capture plan when telemetry suggests a narrow protocol failure and authorization permits it
+- Typical outputs: manual capture plan, derived filter hints, authorization state, narrowed next steps
