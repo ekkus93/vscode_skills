@@ -712,31 +712,31 @@ Implementation assumption for v1:
 ## 12. Phase 10 - Documentation and operator usability
 
 ### 12.1 Skill docs
-- [ ] Document each skill:
-  - [ ] purpose
-  - [ ] inputs
-  - [ ] outputs
-  - [ ] dependencies
-  - [ ] example invocation
-  - [ ] example result
-  - [ ] common failure cases
+- [x] Document each skill:
+  - [x] purpose
+  - [x] inputs
+  - [x] outputs
+  - [x] dependencies
+  - [x] example invocation
+  - [x] example result
+  - [x] common failure cases
 
 ### 12.2 Configuration docs
-- [ ] Document provider configuration
-- [ ] Document thresholds
-- [ ] Document secrets handling
-- [ ] Document active-probe restrictions
+- [x] Document provider configuration
+- [x] Document thresholds
+- [x] Document secrets handling
+- [x] Document active-probe restrictions
 
 ### 12.3 Troubleshooting playbooks
-- [ ] Add “single user complaint” playbook
-- [ ] Add “site-wide slowdown” playbook
-- [ ] Add “auth issue” playbook
-- [ ] Add “recent hardware change” playbook
+- [x] Add “single user complaint” playbook
+- [x] Add “site-wide slowdown” playbook
+- [x] Add “auth issue” playbook
+- [x] Add “recent hardware change” playbook
 
 ### 12.4 Findings code registry
-- [ ] Create registry of finding codes
-- [ ] Document severity semantics
-- [ ] Document expected operator actions per code
+- [x] Create registry of finding codes
+- [x] Document severity semantics
+- [x] Document expected operator actions per code
 
 ---
 

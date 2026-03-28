@@ -61,4 +61,8 @@ def test_finding_code_documentation_includes_registry_context() -> None:
     )
 
     assert "Severity semantics:" in doc_text
-    assert "| Code | Default Severity | Producer Skills | Summary |" in doc_text
+    assert "Expected Operator Action column" in doc_text
+    assert (
+        "| Code | Default Severity | Producer Skills | Summary | Expected Operator Action |"
+        in doc_text
+    )

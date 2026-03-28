@@ -9,6 +9,12 @@ Phase 0 scope in this folder:
 - add stdlib JSON logging support
 - document architecture, configuration, and testing expectations
 
+Operator documentation in this folder now includes:
+
+- `CONFIGURATION.md` for runtime and policy configuration guidance
+- `TESTING.md` for validation guidance
+- `PLAYBOOKS.md` for human-driven troubleshooting playbooks aligned with the current orchestrator and wrapper docs
+
 Current status:
 
 - the public NETTOOLS skill folders exist under `skills/`

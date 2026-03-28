@@ -428,3 +428,50 @@
 - Ran `ruff check .` across the repository with no lint findings.
 - Ran `mypy --python-executable /home/phil/work/vscode_skills/.venv/bin/python .` successfully on 120 source files.
 - Ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest` and the full suite passed with 248 tests.
+
+## 2026-03-28T15:29:03Z - GPT-5.4 - Completed NETTOOLS Phase 10.4 finding registry operator guidance
+- Extended `docs/NETTOOLS_FINDING_CODES.md` so every emitted NETTOOLS finding code now includes an explicit expected operator action alongside the existing severity and producer-skill registry data.
+- Updated `tests/unit/nettools/test_findings_registry.py` so the documentation contract now requires the operator-action column to remain present in the checked-in registry.
+- Updated `docs/NETTOOLS_TODO.md` so all items under Phase 10.4 are now marked complete.
+- Focused validation is green: `ruff check tests/unit/nettools/test_findings_registry.py` passed, `pytest tests/unit/nettools/test_findings_registry.py` passed with 2 tests, and MyPy passed on the test file when run with `skills/nettools-core` on the import path.
+
+## 2026-03-28T15:56:45Z - GPT-5.4 - Expanded all NETTOOLS skill wrappers with operator-ready contract details
+- Updated all 15 NETTOOLS wrapper `SKILL.md` files under `skills/net-*/` so each one now documents inputs, outputs, dependencies, example invocations, example JSON results, and common failure cases in a consistent structure.
+- Corrected stale wrapper examples while doing the pass, including the `net.segmentation_policy` command example that referenced a CLI flag no longer exposed by the helper.
+- Updated `docs/NETTOOLS_TODO.md` so Phase 10.1 skill documentation is now marked complete.
+- Documentation coverage was validated by checking that every NETTOOLS wrapper now contains `## Inputs`, `## Outputs`, `## Dependencies`, `## Example Result`, and `## Common Failure Cases` sections.
+
+## 2026-03-28T16:06:48Z - GPT-5.4 - Expanded NETTOOLS configuration docs into an operator guide
+- Rewrote `skills/nettools-core/CONFIGURATION.md` into a Phase 10.2 operator guide that documents the current configuration sources, the two environment variables actually consumed by the code today (`NETTOOLS_LOG_LEVEL` and `NETTOOLS_FIXTURE_FILE`), the implemented default thresholds, secrets-handling guidance, and the policy status of active probes and capture planning.
+- Explicitly distinguished code-backed behavior from reserved `.env.example` variables that are documented for future provider wiring but are not yet read by the runtime, so the guide does not overstate live provider configurability.
+- Updated `docs/NETTOOLS_TODO.md` so all items under Phase 10.2 are now marked complete.
+- Documentation structure was validated by confirming the new guide includes dedicated sections for supported environment variables, reserved variables, provider configuration, thresholds, secrets handling, active-probe restrictions, recommended local setup, and validation steps.
+
+## 2026-03-28T16:12:01Z - GPT-5.4 - Added the first NETTOOLS troubleshooting playbook for single-user complaints
+- Added `skills/nettools-core/PLAYBOOKS.md` with an operator-facing `Single User Complaint` playbook aligned to the `single_client_wifi_issue` orchestrator definition and the single-user flow in `docs/NETTOOLS_SPECS.md`.
+- The new playbook includes when-to-use guidance, required inputs, a fast-path orchestrator entrypoint, a manual skill-by-skill sequence, interpretation notes for the main finding-code branches, stop conditions, and escalation guidance.
+- Updated `skills/nettools-core/README.md` so the shared core docs now advertise the playbook document alongside configuration and testing guidance.
+- Updated `docs/NETTOOLS_TODO.md` so the first item under Phase 10.3, the single user complaint playbook, is now marked complete.
+
+## 2026-03-28T16:15:24Z - GPT-5.4 - Added the NETTOOLS site-wide slowdown troubleshooting playbook
+- Extended `skills/nettools-core/PLAYBOOKS.md` with an operator-facing `Site-Wide Slowdown` playbook aligned to the `site_wide_internal_slowdown` orchestrator definition and the broad-impact flow in `docs/NETTOOLS_SPECS.md`.
+- The new playbook includes when-to-use guidance, required site-scope inputs, an orchestrator fast path, a manual sequence covering change detection, path probes, topology checks, representative AP uplink and RF sampling, service checks, and final incident correlation, plus stop conditions and escalation guidance.
+- Updated `docs/NETTOOLS_TODO.md` so the second item under Phase 10.3, the site-wide slowdown playbook, is now marked complete.
+- Documentation structure was validated by confirming the new playbook section includes the same operator scaffolding as the single-user runbook: fast path, manual sequence, stop conditions, and related references.
+
+## 2026-03-28T16:19:05Z - GPT-5.4 - Added the NETTOOLS auth issue troubleshooting playbook
+- Extended `skills/nettools-core/PLAYBOOKS.md` with an operator-facing `Auth Issue` playbook aligned to the `auth_or_onboarding_issue` orchestrator definition and focused on onboarding and access-failure triage.
+- The new playbook includes when-to-use guidance, required access-path inputs, an orchestrator fast path, a manual sequence covering incident intake, auth/RADIUS checks, DHCP, segmentation, DNS, client-health fallback, and final incident correlation, plus stop conditions and escalation guidance.
+- Updated `docs/NETTOOLS_TODO.md` so the third item under Phase 10.3, the auth issue playbook, is now marked complete.
+- Documentation structure was validated by confirming the new playbook section includes fast path, manual sequence, stop conditions, and related references just like the existing playbooks.
+
+## 2026-03-28T16:20:58Z - GPT-5.4 - Added the NETTOOLS recent hardware change troubleshooting playbook
+- Extended `skills/nettools-core/PLAYBOOKS.md` with an operator-facing `Recent Hardware Change` playbook centered on `net.change_detection`, `net.incident_correlation`, and direct validation of the changed technical domain.
+- Documented this one explicitly as a change-led operator playbook rather than claiming a dedicated orchestrator playbook exists today; the fast path uses the closest implemented orchestrator route while the manual sequence anchors on change detection first.
+- Updated `docs/NETTOOLS_TODO.md` so the final remaining item under Phase 10.3, the recent hardware change playbook, is now marked complete.
+- Documentation structure was validated by confirming the new section includes fast path, manual sequence, stop conditions, and related references, bringing all four Phase 10.3 playbooks to the same operator-ready structure.
+
+## 2026-03-28T16:23:47Z - GPT-5.4 - Published the NETTOOLS Phase 10 documentation checkpoint
+- Prepared the full Phase 10 documentation checkpoint for publication, including wrapper-contract expansions, the operator configuration guide, the troubleshooting playbooks, the finding-code registry operator actions, and the checklist updates in `docs/NETTOOLS_TODO.md`.
+- Kept the documentation aligned with the current implementation by documenting reserved configuration knobs as non-runtime placeholders and by stating explicitly that the recent-hardware-change workflow is an operator playbook rather than a dedicated orchestrator playbook.
+- This checkpoint is intended to be committed and pushed as the published Phase 10 operator-documentation milestone.
