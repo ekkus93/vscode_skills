@@ -248,6 +248,11 @@
 - Updated `.github/workflows/ci.yml` so the `mypy` job installs `pytest` alongside `mypy`, `pydantic`, `openpyxl`, `xlrd`, and `yfinance`.
 - Root cause: the workflow runs `python -m mypy .`, which type-checks test modules under `tests/` and `skills/`, but the CI mypy environment did not install `pytest`, causing `import-not-found` failures that do not reproduce locally when `pytest` is already present.
 - Kept the fix in CI rather than weakening mypy coverage, because the repository currently intends to type-check the test modules too.
+
+## 2026-03-28T21:17:35Z - GPT-5.4 - Pushed CI mypy environment fix to origin/master
+- Committed the CI workflow fix as `f16b0cf` with the message `Fix mypy CI environment`.
+- Pushed `master` to `origin/master`, advancing the remote from `22923e2` to `f16b0cf`.
+- Verified the worktree was clean immediately after the push before recording this checkpoint.
 - Added `tests/unit/nettools/test_phase2_models.py` to cover partial-data tolerance, nested serialization, and source/version metadata behavior across the new models.
 - Re-ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest tests/unit/nettools`; the full NETTOOLS unit suite passed with 16 tests.
 - Marked all Phase 2 items complete in `docs/NETTOOLS_TODO.md`.
