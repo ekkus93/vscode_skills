@@ -123,3 +123,15 @@
 ## 2026-03-20T01:59:45Z - GPT-5.4 - Prepared excel skill and install-manifest changes for check-in
 - Final staged change set includes the new `excel-to-markdown` and `excel-to-delimited` shared skills, registry updates in `skills/SKILL_LIST.md`, README documentation updates in both repo docs, and the new machine-readable install manifest.
 - Verified there were no editor diagnostics in the modified README, JSON, and new Python helper/test files before committing.
+
+## 2026-03-28T07:21:35Z - GPT-5.4 - NETTOOLS architecture and implementation scope reviewed
+- Reviewed `docs/NETTOOLS_SPECS.md` and `docs/NETTOOLS_TODO.md` as requirements only; no code changes made in this session.
+- NETTOOLS is intended as a layered diagnostics framework for office Wi-Fi and LAN issues, with OpenClaw-facing skills on top of provider adapters, normalization models, analysis utilities, and optional cache/baseline storage.
+- The shared output contract is central: every skill should emit a standardized `SkillResult`-style structure with status, scope, evidence, findings, next actions, timestamps, and raw references.
+- Priority 1 implementation order is explicitly defined: common contracts/config/errors/logging first, then normalized models and adapter interfaces, then the six initial skills `net.client_health`, `net.ap_rf_health`, `net.dhcp_path`, `net.dns_latency`, `net.ap_uplink_health`, and `net.stp_loop_anomaly`.
+- The design is intentionally vendor-adaptable, read-only by default in v1, evidence-first, threshold-driven, and expected to degrade cleanly under partial source failure rather than crashing unrelated skills.
+
+## 2026-03-28T07:33:10Z - GPT-5.4 - Aligned NETTOOLS docs with repo-local OpenClaw skill plan
+- Updated `docs/NETTOOLS_SPECS.md` to reflect the confirmed implementation profile: NETTOOLS lives under `skills/`, each capability is an OpenClaw skill folder with `SKILL.md` plus a helper script or Unix tool workflow, the v1 target runtime is Debian on a Dell Chromebook, Pydantic is the model layer, and logging uses stdlib logging with JSON output.
+- Replaced the old standalone `nettools/` repository-layout example in `docs/NETTOOLS_SPECS.md` with a skill-first layout under `skills/`, including an internal `nettools-core` support package for shared adapters, models, analysis, config, findings, and logging helpers.
+- Updated `docs/NETTOOLS_TODO.md` so Phase 0 now scaffolds repo-local skill folders under `skills/`, adds `SKILL.md` wrappers and helper entrypoints, locks in Pydantic and stdlib JSON logging, adds a stable finding-code registry task, and explicitly creates per-skill wrapper tasks across Priority 1 through Priority 3 skills.
