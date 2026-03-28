@@ -13,6 +13,7 @@ from .state import (
     DomainScore,
     IncidentState,
     InvestigationStatus,
+    InvestigationTraceEventType,
     StopReason,
     StopReasonCode,
 )
@@ -295,16 +296,49 @@ def evaluate_stop_conditions(
 
     if stop_reason is None:
         rationale.append("No stop condition matched; investigation can continue.")
+        if mutate_state:
+            state.append_trace(
+                InvestigationTraceEventType.STOP_CONDITION_CHECK,
+                "Stop conditions evaluated without triggering a stop.",
+                details={
+                    "should_stop": False,
+                    "branch_depth": branch_depth,
+                    "rationale": list(rationale),
+                },
+                recorded_at=resolved_now,
+            )
         return StopConditionDecision(should_stop=False, rationale=rationale)
 
     rationale.append(f"Stop triggered: {stop_reason.code.value}.")
     if mutate_state:
+        state.append_trace(
+            InvestigationTraceEventType.STOP_CONDITION_CHECK,
+            f"Stop conditions matched {stop_reason.code.value}.",
+            details={
+                "should_stop": True,
+                "branch_depth": branch_depth,
+                "stop_reason_code": stop_reason.code.value,
+                "rationale": list(rationale),
+            },
+            recorded_at=resolved_now,
+        )
         state.set_stop_reason(stop_reason)
         if stop_reason.code is StopReasonCode.DEPENDENCY_BLOCKED:
             state.status = InvestigationStatus.BLOCKED
         else:
             state.status = InvestigationStatus.COMPLETED
         state.updated_at = resolved_now
+        state.append_trace(
+            InvestigationTraceEventType.FINAL_STOP_RATIONALE,
+            stop_reason.message,
+            details={
+                "stop_reason_code": stop_reason.code.value,
+                "related_domains": [domain.value for domain in stop_reason.related_domains],
+                "supporting_context": dict(stop_reason.supporting_context),
+                "uncertainty_summary": stop_reason.uncertainty_summary,
+            },
+            recorded_at=resolved_now,
+        )
     return StopConditionDecision(
         should_stop=True,
         stop_reason=stop_reason,

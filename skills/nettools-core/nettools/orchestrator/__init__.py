@@ -53,6 +53,7 @@ from .scoring import (
 )
 from .state import (
     DependencyFailure,
+    DiagnoseIncidentAuditTrail,
     DiagnoseIncidentReport,
     DiagnosticDomain,
     DomainScore,
@@ -63,6 +64,8 @@ from .state import (
     IncidentStateReport,
     IncidentType,
     InvestigationStatus,
+    InvestigationTraceEntry,
+    InvestigationTraceEventType,
     RankedCause,
     SamplingSummary,
     ScopeSummary,
@@ -87,6 +90,7 @@ __all__ = [
     "PlaybookSelectionDecision",
     "ConfidenceThresholds",
     "DependencyFailure",
+    "DiagnoseIncidentAuditTrail",
     "DiagnoseIncidentInput",
     "DiagnoseIncidentReport",
     "DiagnosticDomain",
@@ -101,6 +105,8 @@ __all__ = [
     "IdentifierResolver",
     "IncidentState",
     "IncidentType",
+    "InvestigationTraceEntry",
+    "InvestigationTraceEventType",
     "InvestigationStatus",
     "SKILL_REGISTRY",
     "PlaybookDefinition",

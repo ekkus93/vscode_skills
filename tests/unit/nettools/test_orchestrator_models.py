@@ -14,12 +14,14 @@ from nettools.models import (
 )
 from nettools.orchestrator import (
     DEFAULT_PLAYBOOKS,
+    DiagnoseIncidentAuditTrail,
     DiagnoseIncidentReport,
     DiagnosticDomain,
     DomainScore,
     IncidentState,
     IncidentType,
     InvestigationStatus,
+    InvestigationTraceEventType,
     PlaybookDefinition,
     RankedCause,
     SkillExecutionRecord,
@@ -177,6 +179,59 @@ def test_incident_state_serializes_expected_shape() -> None:
     assert payload["skill_trace"][0]["skill_name"] == "net.client_health"
     assert payload["skill_trace"][0]["raw_result"]["skill_name"] == "net.client_health"
     assert payload["evidence_log"][0]["status"] == "ok"
+
+
+def test_incident_state_serializes_investigation_trace() -> None:
+    state = IncidentState(incident_id="inc-trace-1")
+
+    state.append_trace(
+        InvestigationTraceEventType.PLAYBOOK_SELECTION,
+        "Selected playbook single_client_wifi_issue for single_client.",
+        details={
+            "incident_type": "single_client",
+            "playbook_name": "single_client_wifi_issue",
+        },
+    )
+
+    payload = state.model_dump(mode="json")
+
+    assert payload["investigation_trace"] == [
+        {
+            "event_type": "playbook_selection",
+            "recorded_at": payload["investigation_trace"][0]["recorded_at"],
+            "message": "Selected playbook single_client_wifi_issue for single_client.",
+            "details": {
+                "incident_type": "single_client",
+                "playbook_name": "single_client_wifi_issue",
+            },
+        }
+    ]
+
+
+def test_audit_trail_serializes_state_trace_and_execution_records() -> None:
+    state = IncidentState(
+        incident_id="inc-audit-1",
+        incident_type=IncidentType.SINGLE_CLIENT,
+        playbook_used="single_client_wifi_issue",
+    )
+    state.append_execution(_record("net.client_health"))
+    state.append_trace(
+        InvestigationTraceEventType.PLAYBOOK_SELECTION,
+        "Selected playbook single_client_wifi_issue for single_client.",
+        details={"playbook_name": "single_client_wifi_issue"},
+    )
+
+    audit_trail = DiagnoseIncidentAuditTrail.from_incident_state(
+        state,
+        incident_record={"incident_id": "inc-audit-1", "summary": "Audit me"},
+    )
+    payload = audit_trail.model_dump(mode="json")
+
+    assert payload["incident_id"] == "inc-audit-1"
+    assert payload["incident_record"]["summary"] == "Audit me"
+    assert payload["execution_records"][0]["skill_name"] == "net.client_health"
+    assert payload["investigation_trace"][0]["event_type"] == "playbook_selection"
+    assert audit_trail.replay_state().incident_id == state.incident_id
 
 
 def test_diagnose_incident_report_formats_ranked_causes() -> None:

@@ -30,10 +30,12 @@ from .playbooks import PlaybookDefinition
 from .sampling import build_sampling_plan
 from .scoring import score_incident_hypotheses
 from .state import (
+    DiagnoseIncidentAuditTrail,
     DiagnoseIncidentReport,
     DiagnosticDomain,
     IncidentState,
     InvestigationStatus,
+    InvestigationTraceEventType,
     RankedCause,
     StopReason,
     StopReasonCode,
@@ -66,6 +68,7 @@ class DiagnoseIncidentInput(SharedInputBase):
     candidate_areas: list[str] = Field(default_factory=list)
     comparison_areas: list[str] = Field(default_factory=list)
     incident_record: IncidentRecord | None = None
+    replay_audit_trail: DiagnoseIncidentAuditTrail | None = None
     replay_state: IncidentState | None = None
     capture_authorized: bool = False
     capture_approval_ticket: str | None = None
@@ -77,8 +80,15 @@ class DiagnoseIncidentInput(SharedInputBase):
 
     @model_validator(mode="after")
     def validate_incident_source(self) -> DiagnoseIncidentInput:
-        if self.replay_state is None and self.incident_record is None and not self.complaint:
-            raise ValueError("either complaint, incident_record, or replay_state is required")
+        if (
+            self.replay_audit_trail is None
+            and self.replay_state is None
+            and self.incident_record is None
+            and not self.complaint
+        ):
+            raise ValueError(
+                "either complaint, incident_record, replay_audit_trail, or replay_state is required"
+            )
         return self
 
 
@@ -176,6 +186,28 @@ def _incident_record_from_replay_state(
             "notes": list(skill_input.notes),
         }
     )
+
+
+def _incident_record_from_audit_trail(
+    skill_input: DiagnoseIncidentInput,
+    audit_trail: DiagnoseIncidentAuditTrail,
+) -> IncidentRecord:
+    if skill_input.incident_record is not None:
+        return _incident_record_from_input(skill_input)
+    if audit_trail.incident_record:
+        return IncidentRecord.model_validate(audit_trail.incident_record)
+    return _incident_record_from_replay_state(skill_input, audit_trail.replay_state())
+
+
+def _build_audit_trail(
+    state: IncidentState,
+    *,
+    incident_record: IncidentRecord,
+) -> dict[str, Any]:
+    return DiagnoseIncidentAuditTrail.from_incident_state(
+        state,
+        incident_record=incident_record.model_dump(mode="json", exclude_none=True),
+    ).model_dump(mode="json")
 
 
 def _build_intake_payload(skill_input: DiagnoseIncidentInput) -> dict[str, Any]:
@@ -888,11 +920,25 @@ def _manual_stop_reason(message: str, state: IncidentState) -> StopReason:
     )
 
 
+def _record_manual_stop_trace(state: IncidentState, stop_reason: StopReason) -> None:
+    state.append_trace(
+        InvestigationTraceEventType.FINAL_STOP_RATIONALE,
+        stop_reason.message,
+        details={
+            "stop_reason_code": stop_reason.code.value,
+            "related_domains": [domain.value for domain in stop_reason.related_domains],
+            "supporting_context": dict(stop_reason.supporting_context),
+            "uncertainty_summary": stop_reason.uncertainty_summary,
+        },
+    )
+
+
 def _replay_result(
     skill_input: DiagnoseIncidentInput,
     *,
     state: IncidentState,
     incident_record: IncidentRecord,
+    replay_source: str,
 ) -> SkillResult:
     replay_state = state.model_copy(deep=True)
     ranked_causes = _ranked_causes(replay_state)
@@ -936,9 +982,13 @@ def _replay_result(
             "incident_record": incident_record.model_dump(mode="json", exclude_none=True),
             "diagnosis_report": report,
             "incident_state": replay_state.model_dump(mode="json", exclude_none=True),
+            "audit_trail": _build_audit_trail(
+                replay_state,
+                incident_record=incident_record,
+            ),
             "replay_debug": {
                 "enabled": True,
-                "source": "incident_state",
+                "source": replay_source,
                 "replayed_skill_count": len(replay_state.skill_trace),
             },
         },
@@ -956,6 +1006,17 @@ def evaluate_diagnose_incident(
     logger: StructuredLogger | None = None,
     stop_config: StopConditionConfig | None = None,
 ) -> SkillResult:
+    if skill_input.replay_audit_trail is not None:
+        replay_audit_trail = skill_input.replay_audit_trail
+        replay_state = replay_audit_trail.replay_state()
+        incident_record = _incident_record_from_audit_trail(skill_input, replay_audit_trail)
+        return _replay_result(
+            skill_input,
+            state=replay_state,
+            incident_record=incident_record,
+            replay_source="audit_trail",
+        )
+
     if skill_input.replay_state is not None:
         replay_state = skill_input.replay_state
         incident_record = (
@@ -967,6 +1028,7 @@ def evaluate_diagnose_incident(
             skill_input,
             state=replay_state,
             incident_record=incident_record,
+            replay_source="incident_state",
         )
 
     state = IncidentState(incident_id=_state_incident_id(skill_input))
@@ -984,6 +1046,17 @@ def evaluate_diagnose_incident(
         state=state,
     )
     playbook = selection.playbook
+    state.append_trace(
+        InvestigationTraceEventType.PLAYBOOK_SELECTION,
+        f"Selected playbook {selection.playbook_name} for {state.incident_type.value}.",
+        details={
+            "incident_type": state.incident_type.value,
+            "playbook_name": selection.playbook_name,
+            "override_used": selection.override_used,
+            "classification_rationale": list(state.classification_rationale),
+            "selection_rationale": list(selection.rationale),
+        },
+    )
 
     next_skill = _initial_skill(
         playbook,
@@ -1035,6 +1108,19 @@ def evaluate_diagnose_incident(
             skill_input=skill_input,
             incident_record=incident_record,
         )
+        state.append_trace(
+            InvestigationTraceEventType.BRANCH_DECISION,
+            (
+                f"Branch decision after {next_skill}: "
+                f"{branch_decision.selected_skill or 'no follow-up skill selected'}."
+            ),
+            details={
+                "source_skill": next_skill,
+                "selected_skill": branch_decision.selected_skill,
+                "candidate_scores": dict(branch_decision.candidate_scores),
+                "rationale": list(branch_decision.rationale),
+            },
+        )
         selected_skill = branch_decision.selected_skill
         expected_default = _expected_default_followup(
             playbook,
@@ -1073,6 +1159,7 @@ def evaluate_diagnose_incident(
         state.set_stop_reason(manual_stop)
         state.status = InvestigationStatus.COMPLETED
         state.recommend_next(None)
+        _record_manual_stop_trace(state, manual_stop)
     elif next_skill is None and state.stop_reason is None:
         manual_stop = _manual_stop_reason(
             "No additional runnable automated follow-up skills remain.",
@@ -1081,6 +1168,7 @@ def evaluate_diagnose_incident(
         state.set_stop_reason(manual_stop)
         state.status = InvestigationStatus.COMPLETED
         state.recommend_next(None)
+        _record_manual_stop_trace(state, manual_stop)
     elif state.stop_reason is None:
         state.status = InvestigationStatus.RUNNING
 
@@ -1125,6 +1213,10 @@ def evaluate_diagnose_incident(
             "incident_record": incident_record.model_dump(mode="json", exclude_none=True),
             "diagnosis_report": report,
             "incident_state": state.model_dump(mode="json", exclude_none=True),
+            "audit_trail": _build_audit_trail(
+                state,
+                incident_record=incident_record,
+            ),
         },
         findings=[],
         next_actions=followup_recommendations,
@@ -1165,6 +1257,7 @@ def build_diagnose_incident_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--candidate-area", action="append", dest="candidate_areas")
     parser.add_argument("--comparison-area", action="append", dest="comparison_areas")
+    parser.add_argument("--replay-audit-trail-file")
     parser.add_argument("--replay-state-file")
     parser.add_argument("--replay-incident-record-file")
     parser.add_argument("--capture-authorized", action="store_true")
@@ -1183,6 +1276,12 @@ def _parse_input(arguments: argparse.Namespace) -> DiagnoseIncidentInput:
         for key, value in vars(arguments).items()
         if key in DiagnoseIncidentInput.model_fields and value is not None
     }
+    replay_audit_trail_file = getattr(arguments, "replay_audit_trail_file", None)
+    if replay_audit_trail_file:
+        with open(replay_audit_trail_file, encoding="utf-8") as handle:
+            payload["replay_audit_trail"] = DiagnoseIncidentAuditTrail.model_validate_json(
+                handle.read()
+            )
     replay_state_file = getattr(arguments, "replay_state_file", None)
     if replay_state_file:
         with open(replay_state_file, encoding="utf-8") as handle:

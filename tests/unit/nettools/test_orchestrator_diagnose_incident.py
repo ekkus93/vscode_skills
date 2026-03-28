@@ -15,10 +15,12 @@ from nettools.models import (
     TimeWindow,
 )
 from nettools.orchestrator import (
+    DiagnoseIncidentAuditTrail,
     DiagnosticDomain,
     IncidentState,
     IncidentType,
     InvestigationStatus,
+    InvestigationTraceEventType,
     ScopeSummary,
     SkillExecutionRecord,
     StopReason,
@@ -180,6 +182,85 @@ def test_diagnose_incident_runs_intake_then_high_confidence_auth_path(
     assert "LOW_AUTH_SUCCESS_RATE" in report["recommended_human_actions"][0]
     assert "AUTH_TIMEOUTS" in report["recommended_human_actions"][0]
     assert "RADIUS_UNREACHABLE" in report["recommended_human_actions"][0]
+    assert (
+        result.evidence["audit_trail"]["incident_id"]
+        == result.evidence["incident_state"]["incident_id"]
+    )
+    assert (
+        result.evidence["audit_trail"]["execution_records"][0]["skill_name"]
+        == "net.incident_intake"
+    )
+    assert (
+        result.evidence["audit_trail"]["investigation_trace"][0]["event_type"]
+        == "playbook_selection"
+    )
+
+
+def test_diagnose_incident_records_investigation_trace(
+    monkeypatch: Any,
+) -> None:
+    calls: list[str] = []
+    records = {
+        "net.incident_intake": [
+            _skill_record(
+                "net.incident_intake",
+                scope_type=ScopeType.CLIENT,
+                scope_id="client-1",
+                evidence={
+                    "incident_record": {
+                        "incident_id": "inc-trace-1",
+                        "summary": "Laptop cannot connect and reconnect helps",
+                        "site_id": "hq-1",
+                        "client_id": "client-1",
+                        "reconnect_helps": True,
+                    }
+                },
+            )
+        ],
+        "net.auth_8021x_radius": [
+            _skill_record(
+                "net.auth_8021x_radius",
+                scope_type=ScopeType.CLIENT,
+                scope_id="client-1",
+                status=Status.WARN,
+                findings=[
+                    _finding("LOW_AUTH_SUCCESS_RATE"),
+                    _finding("AUTH_TIMEOUTS"),
+                    _finding("RADIUS_UNREACHABLE", severity=FindingSeverity.CRITICAL),
+                ],
+            )
+        ],
+    }
+    monkeypatch.setattr(
+        "nettools.orchestrator.diagnose_incident.invoke_skill",
+        _fake_invoke(records, calls),
+    )
+
+    result = evaluate_diagnose_incident(
+        DiagnoseIncidentInput(
+            site_id="hq-1",
+            client_id="client-1",
+            complaint="My laptop cannot connect to CorpWiFi and reconnect helps",
+        ),
+        AdapterBundle(),
+    )
+
+    trace = result.evidence["incident_state"]["investigation_trace"]
+    event_types = [entry["event_type"] for entry in trace]
+
+    assert calls == ["net.incident_intake", "net.auth_8021x_radius"]
+    assert event_types == [
+        InvestigationTraceEventType.PLAYBOOK_SELECTION.value,
+        InvestigationTraceEventType.SCORE_UPDATE.value,
+        InvestigationTraceEventType.BRANCH_DECISION.value,
+        InvestigationTraceEventType.STOP_CONDITION_CHECK.value,
+        InvestigationTraceEventType.FINAL_STOP_RATIONALE.value,
+    ]
+    assert trace[0]["details"]["playbook_name"] == "auth_or_onboarding_issue"
+    assert trace[1]["details"]["top_domains"][0] == "auth_issue"
+    assert trace[2]["details"]["selected_skill"] == "net.dhcp_path"
+    assert trace[3]["details"]["stop_reason_code"] == "high_confidence_diagnosis"
+    assert trace[4]["details"]["stop_reason_code"] == "high_confidence_diagnosis"
 
 
 def test_diagnose_incident_runs_single_client_dns_path_end_to_end(
@@ -715,6 +796,86 @@ def test_diagnose_incident_replays_serialized_state_without_live_execution(
     assert result.evidence["incident_record"]["site_id"] == "hq-1"
 
 
+def test_diagnose_incident_replays_from_audit_trail_without_live_execution(
+    monkeypatch: Any,
+) -> None:
+    state = IncidentState(
+        incident_id="inc-replay-audit-1",
+        incident_type=IncidentType.SINGLE_CLIENT,
+        playbook_used="single_client_wifi_issue",
+        status=InvestigationStatus.COMPLETED,
+        scope_summary=ScopeSummary(
+            site_id="hq-1",
+            ssid="CorpWiFi",
+            known_client_ids=["client-42"],
+        ),
+    )
+    state.append_execution(
+        _skill_record(
+            "net.client_health",
+            scope_type=ScopeType.CLIENT,
+            scope_id="client-42",
+            status=Status.WARN,
+            findings=[_finding("HIGH_PACKET_LOSS")],
+        )
+    )
+    state.append_execution(
+        _skill_record(
+            "net.dns_latency",
+            scope_type=ScopeType.CLIENT,
+            scope_id="client-42",
+            status=Status.WARN,
+            findings=[_finding("HIGH_DNS_LATENCY"), _finding("DNS_TIMEOUT_RATE")],
+        )
+    )
+    state.set_domain_score(
+        DiagnosticDomain.DNS_ISSUE,
+        score=0.78,
+        confidence=Confidence.HIGH,
+        supporting_findings=["HIGH_DNS_LATENCY", "DNS_TIMEOUT_RATE"],
+    )
+    state.append_trace(
+        InvestigationTraceEventType.PLAYBOOK_SELECTION,
+        "Selected playbook single_client_wifi_issue for single_client.",
+        details={"playbook_name": "single_client_wifi_issue"},
+    )
+    state.set_stop_reason(
+        StopReason(
+            code=StopReasonCode.HIGH_CONFIDENCE_DIAGNOSIS,
+            message="High-confidence diagnosis points to dns_issue with high confidence.",
+            related_domains=[DiagnosticDomain.DNS_ISSUE],
+            supporting_context={"replay": True},
+        )
+    )
+    audit_trail = DiagnoseIncidentAuditTrail.from_incident_state(
+        state,
+        incident_record={
+            "incident_id": "inc-replay-audit-1",
+            "summary": "Replay audit trail",
+            "site_id": "hq-1",
+            "client_id": "client-42",
+        },
+    )
+
+    def fail_invoke(*args: Any, **kwargs: Any) -> Any:
+        raise AssertionError("audit replay mode should not invoke primitive skills")
+
+    monkeypatch.setattr("nettools.orchestrator.diagnose_incident.invoke_skill", fail_invoke)
+
+    result = evaluate_diagnose_incident(
+        DiagnoseIncidentInput(replay_audit_trail=audit_trail, site_id="hq-1"),
+        AdapterBundle(),
+    )
+
+    assert result.evidence["replay_debug"] == {
+        "enabled": True,
+        "source": "audit_trail",
+        "replayed_skill_count": 2,
+    }
+    assert result.evidence["audit_trail"]["incident_id"] == "inc-replay-audit-1"
+    assert result.evidence["incident_record"]["client_id"] == "client-42"
+
+
 def test_parse_input_loads_replay_state_and_incident_record_files(tmp_path: Any) -> None:
     state = IncidentState(
         incident_id="inc-replay-parse",
@@ -748,6 +909,35 @@ def test_parse_input_loads_replay_state_and_incident_record_files(tmp_path: Any)
     assert skill_input.replay_state.incident_id == "inc-replay-parse"
     assert skill_input.incident_record is not None
     assert skill_input.incident_record.client_id == "client-88"
+
+
+def test_parse_input_loads_replay_audit_trail_file(tmp_path: Any) -> None:
+    state = IncidentState(
+        incident_id="inc-replay-audit-parse",
+        incident_type=IncidentType.SINGLE_CLIENT,
+        playbook_used="single_client_wifi_issue",
+        scope_summary=ScopeSummary(site_id="hq-1"),
+    )
+    audit_trail = DiagnoseIncidentAuditTrail.from_incident_state(
+        state,
+        incident_record={
+            "incident_id": "inc-replay-audit-parse",
+            "summary": "Replay audit trail",
+            "site_id": "hq-1",
+        },
+    )
+    audit_trail_path = tmp_path / "audit-trail.json"
+    audit_trail_path.write_text(audit_trail.model_dump_json(indent=2), encoding="utf-8")
+
+    parser = build_diagnose_incident_parser()
+    arguments = parser.parse_args([
+        "--replay-audit-trail-file",
+        str(audit_trail_path),
+    ])
+    skill_input = _parse_input(arguments)
+
+    assert skill_input.replay_audit_trail is not None
+    assert skill_input.replay_audit_trail.incident_id == "inc-replay-audit-parse"
 
 
 def test_diagnose_incident_uses_pre_normalized_record_without_intake(

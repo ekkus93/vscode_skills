@@ -279,6 +279,20 @@
 - Re-ran repository validation before publication using `/home/phil/.local/bin/ruff check .`, `.venv/bin/python -m mypy .`, and `.venv/bin/python -m pytest`; Ruff passed, MyPy passed on 120 source files, and pytest passed with 263 tests.
 - Confirmed the remaining working tree is limited to the Phase 12.3 follow-up recommendation implementation, its focused diagnose-incident tests, the roadmap checkbox for authorized capture-trigger recommendations, and the related memory updates.
 
+## 2026-03-28T19:00:17Z - GPT-5.4 - Added orchestrator investigation trace logging
+- Extended `IncidentState` with typed `investigation_trace` entries and exported trace event models so orchestrator state now serializes playbook selection, branch decisions, score updates, stop-condition checks, and final stop rationale as structured events.
+- Wired trace logging into `diagnose_incident.py`, `scoring.py`, and `stop_conditions.py` so the trace is emitted from the real decision points rather than reconstructed from report text.
+- Added model serialization coverage plus a one-step end-to-end trace completeness test; validated the touched files with `/home/phil/.local/bin/ruff check`, `.venv/bin/python -m mypy`, and `pytest tests/unit/nettools/test_orchestrator_models.py tests/unit/nettools/test_orchestrator_diagnose_incident.py tests/unit/nettools/test_orchestrator_stop_conditions.py` (32 passed).
+
+## 2026-03-28T19:05:54Z - GPT-5.4 - Added orchestrator audit-trail persistence and replay bundle
+- Added `DiagnoseIncidentAuditTrail` so `net.diagnose_incident` now persists a typed bundle containing the final `IncidentState`, the normalized incident record, serialized execution records, and investigation trace entries.
+- Updated `diagnose_incident.py` to emit that audit trail in skill-result evidence and to accept `replay_audit_trail` / `--replay-audit-trail-file` as a no-live-execution replay source for debugging.
+- Added focused model and diagnose-incident coverage for audit-trail serialization, emitted evidence, parser loading, and replay-from-audit-trail; validated the touched files with `/home/phil/.local/bin/ruff check`, `.venv/bin/python -m mypy`, and `pytest tests/unit/nettools/test_orchestrator_models.py tests/unit/nettools/test_orchestrator_diagnose_incident.py` (30 passed).
+
+## 2026-03-28T19:11:23Z - GPT-5.4 - Validated Phase 13 traceability checkpoint for publication
+- Re-ran full repository validation before publication: `/home/phil/.local/bin/ruff check .` passed, `.venv/bin/python -m mypy .` passed on 120 source files, and `.venv/bin/python -m pytest` passed with 268 tests.
+- Confirmed the pending working tree on top of `31ebd95` is limited to the Phase 13.1 investigation trace logging work, the Phase 13.2 audit-trail persistence and replay support, their focused tests, the roadmap checkboxes, and the related memory updates.
+
 ## 2026-03-28T18:40:47Z - GPT-5.4 - Pushed orchestrator report improvements to origin/master
 - Committed the human-action generator, report-formatting coverage, and roadmap updates as `40b984e` with the message `Improve orchestrator report actions and tests`.
 - Pushed `master` to `origin/master` after a clean validation baseline: Ruff passed, MyPy passed on 120 source files, and pytest passed with 261 tests.

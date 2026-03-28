@@ -383,16 +383,16 @@ Notes:
 ## 13. Phase 11 - Traceability and observability
 
 ### 13.1 Investigation trace logging
-- [ ] log playbook selection
-- [ ] log branch decisions
-- [ ] log score updates
-- [ ] log stop-condition checks
-- [ ] log final stop rationale
+- [x] log playbook selection
+- [x] log branch decisions
+- [x] log score updates
+- [x] log stop-condition checks
+- [x] log final stop rationale
 
 ### 13.2 Audit trail persistence
-- [ ] support serializing final incident state
-- [ ] support storing execution records
-- [ ] support replay from trace for debugging
+- [x] support serializing final incident state
+- [x] support storing execution records
+- [x] support replay from trace for debugging
 
 ### 13.3 Metrics
 - [ ] count invocations by playbook
@@ -401,7 +401,7 @@ Notes:
 - [ ] record average skill count per investigation
 
 ### 13.4 Tests
-- [ ] trace completeness test
+- [x] trace completeness test
 - [ ] replayability test
 - [ ] log redaction test
 

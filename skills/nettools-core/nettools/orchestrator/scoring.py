@@ -5,7 +5,13 @@ from collections.abc import Iterable, Sequence
 from pydantic import BaseModel, ConfigDict, Field
 
 from ..models import Confidence, Status
-from .state import DiagnosticDomain, DomainScore, ExecutionRecord, IncidentState
+from .state import (
+    DiagnosticDomain,
+    DomainScore,
+    ExecutionRecord,
+    IncidentState,
+    InvestigationTraceEventType,
+)
 
 
 class ConfidenceThresholds(BaseModel):
@@ -490,6 +496,20 @@ def score_incident_hypotheses(
         rationale.append(
             "Mixed evidence keeps multiple domains plausible instead of forcing a single cause."
         )
+
+    state.append_trace(
+        InvestigationTraceEventType.SCORE_UPDATE,
+        f"Updated domain scores using {len(records)} execution records.",
+        details={
+            "top_domains": [domain.value for domain in top_domains[:3]],
+            "suspected_domains": [domain.value for domain in state.suspected_domains],
+            "eliminated_domains": [domain.value for domain in state.eliminated_domains],
+            "rationale": list(rationale),
+            "domain_scores": {
+                domain.value: scored_domains[domain].score for domain in DiagnosticDomain
+            },
+        },
+    )
 
     return HypothesisScoringDecision(
         domain_scores=scored_domains,

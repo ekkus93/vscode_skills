@@ -54,6 +54,14 @@ class StopReasonCode(str, Enum):
     NO_NEW_INFORMATION = "no_new_information"
 
 
+class InvestigationTraceEventType(str, Enum):
+    PLAYBOOK_SELECTION = "playbook_selection"
+    BRANCH_DECISION = "branch_decision"
+    SCORE_UPDATE = "score_update"
+    STOP_CONDITION_CHECK = "stop_condition_check"
+    FINAL_STOP_RATIONALE = "final_stop_rationale"
+
+
 class ScopeSummary(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -151,6 +159,15 @@ class StopReason(BaseModel):
     supporting_context: dict[str, Any] = Field(default_factory=dict)
     uncertainty_summary: str | None = None
     recommended_human_actions: list[str] = Field(default_factory=list)
+
+
+class InvestigationTraceEntry(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    event_type: InvestigationTraceEventType
+    recorded_at: datetime
+    message: str
+    details: dict[str, Any] = Field(default_factory=dict)
 
 
 class RankedCause(BaseModel):
@@ -315,6 +332,39 @@ class DiagnoseIncidentReport(BaseModel):
         )
 
 
+class DiagnoseIncidentAuditTrail(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    incident_id: str
+    persisted_at: datetime = Field(default_factory=utc_now)
+    incident_state: IncidentState
+    incident_record: dict[str, Any] = Field(default_factory=dict)
+    execution_records: list[ExecutionRecord] = Field(default_factory=list)
+    investigation_trace: list[InvestigationTraceEntry] = Field(default_factory=list)
+
+    @classmethod
+    def from_incident_state(
+        cls,
+        state: IncidentState,
+        *,
+        incident_record: dict[str, Any] | None = None,
+        persisted_at: datetime | None = None,
+    ) -> DiagnoseIncidentAuditTrail:
+        return cls(
+            incident_id=state.incident_id,
+            persisted_at=persisted_at or utc_now(),
+            incident_state=state.model_copy(deep=True),
+            incident_record=dict(incident_record or {}),
+            execution_records=[record.model_copy(deep=True) for record in state.skill_trace],
+            investigation_trace=[
+                entry.model_copy(deep=True) for entry in state.investigation_trace
+            ],
+        )
+
+    def replay_state(self) -> IncidentState:
+        return self.incident_state.model_copy(deep=True)
+
+
 class IncidentState(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -333,6 +383,7 @@ class IncidentState(BaseModel):
     domain_scores: dict[DiagnosticDomain, DomainScore] = Field(default_factory=dict)
     evidence_log: list[EvidenceEntry] = Field(default_factory=list)
     skill_trace: list[ExecutionRecord] = Field(default_factory=list)
+    investigation_trace: list[InvestigationTraceEntry] = Field(default_factory=list)
     dependency_failures: list[DependencyFailure] = Field(default_factory=list)
     recommended_next_skill: str | None = None
     stop_reason: StopReason | None = None
@@ -378,6 +429,24 @@ class IncidentState(BaseModel):
             )
         self.updated_at = record.finished_at
         return execution_record
+
+    def append_trace(
+        self,
+        event_type: InvestigationTraceEventType,
+        message: str,
+        *,
+        details: dict[str, Any] | None = None,
+        recorded_at: datetime | None = None,
+    ) -> InvestigationTraceEntry:
+        entry = InvestigationTraceEntry(
+            event_type=event_type,
+            recorded_at=recorded_at or utc_now(),
+            message=message,
+            details=details or {},
+        )
+        self.investigation_trace.append(entry)
+        self.updated_at = entry.recorded_at
+        return entry
 
     def set_domain_score(
         self,
