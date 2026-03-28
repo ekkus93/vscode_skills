@@ -115,6 +115,16 @@
 - Updated `skills/README.md` with an `OpenClaw Prerequisites` section, a one-pass install guide for Ubuntu/Debian and macOS, a per-skill dependency matrix, and smaller install bundles for partial deployments.
 - Corrected the malformed shared-library directory tree in `skills/README.md` while documenting the install requirements.
 
+## 2026-03-28T20:13:18Z - GPT-5.4 - Refreshed full repo validation baseline after primitive skill adapter changes
+- Ran `/home/phil/.local/bin/ruff check .` from the repo root; Ruff passed cleanly.
+- Ran `/home/phil/work/vscode_skills/.venv/bin/python -m mypy .`; MyPy reported success with no issues in 121 source files.
+- Ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest`; the full suite passed with 282 tests.
+
+## 2026-03-28T20:10:29Z - GPT-5.4 - Added primitive skill compatibility adapter layer
+- Extended `skills/nettools-core/nettools/orchestrator/execution.py` so `invoke_skill(...)` now attempts strict `SkillResult` validation first, then selectively normalizes clearly legacy-shaped result envelopes into canonical `SkillResult` payloads using invocation context for scope, time window, and defaults.
+- The compatibility layer currently adapts legacy `message`, `details`/`data`, `finding_codes`, `recommended_next_skills`, and `references` style fields while preserving raw results for debugging and leaving non-compatible malformed outputs on the existing clean failure path.
+- Added `test_invoke_skill_adapts_legacy_result_shape()` in `tests/unit/nettools/test_orchestration.py` plus `test_primitive_skill_contract_mismatch_fails_cleanly()` in `tests/unit/nettools/test_skill_output_contracts.py`; validation passed with `/home/phil/.local/bin/ruff check`, `.venv/bin/python -m mypy`, and `.venv/bin/python -m pytest tests/unit/nettools/test_orchestration.py tests/unit/nettools/test_skill_output_contracts.py` (28 passed).
+
 ## 2026-03-20T01:54:51Z - GPT-5.4 - Added machine-readable install manifest for OpenClaw deployment
 - Added `skills/install-manifest.json` as a machine-readable dependency manifest for the shared skill library.
 - The manifest includes full install profiles, smaller capability bundles, and per-skill requirements such as binaries, Python packages, node packages, network access, transitive skill dependencies, and post-install steps.

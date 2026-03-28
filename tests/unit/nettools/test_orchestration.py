@@ -297,6 +297,48 @@ def test_invoke_skill_normalizes_malformed_result(
     assert "Field required" in record.result.summary
 
 
+def test_invoke_skill_adapts_legacy_result_shape(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_handler(skill_input: ClientHealthInput, adapters: AdapterBundle) -> SkillResult:
+        del skill_input, adapters
+        return cast(
+            SkillResult,
+            {
+                "status": "warn",
+                "message": "Legacy client health detected RF degradation.",
+                "details": {"legacy_source": True},
+                "finding_codes": ["LOW_RSSI"],
+                "recommended_next_skills": ["net.ap_rf_health"],
+            },
+        )
+
+    monkeypatch.setitem(
+        SKILL_REGISTRY,
+        "net.client_health",
+        SkillDefinition(
+            "net.client_health",
+            ClientHealthInput,
+            ScopeType.CLIENT,
+            fake_handler,
+        ),
+    )
+
+    record = invoke_skill("net.client_health", {"client_id": "client-1"}, AdapterBundle())
+
+    assert record.error_type is None
+    assert record.result.status is Status.WARN
+    assert record.result.skill_name == "net.client_health"
+    assert record.result.scope_type is ScopeType.CLIENT
+    assert record.result.scope_id == "client-1"
+    assert record.result.summary == "Legacy client health detected RF degradation."
+    assert record.result.evidence == {"legacy_source": True}
+    assert [finding.code for finding in record.result.findings] == ["LOW_RSSI"]
+    assert [action.skill for action in record.result.next_actions] == ["net.ap_rf_health"]
+    assert record.raw_result is not None
+    assert record.raw_result["message"] == "Legacy client health detected RF degradation."
+
+
 def test_invoke_skill_handles_repeated_invocations_without_state_leakage(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

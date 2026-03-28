@@ -440,12 +440,12 @@ Notes:
 - [x] validate result status compatibility
 
 ### 15.2 Skill adapter layer if needed
-- [ ] create compatibility wrappers for primitive skills
-- [ ] normalize legacy outputs if required
+- [x] create compatibility wrappers for primitive skills
+- [x] normalize legacy outputs if required
 
 ### 15.3 Tests
-- [ ] primitive skill contract mismatch test
-- [ ] compatibility wrapper test
+- [x] primitive skill contract mismatch test
+- [x] compatibility wrapper test
 
 ---
 

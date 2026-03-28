@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import cast
+
 import pytest
 from nettools.adapters import (
     StubAuthAdapter,
@@ -13,12 +15,17 @@ from nettools.adapters import (
 )
 from nettools.findings import validate_finding_code
 from nettools.models import SkillResult
-from nettools.orchestrator import SKILL_REGISTRY, IdentifierResolver, invoke_skill
+from nettools.orchestrator import (
+    SKILL_REGISTRY,
+    IdentifierResolver,
+    SkillDefinition,
+    invoke_skill,
+)
 from nettools.orchestrator.diagnose_incident import (
     DiagnoseIncidentInput,
     evaluate_diagnose_incident,
 )
-from nettools.priority1 import AdapterBundle
+from nettools.priority1 import AdapterBundle, ClientHealthInput
 
 
 def build_bundle(fixtures: dict[str, object]) -> AdapterBundle:
@@ -416,3 +423,45 @@ def test_output_contract_next_actions_only_reference_known_skills() -> None:
 
     assert referenced_skills
     assert referenced_skills.issubset(set(SKILL_REGISTRY))
+
+
+def test_primitive_skill_contract_mismatch_fails_cleanly(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_handler(skill_input: ClientHealthInput, adapters: AdapterBundle) -> SkillResult:
+        del skill_input, adapters
+        return cast(
+            SkillResult,
+            {
+                "status": "warn",
+                "message": "Legacy wrapper emitted an invalid finding code.",
+                "finding_codes": ["not_valid_code"],
+            },
+        )
+
+    monkeypatch.setitem(
+        SKILL_REGISTRY,
+        "net.client_health",
+        SkillDefinition(
+            "net.client_health",
+            ClientHealthInput,
+            SKILL_REGISTRY["net.client_health"].scope_type,
+            fake_handler,
+        ),
+    )
+
+    record = invoke_skill(
+        "net.client_health",
+        {"client_id": "client-1"},
+        build_bundle({}),
+        resolver=IdentifierResolver(),
+    )
+
+    assert record.error_type == "BadInputError"
+    assert record.result.status.value == "fail"
+    assert record.result.findings[0].code == "BAD_INPUT"
+    assert record.raw_result == {
+        "status": "warn",
+        "message": "Legacy wrapper emitted an invalid finding code.",
+        "finding_codes": ["not_valid_code"],
+    }

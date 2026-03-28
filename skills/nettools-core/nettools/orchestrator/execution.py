@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from time import perf_counter
@@ -10,7 +10,7 @@ from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from ..errors import BadInputError, NettoolsError, error_to_skill_result
 from ..logging import StructuredLogger, configure_logging, generate_invocation_id
-from ..models import ScopeType, SharedInputBase, SkillResult
+from ..models import Confidence, ScopeType, SharedInputBase, SkillResult, Status
 from ..priority1 import (
     AdapterBundle,
     ApRfHealthInput,
@@ -173,6 +173,129 @@ def _snapshot_raw_result(raw_result: Any) -> Any:
     return RAW_RESULT_ADAPTER.dump_python(raw_result, mode="json")
 
 
+def _coerce_result_mapping(raw_result: Any) -> dict[str, Any]:
+    if isinstance(raw_result, BaseModel):
+        return raw_result.model_dump(mode="python", exclude_none=True)
+    if isinstance(raw_result, Mapping):
+        return dict(raw_result)
+    raise BadInputError("Primitive skill returned a non-mapping result payload.")
+
+
+def _legacy_findings(payload: Mapping[str, Any]) -> list[Any]:
+    findings = payload.get("findings")
+    if isinstance(findings, list):
+        return list(findings)
+
+    finding_codes = payload.get("finding_codes")
+    if not isinstance(finding_codes, Sequence) or isinstance(
+        finding_codes,
+        (str, bytes, bytearray),
+    ):
+        return []
+
+    normalized_findings: list[dict[str, Any]] = []
+    for code in finding_codes:
+        if not isinstance(code, str):
+            continue
+        normalized_findings.append(
+            {
+                "code": code,
+                "severity": "warn",
+                "message": code,
+            }
+        )
+    return normalized_findings
+
+
+def _legacy_next_actions(payload: Mapping[str, Any]) -> list[Any]:
+    next_actions = payload.get("next_actions")
+    if isinstance(next_actions, list):
+        return list(next_actions)
+
+    recommended_next_skills = payload.get("recommended_next_skills")
+    if not isinstance(recommended_next_skills, Sequence) or isinstance(
+        recommended_next_skills,
+        (str, bytes, bytearray),
+    ):
+        return []
+
+    normalized_actions: list[dict[str, Any]] = []
+    for skill_name in recommended_next_skills:
+        if not isinstance(skill_name, str):
+            continue
+        normalized_actions.append(
+            {
+                "skill": skill_name,
+                "reason": "Suggested by legacy compatibility adapter.",
+            }
+        )
+    return normalized_actions
+
+
+def _legacy_evidence(payload: Mapping[str, Any]) -> dict[str, Any]:
+    evidence: dict[str, Any] = {}
+    details = payload.get("details")
+    if isinstance(details, Mapping):
+        evidence.update(details)
+    legacy_data = payload.get("data")
+    if isinstance(legacy_data, Mapping):
+        evidence.update(legacy_data)
+    raw_evidence = payload.get("evidence")
+    if isinstance(raw_evidence, Mapping):
+        evidence.update(raw_evidence)
+    return evidence
+
+
+def _looks_legacy_compatible(payload: Mapping[str, Any]) -> bool:
+    compatibility_keys = {
+        "message",
+        "details",
+        "data",
+        "evidence",
+        "findings",
+        "finding_codes",
+        "next_actions",
+        "recommended_next_skills",
+        "raw_refs",
+        "references",
+    }
+    return bool(set(payload).intersection(compatibility_keys))
+
+
+def _normalize_legacy_result(
+    raw_result: Any,
+    *,
+    definition: SkillDefinition,
+    skill_input: SkillInput,
+    finished_at: datetime,
+) -> SkillResult:
+    payload = _coerce_result_mapping(raw_result)
+    if not _looks_legacy_compatible(payload):
+        raise BadInputError("Primitive skill result is not compatible with legacy normalization.")
+    canonical_payload = {
+        "status": payload.get("status", Status.UNKNOWN),
+        "skill_name": definition.skill_name,
+        "scope_type": definition.scope_type,
+        "scope_id": skill_input.scope_id,
+        "summary": (
+            payload.get("summary")
+            or payload.get("message")
+            or f"{definition.skill_name} emitted a legacy-compatible result."
+        ),
+        "confidence": payload.get("confidence", Confidence.LOW),
+        "observed_at": payload.get("observed_at", finished_at),
+        "time_window": payload.get(
+            "time_window",
+            skill_input.time_window.model_dump(mode="python"),
+        ),
+        "evidence": _legacy_evidence(payload),
+        "findings": _legacy_findings(payload),
+        "next_actions": _legacy_next_actions(payload),
+        "raw_refs": payload.get("raw_refs", payload.get("references", [])),
+    }
+    return SkillResult.model_validate(canonical_payload)
+
+
 def _record_from_result(
     *,
     invocation_id: str,
@@ -307,7 +430,18 @@ def invoke_skill(
     try:
         skill_input = definition.input_model.model_validate(filtered_payload)
         raw_result = definition.handler(skill_input, adapters)
-        result = SkillResult.model_validate(raw_result)
+        try:
+            result = SkillResult.model_validate(raw_result)
+        except ValidationError as strict_exc:
+            payload_for_compat = _coerce_result_mapping(raw_result)
+            if not _looks_legacy_compatible(payload_for_compat):
+                raise strict_exc
+            result = _normalize_legacy_result(
+                payload_for_compat,
+                definition=definition,
+                skill_input=skill_input,
+                finished_at=utc_now(),
+            )
     except ValidationError as exc:
         duration_ms = int((perf_counter() - started_perf) * 1000)
         record = _error_record(
