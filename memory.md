@@ -348,6 +348,17 @@
 ## 2026-03-28T14:11:53Z - GPT-5.4 - Reconciled orchestrator TODO checklist with implemented code
 - Updated `docs/NETWORK_DIAGNOSIS_ORCHESTRATOR_TODO.md` to mark the already-implemented orchestrator modules, execution-wrapper behavior, sampling integration, main-loop controls, report assembly, and the covered site-wide/auth end-to-end tests as complete.
 - Left genuinely unfinished items unchecked, including raw-result capture, replay/debug mode, several explicit report-formatting tests, and the remaining unresolved/blocked end-to-end scenarios.
+
+## 2026-03-28T14:27:47Z - GPT-5.4 - Added NETTOOLS Phase 9 output-contract and threshold-boundary coverage
+- Added `tests/unit/nettools/test_skill_output_contracts.py` to exercise every implemented NETTOOLS skill entrypoint through the shared invocation layer plus `net.diagnose_incident`, asserting valid `SkillResult` serialization, ISO-8601 timestamps, registry-valid `next_actions`, and finding-code validation.
+- Extended `tests/unit/nettools/test_phase4_analysis.py` with an explicit threshold-boundary test so equality-at-threshold behavior is covered.
+- Re-ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest tests/unit/nettools` and the full NETTOOLS unit suite now passes with 146 tests.
+- Updated `docs/NETTOOLS_TODO.md` Phase 9 to mark the newly enforced unit, failure-mode, and output-contract items complete, while leaving the remaining integration and contradictory-data gaps unchecked.
+
+## 2026-03-28T14:34:57Z - GPT-5.4 - Repo-wide validation baseline refreshed after Phase 9 test work
+- Re-ran `/home/phil/.local/bin/ruff check .`; all checks passed.
+- Re-ran `/home/phil/.local/bin/mypy --python-executable /home/phil/work/vscode_skills/.venv/bin/python .`; it reported success with no issues in 111 source files.
+- Re-ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest`; the full repository suite passed with 234 tests.
 - The new test fails with an explicit message instructing the developer to run `python3 tools/generate_requirements.py` whenever generated requirements files are stale.
 - There is currently no checked-in `.github/workflows/` file in this repo, so this guard is designed to run inside any CI job or local validation path that already executes pytest.
 - Validation for this change: `/home/phil/work/vscode_skills/.venv/bin/python -m pytest -q tests/test_generate_requirements.py`, `ruff check tests/test_generate_requirements.py`, and `mypy tests/test_generate_requirements.py` all passed.
@@ -382,3 +393,7 @@
 - Renamed the broad GitHub Actions workflow from `.github/workflows/generated-requirements-check.yml` to `.github/workflows/ci.yml` so the filename matches its current scope.
 - Preserved the existing CI contents unchanged: generated requirements freshness, repo-wide Ruff, repo-wide MyPy, and full pytest.
 - Verified the renamed workflow file has no editor-detected errors and re-ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest -q tests/test_generate_requirements.py`, which still passed with `5 passed`.
+
+## 2026-03-28T14:39:00Z - GPT-5.4 - Prepared NETTOOLS Phase 9 testing updates for check-in
+- The pending NETTOOLS Phase 9 change set consists of the new output-contract coverage in `tests/unit/nettools/test_skill_output_contracts.py`, the threshold-boundary coverage added to `tests/unit/nettools/test_phase4_analysis.py`, and the corresponding checklist updates in `docs/NETTOOLS_TODO.md`.
+- The current branch is `master`, and the pending files match the recent validation baseline that already passed repo-wide Ruff, MyPy, and pytest.

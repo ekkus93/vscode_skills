@@ -679,10 +679,10 @@ Implementation assumption for v1:
 ## 11. Phase 9 - Testing and validation
 
 ### 11.1 Unit testing
-- [ ] Add unit tests for all analysis helpers
-- [ ] Add unit tests for threshold boundaries
-- [ ] Add unit tests for recommendation builders
-- [ ] Add unit tests for error translation
+- [x] Add unit tests for all analysis helpers
+- [x] Add unit tests for threshold boundaries
+- [x] Add unit tests for recommendation builders
+- [x] Add unit tests for error translation
 
 ### 11.2 Integration testing
 - [ ] Create end-to-end tests for:
@@ -696,16 +696,16 @@ Implementation assumption for v1:
   - [ ] wrong VLAN case
 
 ### 11.3 Failure mode testing
-- [ ] Test source adapter timeouts
+- [x] Test source adapter timeouts
 - [ ] Test partial data returns
-- [ ] Test missing identifiers
+- [x] Test missing identifiers
 - [ ] Test contradictory data from multiple sources
 
 ### 11.4 Output contract testing
-- [ ] Verify every skill returns valid `SkillResult`
+- [x] Verify every skill returns valid `SkillResult`
 - [ ] Verify every finding code is stable and documented
-- [ ] Verify all timestamps are ISO-8601
-- [ ] Verify `next_actions` reference valid skill names
+- [x] Verify all timestamps are ISO-8601
+- [x] Verify `next_actions` reference valid skill names
 
 ---
 

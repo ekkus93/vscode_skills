@@ -126,6 +126,24 @@ def test_threshold_scoring_and_recommendation_helpers() -> None:
     assert [action.skill for action in actions] == ["net.ap_rf_health", "net.path_probe"]
 
 
+def test_threshold_helpers_treat_equal_boundary_as_breached() -> None:
+    gte_boundary = compare_to_threshold(
+        "dns_latency_ms",
+        250.0,
+        250.0,
+        direction="gte",
+    )
+    lte_boundary = compare_to_threshold(
+        "rssi_dbm",
+        -70.0,
+        -70.0,
+        direction="lte",
+    )
+
+    assert gte_boundary.breached is True
+    assert lte_boundary.breached is True
+
+
 def test_correlation_and_cache_helpers() -> None:
     first_window = TimeWindow(
         start=datetime(2026, 3, 28, 8, 0, tzinfo=timezone.utc),
