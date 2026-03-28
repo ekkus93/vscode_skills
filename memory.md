@@ -115,6 +115,11 @@
 - Updated `skills/README.md` with an `OpenClaw Prerequisites` section, a one-pass install guide for Ubuntu/Debian and macOS, a per-skill dependency matrix, and smaller install bundles for partial deployments.
 - Corrected the malformed shared-library directory tree in `skills/README.md` while documenting the install requirements.
 
+## 2026-03-28T20:14:26Z - GPT-5.4 - Pushed primitive skill compatibility adapter to origin/master
+- Committed the primitive skill compatibility adapter layer, focused compatibility tests, Phase 15 roadmap updates, and validation baseline as `7b0ea40` with the message `Add primitive skill compatibility adapter`.
+- Pushed `master` to `origin/master`, advancing the remote from `b22c19b` to `7b0ea40`.
+- Verified the post-push worktree was clean before recording this checkpoint.
+
 ## 2026-03-28T20:13:18Z - GPT-5.4 - Refreshed full repo validation baseline after primitive skill adapter changes
 - Ran `/home/phil/.local/bin/ruff check .` from the repo root; Ruff passed cleanly.
 - Ran `/home/phil/work/vscode_skills/.venv/bin/python -m mypy .`; MyPy reported success with no issues in 121 source files.
