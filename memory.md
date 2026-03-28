@@ -253,6 +253,11 @@
 - Committed the CI workflow fix as `f16b0cf` with the message `Fix mypy CI environment`.
 - Pushed `master` to `origin/master`, advancing the remote from `22923e2` to `f16b0cf`.
 - Verified the worktree was clean immediately after the push before recording this checkpoint.
+
+## 2026-03-28T21:19:57Z - GPT-5.4 - Updated GitHub Actions workflow to Node 24-capable action versions
+- Updated `.github/workflows/ci.yml` from `actions/checkout@v4` to `actions/checkout@v6` and from `actions/setup-python@v5` to `actions/setup-python@v6` across all CI jobs.
+- Chose the action upgrades instead of the temporary `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` opt-in because both upstream actions now publish Node 24-based major versions.
+- This should remove the GitHub warning about deprecated Node.js 20 JavaScript actions on the CI jobs `generated-requirements`, `ruff`, `mypy`, and `pytest`.
 - Added `tests/unit/nettools/test_phase2_models.py` to cover partial-data tolerance, nested serialization, and source/version metadata behavior across the new models.
 - Re-ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest tests/unit/nettools`; the full NETTOOLS unit suite passed with 16 tests.
 - Marked all Phase 2 items complete in `docs/NETTOOLS_TODO.md`.
