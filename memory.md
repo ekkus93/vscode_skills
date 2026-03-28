@@ -238,6 +238,11 @@
 - Updated the repo `README.md` with a short `NETTOOLS skills` subsection so the network-diagnostics wrappers are grouped separately instead of only appearing in the generic example lists.
 - Updated `skills/README.md` with a matching `NETTOOLS Skills` subsection that groups the wrappers by orchestrator, helpers, core diagnostics, and follow-up diagnostics.
 - Kept the distinction explicit that `skills/nettools-core/` is shared runtime code, while the `net-*` wrapper folders are the registered skills.
+
+## 2026-03-28T21:15:00Z - GPT-5.4 - Pushed NETTOOLS skill-index and README refresh to origin/master
+- Committed the skill-index and README refresh as `4da9e16` with the message `Register NETTOOLS skills in docs`.
+- Pushed `master` to `origin/master`, advancing the remote from `3c5cd31` to `4da9e16`.
+- Verified the worktree was clean immediately after the push before recording this checkpoint.
 - Added `tests/unit/nettools/test_phase2_models.py` to cover partial-data tolerance, nested serialization, and source/version metadata behavior across the new models.
 - Re-ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest tests/unit/nettools`; the full NETTOOLS unit suite passed with 16 tests.
 - Marked all Phase 2 items complete in `docs/NETTOOLS_TODO.md`.
