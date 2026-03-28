@@ -15,11 +15,11 @@ The goal is to build a top-level `net.diagnose_incident` skill that controls the
 - [ ] Create files:
   - [x] `diagnose_incident.py`
   - [x] `playbooks.py`
-  - [ ] `branch_rules.py`
+  - [x] `branch_rules.py`
   - [x] `state.py`
-  - [ ] `scoring.py`
-  - [ ] `stop_conditions.py`
-  - [ ] `sampling.py`
+  - [x] `scoring.py`
+  - [x] `stop_conditions.py`
+  - [x] `sampling.py`
   - [ ] `report_builder.py`
   - [x] `execution.py`
   - [ ] `config.py`
@@ -159,28 +159,28 @@ The goal is to build a top-level `net.diagnose_incident` skill that controls the
 ## 6. Phase 4 - Skill execution wrapper
 
 ### 6.1 Implement common skill invocation wrapper
-- [ ] Create function to invoke primitive skills
-- [ ] Add invocation ID
-- [ ] Add timing measurement
-- [ ] Add structured logging
+- [x] Create function to invoke primitive skills
+- [x] Add invocation ID
+- [x] Add timing measurement
+- [x] Add structured logging
 - [ ] Capture raw result
-- [ ] Normalize wrapper return record
+- [x] Normalize wrapper return record
 
 ### 6.2 Error handling
-- [ ] Catch dependency failures
-- [ ] Catch timeouts
-- [ ] Catch schema validation errors
-- [ ] Catch unsupported-skill errors
-- [ ] Convert failures into execution records
+- [x] Catch dependency failures
+- [x] Catch timeouts
+- [x] Catch schema validation errors
+- [x] Catch unsupported-skill errors
+- [x] Convert failures into execution records
 
 ### 6.3 State integration
-- [ ] Append skill trace
-- [ ] Append evidence summary
-- [ ] Append dependency failures
-- [ ] Update updated_at timestamp
+- [x] Append skill trace
+- [x] Append evidence summary
+- [x] Append dependency failures
+- [x] Update updated_at timestamp
 
 ### 6.4 Tests
-- [ ] successful invocation test
+- [x] successful invocation test
 - [ ] timeout test
 - [ ] dependency unavailable test
 - [ ] malformed result test
@@ -284,14 +284,14 @@ The goal is to build a top-level `net.diagnose_incident` skill that controls the
 ## 10. Phase 8 - Sampling strategy
 
 ### 10.1 Implement sampling models
-- [ ] define AP sampling inputs
-- [ ] define client sampling inputs
+- [x] define AP sampling inputs
+- [x] define client sampling inputs
 - [x] define comparison/control sample support
 
 ### 10.2 Implement deterministic sampling logic
-- [ ] representative AP selection
-- [ ] representative client selection
-- [ ] inclusion of changed hardware where relevant
+- [x] representative AP selection
+- [x] representative client selection
+- [x] inclusion of changed hardware where relevant
 - [x] inclusion of control sample where possible
 
 Notes:
@@ -303,14 +303,14 @@ Notes:
 - the older state-level report model has been renamed to `IncidentStateReport` so it no longer overlaps semantically with the public `DiagnoseIncidentReport` payload model.
 
 ### 10.3 Playbook integration
-- [ ] site-wide playbook sampling defaults
-- [ ] area-based playbook sampling defaults
-- [ ] single-client bypass logic
+- [x] site-wide playbook sampling defaults
+- [x] area-based playbook sampling defaults
+- [x] single-client bypass logic
 
 ### 10.4 Tests
-- [ ] site-wide sample size test
-- [ ] area-based sample size test
-- [ ] deterministic sample ordering test
+- [x] site-wide sample size test
+- [x] area-based sample size test
+- [x] deterministic sample ordering test
 
 ---
 
@@ -326,23 +326,23 @@ Notes:
 - [x] update state after each skill
 - [x] evaluate stop conditions after each step
 - [x] branch or continue
-- [ ] finalize report
+- [x] finalize report
 
 ### 11.2 Prevent uncontrolled execution
-- [ ] enforce skill budget
-- [ ] enforce branch budget
-- [ ] prevent same-skill runaway repeats
-- [ ] reject skills outside playbook/allowed transitions
+- [x] enforce skill budget
+- [x] enforce branch budget
+- [x] prevent same-skill runaway repeats
+- [x] reject skills outside playbook/allowed transitions
 
 ### 11.3 Handle partial investigations
-- [ ] support blocked state
-- [ ] support unresolved state
+- [x] support blocked state
+- [x] support unresolved state
 - [ ] support replay/debug mode
 
 ### 11.4 Tests
 - [ ] single-client end-to-end path test
-- [ ] site-wide end-to-end path test
-- [ ] auth/onboarding end-to-end path test
+- [x] site-wide end-to-end path test
+- [x] auth/onboarding end-to-end path test
 - [ ] unresolved ambiguous end-to-end test
 - [ ] blocked dependency end-to-end test
 
@@ -351,13 +351,13 @@ Notes:
 ## 12. Phase 10 - Report builder
 
 ### 12.1 Implement final report assembly
-- [ ] compute top-ranked causes
-- [ ] collect eliminated domains
-- [ ] summarize evidence
-- [ ] include skill trace
-- [ ] include dependency failures
-- [ ] include stop reason
-- [ ] include confidence
+- [x] compute top-ranked causes
+- [x] collect eliminated domains
+- [x] summarize evidence
+- [x] include skill trace
+- [x] include dependency failures
+- [x] include stop reason
+- [x] include confidence
 
 ### 12.2 Implement human action generator
 - [ ] generate evidence-linked actions
@@ -366,7 +366,7 @@ Notes:
 - [ ] include specific APs / ports / services when available
 
 ### 12.3 Implement follow-up skill recommendations
-- [ ] suggest next primitive skills if unresolved
+- [x] suggest next primitive skills if unresolved
 - [ ] suggest capture trigger only when authorized and useful
 
 ### 12.4 Tests

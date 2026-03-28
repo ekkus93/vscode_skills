@@ -344,6 +344,10 @@
 - Re-ran `/home/phil/.local/bin/ruff check .`; it now passes cleanly.
 - Re-ran `/home/phil/.local/bin/mypy --python-executable /home/phil/work/vscode_skills/.venv/bin/python .`; it reports success with no issues in 110 source files.
 - Re-ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest`; the full repository suite passes with 217 tests.
+
+## 2026-03-28T14:11:53Z - GPT-5.4 - Reconciled orchestrator TODO checklist with implemented code
+- Updated `docs/NETWORK_DIAGNOSIS_ORCHESTRATOR_TODO.md` to mark the already-implemented orchestrator modules, execution-wrapper behavior, sampling integration, main-loop controls, report assembly, and the covered site-wide/auth end-to-end tests as complete.
+- Left genuinely unfinished items unchecked, including raw-result capture, replay/debug mode, several explicit report-formatting tests, and the remaining unresolved/blocked end-to-end scenarios.
 - The new test fails with an explicit message instructing the developer to run `python3 tools/generate_requirements.py` whenever generated requirements files are stale.
 - There is currently no checked-in `.github/workflows/` file in this repo, so this guard is designed to run inside any CI job or local validation path that already executes pytest.
 - Validation for this change: `/home/phil/work/vscode_skills/.venv/bin/python -m pytest -q tests/test_generate_requirements.py`, `ruff check tests/test_generate_requirements.py`, and `mypy tests/test_generate_requirements.py` all passed.
