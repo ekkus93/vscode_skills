@@ -34,6 +34,7 @@ from .state import (
     DiagnoseIncidentReport,
     DiagnosticDomain,
     IncidentState,
+    InvestigationMetricsSummary,
     InvestigationStatus,
     InvestigationTraceEventType,
     RankedCause,
@@ -203,10 +204,27 @@ def _build_audit_trail(
     state: IncidentState,
     *,
     incident_record: IncidentRecord,
+    result_status: Status,
+    ranked_causes: Sequence[RankedCause],
 ) -> dict[str, Any]:
     return DiagnoseIncidentAuditTrail.from_incident_state(
         state,
         incident_record=incident_record.model_dump(mode="json", exclude_none=True),
+        result_status=result_status,
+        ranked_causes=list(ranked_causes),
+    ).model_dump(mode="json")
+
+
+def _metrics_summary(
+    state: IncidentState,
+    *,
+    result_status: Status,
+    ranked_causes: Sequence[RankedCause],
+) -> dict[str, Any]:
+    return InvestigationMetricsSummary.from_incident_state(
+        state,
+        result_status=result_status,
+        ranked_causes=list(ranked_causes),
     ).model_dump(mode="json")
 
 
@@ -982,9 +1000,16 @@ def _replay_result(
             "incident_record": incident_record.model_dump(mode="json", exclude_none=True),
             "diagnosis_report": report,
             "incident_state": replay_state.model_dump(mode="json", exclude_none=True),
+            "investigation_metrics": _metrics_summary(
+                replay_state,
+                result_status=result_status,
+                ranked_causes=ranked_causes,
+            ),
             "audit_trail": _build_audit_trail(
                 replay_state,
                 incident_record=incident_record,
+                result_status=result_status,
+                ranked_causes=ranked_causes,
             ),
             "replay_debug": {
                 "enabled": True,
@@ -1213,9 +1238,16 @@ def evaluate_diagnose_incident(
             "incident_record": incident_record.model_dump(mode="json", exclude_none=True),
             "diagnosis_report": report,
             "incident_state": state.model_dump(mode="json", exclude_none=True),
+            "investigation_metrics": _metrics_summary(
+                state,
+                result_status=result_status,
+                ranked_causes=ranked_causes,
+            ),
             "audit_trail": _build_audit_trail(
                 state,
                 incident_record=incident_record,
+                result_status=result_status,
+                ranked_causes=ranked_causes,
             ),
         },
         findings=[],

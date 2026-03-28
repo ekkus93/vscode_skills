@@ -332,6 +332,36 @@ class DiagnoseIncidentReport(BaseModel):
         )
 
 
+class InvestigationMetricsSummary(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    playbook_invocations: dict[str, int] = Field(default_factory=dict)
+    stop_reason_counts: dict[str, int] = Field(default_factory=dict)
+    diagnosis_domains_by_outcome: dict[str, dict[str, int]] = Field(default_factory=dict)
+    average_skill_count_per_investigation: float = Field(default=0.0, ge=0.0)
+
+    @classmethod
+    def from_incident_state(
+        cls,
+        state: IncidentState,
+        *,
+        result_status: Status,
+        ranked_causes: list[RankedCause] | None = None,
+    ) -> InvestigationMetricsSummary:
+        ranked = list(ranked_causes or [])
+        lead_domain = ranked[0].domain.value if ranked else DiagnosticDomain.UNKNOWN.value
+        playbook_name = state.playbook_used or "unassigned"
+        stop_reason_counts = (
+            {state.stop_reason.code.value: 1} if state.stop_reason is not None else {}
+        )
+        return cls(
+            playbook_invocations={playbook_name: 1},
+            stop_reason_counts=stop_reason_counts,
+            diagnosis_domains_by_outcome={result_status.value: {lead_domain: 1}},
+            average_skill_count_per_investigation=float(len(state.skill_trace)),
+        )
+
+
 class DiagnoseIncidentAuditTrail(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -341,6 +371,9 @@ class DiagnoseIncidentAuditTrail(BaseModel):
     incident_record: dict[str, Any] = Field(default_factory=dict)
     execution_records: list[ExecutionRecord] = Field(default_factory=list)
     investigation_trace: list[InvestigationTraceEntry] = Field(default_factory=list)
+    metrics_summary: InvestigationMetricsSummary = Field(
+        default_factory=InvestigationMetricsSummary
+    )
 
     @classmethod
     def from_incident_state(
@@ -349,6 +382,8 @@ class DiagnoseIncidentAuditTrail(BaseModel):
         *,
         incident_record: dict[str, Any] | None = None,
         persisted_at: datetime | None = None,
+        result_status: Status = Status.UNKNOWN,
+        ranked_causes: list[RankedCause] | None = None,
     ) -> DiagnoseIncidentAuditTrail:
         return cls(
             incident_id=state.incident_id,
@@ -359,6 +394,11 @@ class DiagnoseIncidentAuditTrail(BaseModel):
             investigation_trace=[
                 entry.model_copy(deep=True) for entry in state.investigation_trace
             ],
+            metrics_summary=InvestigationMetricsSummary.from_incident_state(
+                state,
+                result_status=result_status,
+                ranked_causes=ranked_causes,
+            ),
         )
 
     def replay_state(self) -> IncidentState:

@@ -293,6 +293,26 @@
 - Re-ran full repository validation before publication: `/home/phil/.local/bin/ruff check .` passed, `.venv/bin/python -m mypy .` passed on 120 source files, and `.venv/bin/python -m pytest` passed with 268 tests.
 - Confirmed the pending working tree on top of `31ebd95` is limited to the Phase 13.1 investigation trace logging work, the Phase 13.2 audit-trail persistence and replay support, their focused tests, the roadmap checkboxes, and the related memory updates.
 
+## 2026-03-28T19:17:42Z - GPT-5.4 - Added orchestrator investigation metrics summary
+- Added `InvestigationMetricsSummary` and attached it to `DiagnoseIncidentAuditTrail` so each investigation now emits aggregation-friendly counts for playbook invocations, stop reasons, diagnosis domain by final outcome, and average skill count.
+- Updated `diagnose_incident.py` to emit `investigation_metrics` in result evidence for both live runs and replay paths, and extended focused orchestrator model/runtime tests to assert the new metrics payload.
+- Re-ran focused validation on the Phase 13.3 changes: `/home/phil/.local/bin/ruff check` passed on the touched orchestrator files, `.venv/bin/python -m mypy` passed on 4 source files, and `.venv/bin/python -m pytest tests/unit/nettools/test_orchestrator_models.py tests/unit/nettools/test_orchestrator_diagnose_incident.py` passed with 31 tests.
+
+## 2026-03-28T19:22:39Z - GPT-5.4 - Added orchestrator replayability round-trip coverage
+- Added a focused replayability test that runs a live `net.diagnose_incident` investigation, validates the emitted audit trail, replays that persisted artifact, and asserts the replay preserves the diagnosis report, incident state, investigation metrics, next actions, and stable audit-trail contents.
+- Marked the Phase 13.4 replayability checklist item complete in `docs/NETWORK_DIAGNOSIS_ORCHESTRATOR_TODO.md`.
+- Re-ran focused validation for the replayability change: `/home/phil/.local/bin/ruff check tests/unit/nettools/test_orchestrator_diagnose_incident.py` passed, `.venv/bin/python -m mypy tests/unit/nettools/test_orchestrator_diagnose_incident.py` passed, and `.venv/bin/python -m pytest tests/unit/nettools/test_orchestrator_diagnose_incident.py` passed with 19 tests.
+
+## 2026-03-28T19:40:18Z - GPT-5.4 - Completed orchestrator log redaction coverage
+- Added a focused structured-logging regression test in `tests/unit/nettools/test_logging_and_thresholds.py` that verifies nested sensitive fields inside logged `inputs` payloads are emitted as `[REDACTED]` and never appear in rendered JSON output.
+- This closes the remaining Phase 13.4 observability test gap by exercising the shared `StructuredLogger` and `JsonFormatter` path used by orchestrator skill-invocation logging.
+- Validated the change with `/home/phil/.local/bin/ruff check tests/unit/nettools/test_logging_and_thresholds.py`, `.venv/bin/python -m mypy skills/nettools-core/nettools/logging/json_formatter.py tests/unit/nettools/test_logging_and_thresholds.py`, and `.venv/bin/python -m pytest tests/unit/nettools/test_logging_and_thresholds.py tests/unit/nettools/test_orchestrator_diagnose_incident.py -k 'redact or replay'` (7 passed).
+
+## 2026-03-28T19:42:01Z - GPT-5.4 - Refreshed full repository validation baseline
+- Re-ran `/home/phil/.local/bin/ruff check .`; the full repository lint pass completed cleanly.
+- Re-ran `.venv/bin/python -m mypy .`; MyPy reported success with no issues in 120 source files.
+- Re-ran `.venv/bin/python -m pytest`; the full repository test suite passed with 271 tests.
+
 ## 2026-03-28T18:40:47Z - GPT-5.4 - Pushed orchestrator report improvements to origin/master
 - Committed the human-action generator, report-formatting coverage, and roadmap updates as `40b984e` with the message `Improve orchestrator report actions and tests`.
 - Pushed `master` to `origin/master` after a clean validation baseline: Ruff passed, MyPy passed on 120 source files, and pytest passed with 261 tests.

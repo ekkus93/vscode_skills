@@ -194,6 +194,12 @@ def test_diagnose_incident_runs_intake_then_high_confidence_auth_path(
         result.evidence["audit_trail"]["investigation_trace"][0]["event_type"]
         == "playbook_selection"
     )
+    assert result.evidence["investigation_metrics"] == {
+        "playbook_invocations": {"auth_or_onboarding_issue": 1},
+        "stop_reason_counts": {"high_confidence_diagnosis": 1},
+        "diagnosis_domains_by_outcome": {"warn": {"auth_issue": 1}},
+        "average_skill_count_per_investigation": 2.0,
+    }
 
 
 def test_diagnose_incident_records_investigation_trace(
@@ -792,6 +798,12 @@ def test_diagnose_incident_replays_serialized_state_without_live_execution(
         "source": "incident_state",
         "replayed_skill_count": 2,
     }
+    assert result.evidence["investigation_metrics"] == {
+        "playbook_invocations": {"single_client_wifi_issue": 1},
+        "stop_reason_counts": {"high_confidence_diagnosis": 1},
+        "diagnosis_domains_by_outcome": {"warn": {"dns_issue": 1}},
+        "average_skill_count_per_investigation": 2.0,
+    }
     assert result.evidence["incident_record"]["incident_id"] == "inc-replay-1"
     assert result.evidence["incident_record"]["site_id"] == "hq-1"
 
@@ -872,8 +884,105 @@ def test_diagnose_incident_replays_from_audit_trail_without_live_execution(
         "source": "audit_trail",
         "replayed_skill_count": 2,
     }
+    assert result.evidence["investigation_metrics"] == {
+        "playbook_invocations": {"single_client_wifi_issue": 1},
+        "stop_reason_counts": {"high_confidence_diagnosis": 1},
+        "diagnosis_domains_by_outcome": {"warn": {"dns_issue": 1}},
+        "average_skill_count_per_investigation": 2.0,
+    }
     assert result.evidence["audit_trail"]["incident_id"] == "inc-replay-audit-1"
     assert result.evidence["incident_record"]["client_id"] == "client-42"
+
+
+def test_diagnose_incident_replays_emitted_audit_trail_consistently(
+    monkeypatch: Any,
+) -> None:
+    calls: list[str] = []
+    records = {
+        "net.incident_intake": [
+            _skill_record(
+                "net.incident_intake",
+                scope_type=ScopeType.CLIENT,
+                scope_id="client-1",
+                evidence={
+                    "incident_record": {
+                        "incident_id": "inc-replayability-1",
+                        "summary": "Laptop cannot connect and reconnect helps",
+                        "site_id": "hq-1",
+                        "client_id": "client-1",
+                        "reconnect_helps": True,
+                    }
+                },
+            )
+        ],
+        "net.auth_8021x_radius": [
+            _skill_record(
+                "net.auth_8021x_radius",
+                scope_type=ScopeType.CLIENT,
+                scope_id="client-1",
+                status=Status.WARN,
+                findings=[
+                    _finding("LOW_AUTH_SUCCESS_RATE"),
+                    _finding("AUTH_TIMEOUTS"),
+                    _finding("RADIUS_UNREACHABLE", severity=FindingSeverity.CRITICAL),
+                ],
+            )
+        ],
+    }
+    monkeypatch.setattr(
+        "nettools.orchestrator.diagnose_incident.invoke_skill",
+        _fake_invoke(records, calls),
+    )
+
+    live_result = evaluate_diagnose_incident(
+        DiagnoseIncidentInput(
+            site_id="hq-1",
+            client_id="client-1",
+            complaint="My laptop cannot connect to CorpWiFi and reconnect helps",
+        ),
+        AdapterBundle(),
+    )
+
+    emitted_audit_trail = DiagnoseIncidentAuditTrail.model_validate(
+        live_result.evidence["audit_trail"]
+    )
+
+    def fail_invoke(*args: Any, **kwargs: Any) -> Any:
+        raise AssertionError("replayed audit trail should not invoke primitive skills")
+
+    monkeypatch.setattr("nettools.orchestrator.diagnose_incident.invoke_skill", fail_invoke)
+
+    replay_result = evaluate_diagnose_incident(
+        DiagnoseIncidentInput(replay_audit_trail=emitted_audit_trail, site_id="hq-1"),
+        AdapterBundle(),
+    )
+
+    assert calls == ["net.incident_intake", "net.auth_8021x_radius"]
+    assert replay_result.status is live_result.status
+    assert replay_result.summary == live_result.summary
+    assert replay_result.confidence is live_result.confidence
+    assert replay_result.next_actions == live_result.next_actions
+    assert replay_result.raw_refs == live_result.raw_refs
+    assert replay_result.evidence["incident_record"] == live_result.evidence["incident_record"]
+    assert replay_result.evidence["incident_state"] == live_result.evidence["incident_state"]
+    assert replay_result.evidence["diagnosis_report"] == live_result.evidence["diagnosis_report"]
+    assert (
+        replay_result.evidence["investigation_metrics"]
+        == live_result.evidence["investigation_metrics"]
+    )
+    assert replay_result.evidence["replay_debug"] == {
+        "enabled": True,
+        "source": "audit_trail",
+        "replayed_skill_count": 2,
+    }
+
+    live_audit = dict(live_result.evidence["audit_trail"])
+    replay_audit = dict(replay_result.evidence["audit_trail"])
+    live_persisted_at = live_audit.pop("persisted_at")
+    replay_persisted_at = replay_audit.pop("persisted_at")
+
+    assert replay_audit == live_audit
+    assert replay_persisted_at >= live_persisted_at
 
 
 def test_parse_input_loads_replay_state_and_incident_record_files(tmp_path: Any) -> None:

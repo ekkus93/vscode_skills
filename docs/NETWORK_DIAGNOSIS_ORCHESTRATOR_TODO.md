@@ -395,15 +395,15 @@ Notes:
 - [x] support replay from trace for debugging
 
 ### 13.3 Metrics
-- [ ] count invocations by playbook
-- [ ] count stop reasons
-- [ ] count diagnosis domains by outcome
-- [ ] record average skill count per investigation
+- [x] count invocations by playbook
+- [x] count stop reasons
+- [x] count diagnosis domains by outcome
+- [x] record average skill count per investigation
 
 ### 13.4 Tests
 - [x] trace completeness test
-- [ ] replayability test
-- [ ] log redaction test
+- [x] replayability test
+- [x] log redaction test
 
 ---
 

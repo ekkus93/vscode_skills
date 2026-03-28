@@ -20,6 +20,7 @@ from nettools.orchestrator import (
     DomainScore,
     IncidentState,
     IncidentType,
+    InvestigationMetricsSummary,
     InvestigationStatus,
     InvestigationTraceEventType,
     PlaybookDefinition,
@@ -231,7 +232,49 @@ def test_audit_trail_serializes_state_trace_and_execution_records() -> None:
     assert payload["incident_record"]["summary"] == "Audit me"
     assert payload["execution_records"][0]["skill_name"] == "net.client_health"
     assert payload["investigation_trace"][0]["event_type"] == "playbook_selection"
+    assert payload["metrics_summary"]["playbook_invocations"] == {
+        "single_client_wifi_issue": 1,
+    }
     assert audit_trail.replay_state().incident_id == state.incident_id
+
+
+def test_investigation_metrics_summary_formats_counts() -> None:
+    state = IncidentState(
+        incident_id="inc-metrics-1",
+        incident_type=IncidentType.SINGLE_CLIENT,
+        playbook_used="single_client_wifi_issue",
+    )
+    state.append_execution(_record("net.client_health"))
+    state.append_execution(_record("net.dns_latency"))
+    state.set_stop_reason(
+        StopReason(
+            code=StopReasonCode.HIGH_CONFIDENCE_DIAGNOSIS,
+            message="DNS evidence is sufficient to stop.",
+            related_domains=[DiagnosticDomain.DNS_ISSUE],
+        )
+    )
+
+    metrics = InvestigationMetricsSummary.from_incident_state(
+        state,
+        result_status=Status.WARN,
+        ranked_causes=[
+            RankedCause(
+                domain=DiagnosticDomain.DNS_ISSUE,
+                score=0.82,
+                confidence=Confidence.HIGH,
+                rationale="dns_issue is supported by HIGH_DNS_LATENCY.",
+                supporting_findings=["HIGH_DNS_LATENCY"],
+            )
+        ],
+    )
+    payload = metrics.model_dump(mode="json")
+
+    assert payload == {
+        "playbook_invocations": {"single_client_wifi_issue": 1},
+        "stop_reason_counts": {"high_confidence_diagnosis": 1},
+        "diagnosis_domains_by_outcome": {"warn": {"dns_issue": 1}},
+        "average_skill_count_per_investigation": 2.0,
+    }
 
 
 def test_diagnose_incident_report_formats_ranked_causes() -> None:
