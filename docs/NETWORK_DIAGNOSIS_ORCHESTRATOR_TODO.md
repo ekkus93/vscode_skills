@@ -225,7 +225,7 @@ The goal is to build a top-level `net.diagnose_incident` skill that controls the
 - [x] branch from client RF degradation test
 - [x] branch from clean RF to service checks test
 - [x] branch from DHCP failure to segmentation/auth follow-up test
-- [ ] branch from STP anomaly to stop-early path test
+- [x] branch from STP anomaly to stop-early path test
 - [x] illegal transition prevention test
 
 ---

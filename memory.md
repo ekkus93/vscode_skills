@@ -498,3 +498,9 @@
 - `ExecutionRecord` in `skills/nettools-core/nettools/orchestrator/state.py` now persists that captured raw payload through incident-state serialization.
 - Focused validation is green with `ruff check` on the changed implementation/tests and `pytest -q tests/unit/nettools/test_orchestration.py tests/unit/nettools/test_orchestrator_models.py`, which passed with 18 tests.
 - Updated `docs/NETWORK_DIAGNOSIS_ORCHESTRATOR_TODO.md` so the Phase 4 implementation item for raw-result capture is now marked complete.
+
+## 2026-03-28T17:19:25Z - GPT-5.4 - Completed the remaining Phase 5.4 STP stop-early branching test
+- Added a focused selector test in `tests/unit/nettools/test_orchestrator_branching.py` covering the `net.stp_loop_anomaly` case where both legal follow-up targets are already exhausted, so branch selection returns no next skill.
+- The new test explicitly proves the selector still scores the STP rule matches, filters the exhausted follow-up skills, and records the `No eligible branch targets remain after filtering.` rationale needed for the orchestrator's stop-early path.
+- Focused validation is green with `/home/phil/work/vscode_skills/.venv/bin/python -m pytest -q tests/unit/nettools/test_orchestrator_branching.py`, which passed with 11 tests.
+- Updated `docs/NETWORK_DIAGNOSIS_ORCHESTRATOR_TODO.md` so the remaining Phase 5.4 STP branching test item is now marked complete.

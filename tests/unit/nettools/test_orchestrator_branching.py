@@ -285,3 +285,54 @@ def test_branch_selector_uses_ap_uplink_rules_for_vlan_mismatch() -> None:
 
     assert decision.selected_skill == "net.segmentation_policy"
     assert "net.incident_correlation" in decision.candidate_scores
+
+
+def test_branch_selector_returns_no_target_for_exhausted_stp_followups() -> None:
+    state = IncidentState(
+        incident_id="inc-branch-11",
+        incident_type=IncidentType.SITE_WIDE,
+        playbook_used="site_wide_internal_slowdown",
+    )
+    state.skill_trace.extend(
+        [
+            _execution_record("net.change_detection"),
+            _execution_record("net.path_probe", finding_codes=["SITE_WIDE_PATH_LOSS"]),
+            _execution_record("net.ap_uplink_health"),
+            _execution_record("net.incident_correlation"),
+            _execution_record(
+                "net.stp_loop_anomaly",
+                finding_codes=["MAC_FLAP_LOOP_SIGNATURE", "TOPOLOGY_CHURN"],
+                next_skills=["net.ap_uplink_health", "net.incident_correlation"],
+            ),
+        ]
+    )
+
+    decision = select_next_branch(state)
+
+    assert decision.source_skill == "net.stp_loop_anomaly"
+    assert decision.selected_skill is None
+    assert decision.candidate_scores == {}
+    assert state.recommended_next_skill is None
+    assert any(
+        "Explicit rule from net.stp_loop_anomaly increased net.ap_uplink_health"
+        in line
+        for line in decision.rationale
+    )
+    assert any(
+        "Explicit rule from net.stp_loop_anomaly increased net.incident_correlation"
+        in line
+        for line in decision.rationale
+    )
+    assert any(
+        "Excluded net.ap_uplink_health because it has already been executed." in line
+        for line in decision.rationale
+    )
+    assert any(
+        "Excluded net.incident_correlation because it has already been executed."
+        in line
+        for line in decision.rationale
+    )
+    assert any(
+        "No eligible branch targets remain after filtering." in line
+        for line in decision.rationale
+    )
