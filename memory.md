@@ -208,6 +208,16 @@
 - Extended `skills/nettools-core/nettools/models/common.py` with `SourceMetadata` and `NormalizedModel` so every normalized entity carries source, version, and observation metadata in a consistent shape.
 - Added Phase 2 normalized model modules for clients, APs, radios, switch ports, STP summaries, MAC flaps, DHCP, DNS, auth, path probes, segmentation, incidents, and changes under `skills/nettools-core/nettools/models/`.
 - Updated `skills/nettools-core/nettools/models/__init__.py` so the shared package exports the full normalized model surface for later adapter and skill phases.
+
+## 2026-03-28T20:43:36Z - GPT-5.4 - Updated NETTOOLS definition-of-done checklist after code and test audit
+- Marked seven definition-of-done items complete in `docs/NETWORK_DIAGNOSIS_ORCHESTRATOR_TODO.md`: playbook selection, controlled investigation loop, deterministic branching, appropriate stopping, root-cause ranking, actionable final reports, and reproducible traces.
+- Left `all major scenarios have integration tests` unchecked because the major orchestrator scenarios are still covered primarily by unit-style end-to-end tests in `tests/unit/nettools/test_orchestrator_diagnose_incident.py`, even though primitive-skill, replay-scenario, and dependency-failure integration coverage exists.
+- Validated the roadmap edit with `git diff --check`.
+
+## 2026-03-28T20:54:08Z - GPT-5.4 - Closed the final orchestrator definition-of-done integration gap
+- Added `tests/integration/nettools/test_orchestrator_major_scenarios.py` with six live stub-backed orchestrator scenarios covering single-client DNS, area RF, site-wide L2, onboarding/auth, bounded ambiguity, and dependency-blocked investigations.
+- Fixed `skills/nettools-core/nettools/orchestrator/execution.py` so dependency-failure normalization derives `time_window` from only the shared input fields, preventing validation crashes when a skill input model includes extra orchestrator-only fields.
+- Re-ran full repo validation after the new integration suite and execution fix: `ruff check .` passed, `/home/phil/work/vscode_skills/.venv/bin/python -m mypy --python-executable /home/phil/work/vscode_skills/.venv/bin/python .` passed on 123 source files, and `/home/phil/work/vscode_skills/.venv/bin/python -m pytest -q` passed with 298 tests.
 - Added `tests/unit/nettools/test_phase2_models.py` to cover partial-data tolerance, nested serialization, and source/version metadata behavior across the new models.
 - Re-ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest tests/unit/nettools`; the full NETTOOLS unit suite passed with 16 tests.
 - Marked all Phase 2 items complete in `docs/NETTOOLS_TODO.md`.

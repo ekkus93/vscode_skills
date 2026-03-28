@@ -335,9 +335,10 @@ def _error_record(
     filtered_payload = (
         _filter_payload(payload, definition.input_model) if definition is not None else {}
     )
+    shared_payload = _filter_payload(filtered_payload, SharedInputBase)
     time_window = (
-        SharedInputBase.model_validate(filtered_payload).time_window
-        if filtered_payload
+        SharedInputBase.model_validate(shared_payload).time_window
+        if shared_payload
         else SharedInputBase().time_window
     )
     finished_at = utc_now()

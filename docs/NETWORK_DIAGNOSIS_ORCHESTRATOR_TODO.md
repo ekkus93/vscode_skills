@@ -515,11 +515,11 @@ Notes:
 
 The orchestrator is done when:
 
-- [ ] it can select a correct playbook from intake data
-- [ ] it can run a controlled investigation loop
-- [ ] it can branch deterministically
-- [ ] it can stop appropriately
-- [ ] it can rank likely root causes
-- [ ] it can generate actionable final reports
-- [ ] all major scenarios have integration tests
-- [ ] investigation traces are reproducible
+- [x] it can select a correct playbook from intake data
+- [x] it can run a controlled investigation loop
+- [x] it can branch deterministically
+- [x] it can stop appropriately
+- [x] it can rank likely root causes
+- [x] it can generate actionable final reports
+- [x] all major scenarios have integration tests
+- [x] investigation traces are reproducible
