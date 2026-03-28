@@ -173,6 +173,7 @@ class ExecutionRecord(BaseModel):
     duration_ms: int = Field(ge=0)
     input_summary: dict[str, Any] = Field(default_factory=dict)
     result: SkillResult
+    raw_result: Any | None = None
     error_type: str | None = None
 
     @classmethod
@@ -185,6 +186,7 @@ class ExecutionRecord(BaseModel):
             duration_ms=record.duration_ms,
             input_summary=record.input_summary,
             result=record.result,
+            raw_result=record.raw_result,
             error_type=record.error_type,
         )
 

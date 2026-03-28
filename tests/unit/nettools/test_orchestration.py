@@ -12,6 +12,7 @@ from nettools.adapters import (
     StubSyslogEventAdapter,
     StubWirelessControllerAdapter,
 )
+from nettools.errors import DependencyTimeoutError
 from nettools.models import (
     AccessPointState,
     ClientSession,
@@ -24,13 +25,15 @@ from nettools.models import (
     TimeWindow,
 )
 from nettools.orchestrator import (
+    SKILL_REGISTRY,
     IdentifierResolver,
+    SkillDefinition,
     SkillExecutionRecord,
     invoke_skill,
     run_single_user_complaint_chain,
     run_site_wide_slowdown_chain,
 )
-from nettools.priority1 import AdapterBundle
+from nettools.priority1 import AdapterBundle, ClientHealthInput
 
 
 def build_bundle(fixtures: dict[str, object]) -> AdapterBundle:
@@ -226,6 +229,119 @@ def test_invoke_skill_rejects_unknown_skill() -> None:
     assert record.result.status == Status.FAIL
     assert record.error_type == "BadInputError"
     assert record.result.summary == "Unsupported NETTOOLS skill: net.unknown_skill"
+
+
+def test_invoke_skill_normalizes_dependency_timeout(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_handler(skill_input: ClientHealthInput, adapters: AdapterBundle) -> SkillResult:
+        del skill_input, adapters
+        raise DependencyTimeoutError(
+            "Wireless controller timed out.",
+            raw_refs=["adapter:wireless:get_client_session"],
+        )
+
+    monkeypatch.setitem(
+        SKILL_REGISTRY,
+        "net.client_health",
+        SkillDefinition(
+            "net.client_health",
+            ClientHealthInput,
+            ScopeType.CLIENT,
+            fake_handler,
+        ),
+    )
+
+    record = invoke_skill("net.client_health", {"client_id": "client-1"}, AdapterBundle())
+
+    assert record.result.status == Status.UNKNOWN
+    assert record.error_type == "DependencyTimeoutError"
+    assert record.result.findings[0].code == "DEPENDENCY_TIMEOUT"
+    assert record.result.raw_refs == ["adapter:wireless:get_client_session"]
+    assert record.input_summary["client_id"] == "client-1"
+
+
+def test_invoke_skill_normalizes_dependency_unavailable() -> None:
+    record = invoke_skill("net.dns_latency", {"client_id": "client-1"}, AdapterBundle())
+
+    assert record.result.status == Status.UNKNOWN
+    assert record.error_type == "DependencyUnavailableError"
+    assert record.result.findings[0].code == "DEPENDENCY_UNAVAILABLE"
+    assert record.result.summary == "DNS adapter is not configured."
+    assert record.input_summary["client_id"] == "client-1"
+
+
+def test_invoke_skill_normalizes_malformed_result(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_handler(skill_input: ClientHealthInput, adapters: AdapterBundle) -> SkillResult:
+        del skill_input, adapters
+        return cast(Any, {"skill_name": "net.client_health"})
+
+    monkeypatch.setitem(
+        SKILL_REGISTRY,
+        "net.client_health",
+        SkillDefinition(
+            "net.client_health",
+            ClientHealthInput,
+            ScopeType.CLIENT,
+            fake_handler,
+        ),
+    )
+
+    record = invoke_skill("net.client_health", {"client_id": "client-1"}, AdapterBundle())
+
+    assert record.result.status == Status.FAIL
+    assert record.error_type == "BadInputError"
+    assert record.result.findings[0].code == "BAD_INPUT"
+    assert "Field required" in record.result.summary
+
+
+def test_invoke_skill_handles_repeated_invocations_without_state_leakage(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    call_count = 0
+
+    def fake_handler(skill_input: ClientHealthInput, adapters: AdapterBundle) -> SkillResult:
+        nonlocal call_count
+        del adapters
+        call_count += 1
+        observed_at = _now()
+        return SkillResult(
+            status=Status.OK,
+            skill_name="net.client_health",
+            scope_type=ScopeType.CLIENT,
+            scope_id=skill_input.client_id or "unscoped",
+            summary=f"call {call_count}",
+            confidence=Confidence.MEDIUM,
+            observed_at=observed_at,
+            time_window=TimeWindow(start=observed_at, end=observed_at),
+            evidence={"call_count": call_count},
+            findings=[],
+            next_actions=[],
+            raw_refs=[],
+        )
+
+    monkeypatch.setitem(
+        SKILL_REGISTRY,
+        "net.client_health",
+        SkillDefinition(
+            "net.client_health",
+            ClientHealthInput,
+            ScopeType.CLIENT,
+            fake_handler,
+        ),
+    )
+
+    first = invoke_skill("net.client_health", {"client_id": "client-1"}, AdapterBundle())
+    second = invoke_skill("net.client_health", {"client_id": "client-1"}, AdapterBundle())
+
+    assert call_count == 2
+    assert first.invocation_id != second.invocation_id
+    assert first.result.summary == "call 1"
+    assert second.result.summary == "call 2"
+    assert first.input_summary["client_id"] == "client-1"
+    assert second.input_summary["client_id"] == "client-1"
 
 
 def test_single_user_chain_helper_is_deterministic(monkeypatch: pytest.MonkeyPatch) -> None:

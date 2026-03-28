@@ -475,3 +475,21 @@
 - Prepared the full Phase 10 documentation checkpoint for publication, including wrapper-contract expansions, the operator configuration guide, the troubleshooting playbooks, the finding-code registry operator actions, and the checklist updates in `docs/NETTOOLS_TODO.md`.
 - Kept the documentation aligned with the current implementation by documenting reserved configuration knobs as non-runtime placeholders and by stating explicitly that the recent-hardware-change workflow is an operator playbook rather than a dedicated orchestrator playbook.
 - This checkpoint is intended to be committed and pushed as the published Phase 10 operator-documentation milestone.
+
+## 2026-03-28T16:36:32Z - GPT-5.4 - The orchestrator Phase 0 checklist is partially stale relative to the current repo layout
+- `docs/NETWORK_DIAGNOSIS_ORCHESTRATOR_TODO.md` still lists some Phase 0 items as incomplete even though the implementation now covers those responsibilities under different names or paths, such as report assembly inside `diagnose_incident.py` and `state.py`, identifier-resolution support in `resolution.py`, and orchestrator tests under `tests/unit/nettools` and `tests/integration/nettools` instead of dedicated `tests/*/orchestrator` directories.
+
+## 2026-03-28T16:41:01Z - GPT-5.4 - Reconciled additional stale orchestrator TODO checkboxes beyond Phase 0
+- Updated `docs/NETWORK_DIAGNOSIS_ORCHESTRATOR_TODO.md` to mark already-covered playbook transition testing, primitive-skill contract validation, and the canonical scenario-fixture items that are already exercised by the existing NETTOOLS integration tests.
+- Left boxes unchecked where the current repo still lacks direct evidence for the exact item, such as dedicated timeout or dependency-wrapper tests, ambiguous or blocked end-to-end orchestrator cases, replay/debug support, and the remaining report-formatting or observability items.
+
+## 2026-03-28T16:52:01Z - GPT-5.4 - Completed the remaining Phase 4 execution-wrapper tests
+- Expanded `tests/unit/nettools/test_orchestration.py` with focused wrapper-level cases covering `DependencyTimeoutError`, dependency-unavailable normalization, malformed handler results that fail `SkillResult` validation, and repeated invocation handling with distinct invocation IDs and stable input summaries.
+- Revalidated the focused module with `ruff check --fix tests/unit/nettools/test_orchestration.py`, `pytest --collect-only -q tests/unit/nettools/test_orchestration.py`, and `pytest -q tests/unit/nettools/test_orchestration.py`, which now collects 10 tests and passes cleanly.
+- Updated `docs/NETWORK_DIAGNOSIS_ORCHESTRATOR_TODO.md` so all items under Phase 4.4 test coverage are now marked complete.
+
+## 2026-03-28T17:11:03Z - GPT-5.4 - Implemented raw-result capture in the execution wrapper
+- `SkillExecutionRecord` in `skills/nettools-core/nettools/orchestrator/execution.py` now preserves a JSON-safe snapshot of the handler's raw return payload, including malformed outputs that fail `SkillResult` validation.
+- `ExecutionRecord` in `skills/nettools-core/nettools/orchestrator/state.py` now persists that captured raw payload through incident-state serialization.
+- Focused validation is green with `ruff check` on the changed implementation/tests and `pytest -q tests/unit/nettools/test_orchestration.py tests/unit/nettools/test_orchestrator_models.py`, which passed with 18 tests.
+- Updated `docs/NETWORK_DIAGNOSIS_ORCHESTRATOR_TODO.md` so the Phase 4 implementation item for raw-result capture is now marked complete.

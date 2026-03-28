@@ -12,7 +12,7 @@ The goal is to build a top-level `net.diagnose_incident` skill that controls the
 
 ### 2.1 Create orchestrator package structure
 - [x] Create `nettools/orchestrator/`
-- [ ] Create files:
+- [x] Create current module set:
   - [x] `diagnose_incident.py`
   - [x] `playbooks.py`
   - [x] `branch_rules.py`
@@ -20,20 +20,23 @@ The goal is to build a top-level `net.diagnose_incident` skill that controls the
   - [x] `scoring.py`
   - [x] `stop_conditions.py`
   - [x] `sampling.py`
-  - [ ] `report_builder.py`
   - [x] `execution.py`
-  - [ ] `config.py`
+  - [x] `classification.py`
+  - [x] `resolution.py`
+  - [x] `chains.py`
+  - [x] report assembly implemented in `diagnose_incident.py` and `state.py`
+  - [x] orchestrator config models implemented in `scoring.py` and `stop_conditions.py`
 
 ### 2.2 Create test structure
-- [ ] Create:
-  - [ ] `tests/unit/orchestrator/`
-  - [ ] `tests/integration/orchestrator/`
-  - [ ] `tests/fixtures/orchestrator/`
+- [x] Create:
+  - [x] `tests/unit/nettools/`
+  - [x] `tests/integration/nettools/`
+  - [x] `tests/fixtures/nettools/`
 
 ### 2.3 Documentation scaffolding
-- [ ] Add orchestrator README section
-- [ ] Add playbook documentation stub
-- [ ] Add configuration documentation stub
+- [x] Add orchestrator README section
+- [x] Add playbook documentation stub
+- [x] Add configuration documentation stub
 
 ---
 
@@ -126,7 +129,7 @@ The goal is to build a top-level `net.diagnose_incident` skill that controls the
 ### 4.4 Playbook tests
 - [x] Test playbook loading
 - [x] Test playbook skill order
-- [ ] Test allowed transitions
+- [x] Test allowed transitions
 - [x] Test invalid playbook definitions fail cleanly
 
 ---
@@ -163,7 +166,7 @@ The goal is to build a top-level `net.diagnose_incident` skill that controls the
 - [x] Add invocation ID
 - [x] Add timing measurement
 - [x] Add structured logging
-- [ ] Capture raw result
+- [x] Capture raw result
 - [x] Normalize wrapper return record
 
 ### 6.2 Error handling
@@ -181,10 +184,10 @@ The goal is to build a top-level `net.diagnose_incident` skill that controls the
 
 ### 6.4 Tests
 - [x] successful invocation test
-- [ ] timeout test
-- [ ] dependency unavailable test
-- [ ] malformed result test
-- [ ] repeated invocation handling test
+- [x] timeout test
+- [x] dependency unavailable test
+- [x] malformed result test
+- [x] repeated invocation handling test
 
 ---
 
@@ -431,10 +434,10 @@ Notes:
 ## 15. Phase 13 - Integration with primitive skills
 
 ### 15.1 Primitive skill contract validation
-- [ ] verify required fields from all dependent skills
-- [ ] validate `next_actions` format
-- [ ] validate finding code stability
-- [ ] validate result status compatibility
+- [x] verify required fields from all dependent skills
+- [x] validate `next_actions` format
+- [x] validate finding code stability
+- [x] validate result status compatibility
 
 ### 15.2 Skill adapter layer if needed
 - [ ] create compatibility wrappers for primitive skills
@@ -449,14 +452,14 @@ Notes:
 ## 16. Phase 14 - Scenario fixtures
 
 ### 16.1 Create canonical scenario fixtures
-- [ ] weak single-client RF
-- [ ] overloaded AP / dense RF area
-- [ ] slow DHCP
-- [ ] slow DNS
-- [ ] auth timeout
-- [ ] AP uplink CRC/flap issue
-- [ ] STP loop / MAC flap instability
-- [ ] wrong VLAN / policy placement
+- [x] weak single-client RF
+- [x] overloaded AP / dense RF area
+- [x] slow DHCP
+- [x] slow DNS
+- [x] auth timeout
+- [x] AP uplink CRC/flap issue
+- [x] STP loop / MAC flap instability
+- [x] wrong VLAN / policy placement
 - [ ] mixed evidence two-domain ambiguity
 - [ ] dependency failure scenario
 
@@ -473,19 +476,22 @@ Notes:
 
 ### 17.1 Skill documentation
 - [ ] document `net.diagnose_incident`
-  - [ ] purpose
-  - [ ] inputs
+  - [x] purpose
+  - [x] inputs
   - [ ] state model
-  - [ ] outputs
+  - [x] outputs
   - [ ] playbook selection
   - [ ] stop conditions
   - [ ] example traces
 
 ### 17.2 Operator runbook docs
-- [ ] document single-client troubleshooting path
+- [x] document single-client troubleshooting path
 - [ ] document area-based troubleshooting path
-- [ ] document site-wide troubleshooting path
-- [ ] document auth/onboarding troubleshooting path
+- [x] document site-wide troubleshooting path
+- [x] document auth/onboarding troubleshooting path
+
+Notes:
+- A `recent hardware change` operator playbook is also documented in `skills/nettools-core/PLAYBOOKS.md`.
 
 ### 17.3 Developer docs
 - [ ] how to add a new playbook

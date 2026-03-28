@@ -99,6 +99,7 @@ def test_incident_state_appends_execution_and_dependency_failure() -> None:
     state.append_execution(failed_record)
 
     assert state.skill_trace[0].skill_name == "net.dns_latency"
+    assert state.skill_trace[0].raw_result is None
     assert state.evidence_log[0].summary == "Dependency timed out"
     assert state.dependency_failures[0].error_type == "DependencyTimeoutError"
 
@@ -155,11 +156,25 @@ def test_incident_state_serializes_expected_shape() -> None:
         incident_id="inc-4",
         playbook_used="single_client_wifi_issue",
     )
-    state.append_execution(_record("net.client_health"))
+    record = _record("net.client_health")
+    state.append_execution(
+        SkillExecutionRecord(
+            invocation_id=record.invocation_id,
+            skill_name=record.skill_name,
+            started_at=record.started_at,
+            finished_at=record.finished_at,
+            duration_ms=record.duration_ms,
+            input_summary=record.input_summary,
+            result=record.result,
+            raw_result={"skill_name": "net.client_health", "status": "ok"},
+            error_type=record.error_type,
+        )
+    )
     payload = state.model_dump(mode="json")
 
     assert payload["incident_id"] == "inc-4"
     assert payload["skill_trace"][0]["skill_name"] == "net.client_health"
+    assert payload["skill_trace"][0]["raw_result"]["skill_name"] == "net.client_health"
     assert payload["evidence_log"][0]["status"] == "ok"
 
 

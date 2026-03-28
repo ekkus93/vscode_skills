@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from time import perf_counter
 from typing import Any
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from ..errors import BadInputError, NettoolsError, error_to_skill_result
 from ..logging import StructuredLogger, configure_logging, generate_invocation_id
@@ -50,6 +50,7 @@ from .resolution import IdentifierResolver
 
 SkillInput = SharedInputBase
 SkillHandler = Callable[[Any, AdapterBundle], SkillResult]
+RAW_RESULT_ADAPTER = TypeAdapter(Any)
 
 
 def utc_now() -> datetime:
@@ -73,6 +74,7 @@ class SkillExecutionRecord:
     duration_ms: int
     input_summary: dict[str, Any]
     result: SkillResult
+    raw_result: Any | None = None
     error_type: str | None = None
 
 
@@ -167,6 +169,10 @@ def _filter_payload(payload: Mapping[str, Any], input_model: type[SkillInput]) -
     }
 
 
+def _snapshot_raw_result(raw_result: Any) -> Any:
+    return RAW_RESULT_ADAPTER.dump_python(raw_result, mode="json")
+
+
 def _record_from_result(
     *,
     invocation_id: str,
@@ -176,6 +182,7 @@ def _record_from_result(
     duration_ms: int,
     input_summary: dict[str, Any],
     result: SkillResult,
+    raw_result: Any | None = None,
     error_type: str | None = None,
 ) -> SkillExecutionRecord:
     return SkillExecutionRecord(
@@ -186,6 +193,7 @@ def _record_from_result(
         duration_ms=duration_ms,
         input_summary=input_summary,
         result=result,
+        raw_result=raw_result,
         error_type=error_type,
     )
 
@@ -199,6 +207,7 @@ def _error_record(
     started_at: datetime,
     duration_ms: int,
     error: NettoolsError,
+    raw_result: Any | None = None,
 ) -> SkillExecutionRecord:
     filtered_payload = (
         _filter_payload(payload, definition.input_model) if definition is not None else {}
@@ -233,6 +242,7 @@ def _error_record(
         duration_ms=duration_ms,
         input_summary=dict(filtered_payload),
         result=result,
+        raw_result=raw_result,
         error_type=type(error).__name__,
     )
 
@@ -308,6 +318,7 @@ def invoke_skill(
             started_at=started_at,
             duration_ms=duration_ms,
             error=BadInputError(str(exc)),
+            raw_result=(None if "raw_result" not in locals() else _snapshot_raw_result(raw_result)),
         )
         skill_logger.warning(
             "skill invocation produced a validation error",
@@ -328,6 +339,7 @@ def invoke_skill(
             started_at=started_at,
             duration_ms=duration_ms,
             error=exc,
+            raw_result=(None if "raw_result" not in locals() else _snapshot_raw_result(raw_result)),
         )
         skill_logger.warning(
             "skill invocation produced a structured error",
@@ -349,6 +361,7 @@ def invoke_skill(
             started_at=started_at,
             duration_ms=duration_ms,
             error=NettoolsError(f"Unhandled exception during {skill_name}: {exc}"),
+            raw_result=(None if "raw_result" not in locals() else _snapshot_raw_result(raw_result)),
         )
         skill_logger.error(
             "skill invocation raised an unhandled exception",
@@ -370,6 +383,7 @@ def invoke_skill(
         duration_ms=duration_ms,
         input_summary=skill_input.to_input_summary(),
         result=result,
+        raw_result=_snapshot_raw_result(raw_result),
     )
     skill_logger.info(
         "skill invocation completed",
