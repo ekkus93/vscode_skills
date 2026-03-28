@@ -17,51 +17,51 @@ Implementation assumption for v1:
 ## 2. Phase 0 - Repository setup and scaffolding
 
 ### 2.1 Create project structure
-- [ ] Create skill-first package structure under `skills/`
-  - [ ] `skills/net-client-health/`
-  - [ ] `skills/net-ap-rf-health/`
-  - [ ] `skills/net-roaming-analysis/`
-  - [ ] `skills/net-dhcp-path/`
-  - [ ] `skills/net-dns-latency/`
-  - [ ] `skills/net-auth-8021x-radius/`
-  - [ ] `skills/net-ap-uplink-health/`
-  - [ ] `skills/net-stp-loop-anomaly/`
-  - [ ] `skills/net-path-probe/`
-  - [ ] `skills/net-segmentation-policy/`
-  - [ ] `skills/net-incident-intake/`
-  - [ ] `skills/net-incident-correlation/`
-  - [ ] `skills/net-change-detection/`
-  - [ ] `skills/net-capture-trigger/`
-  - [ ] `skills/nettools-core/`
-  - [ ] `skills/nettools-core/nettools/adapters/`
-  - [ ] `skills/nettools-core/nettools/models/`
-  - [ ] `skills/nettools-core/nettools/analysis/`
-  - [ ] `skills/nettools-core/nettools/config/`
-  - [ ] `tests/unit/`
-  - [ ] `tests/integration/`
-  - [ ] `tests/fixtures/`
+- [x] Create skill-first package structure under `skills/`
+  - [x] `skills/net-client-health/`
+  - [x] `skills/net-ap-rf-health/`
+  - [x] `skills/net-roaming-analysis/`
+  - [x] `skills/net-dhcp-path/`
+  - [x] `skills/net-dns-latency/`
+  - [x] `skills/net-auth-8021x-radius/`
+  - [x] `skills/net-ap-uplink-health/`
+  - [x] `skills/net-stp-loop-anomaly/`
+  - [x] `skills/net-path-probe/`
+  - [x] `skills/net-segmentation-policy/`
+  - [x] `skills/net-incident-intake/`
+  - [x] `skills/net-incident-correlation/`
+  - [x] `skills/net-change-detection/`
+  - [x] `skills/net-capture-trigger/`
+  - [x] `skills/nettools-core/`
+  - [x] `skills/nettools-core/nettools/adapters/`
+  - [x] `skills/nettools-core/nettools/models/`
+  - [x] `skills/nettools-core/nettools/analysis/`
+  - [x] `skills/nettools-core/nettools/config/`
+  - [x] `tests/unit/`
+  - [x] `tests/integration/`
+  - [x] `tests/fixtures/`
 
 ### 2.2 Establish coding conventions
-- [ ] Define Python version target for Debian on the Dell Chromebook OpenClaw runtime
-- [ ] Add formatter / linter config
-- [ ] Add type-checking config
-- [ ] Add test runner config
-- [ ] Standardize on Pydantic for models and configuration
-- [ ] Add stdlib JSON logging config
-- [ ] Add `.env.example` or equivalent config template
+- [x] Define Python version target for Debian on the Dell Chromebook OpenClaw runtime
+- [x] Add formatter / linter config
+- [x] Add type-checking config
+- [x] Add test runner config
+- [x] Standardize on Pydantic for models and configuration
+- [x] Add stdlib JSON logging config
+- [x] Add `.env.example` or equivalent config template
 
 ### 2.3 Create package bootstrap
-- [ ] Add `SKILL.md` files for each NETTOOLS skill folder
-- [ ] Add corresponding Python helper script entrypoints for each NETTOOLS skill folder
-- [ ] Add package init files for the shared `nettools-core` support package
-- [ ] Add module export patterns if desired for shared support code
-- [ ] Add a minimal CLI or entrypoint for local testing if useful
+- [x] Add `SKILL.md` files for each NETTOOLS skill folder
+- [x] Add corresponding Python helper script entrypoints for each NETTOOLS skill folder
+- [x] Add package init files for the shared `nettools-core` support package
+- [x] Add module export patterns if desired for shared support code
+- [x] Add a minimal CLI or entrypoint for local testing if useful
 
 ### 2.4 Documentation bootstrap
-- [ ] Add `README.md`
-- [ ] Add `ARCHITECTURE.md` summary derived from specs
-- [ ] Add `CONFIGURATION.md`
-- [ ] Add `TESTING.md`
+- [x] Add `README.md`
+- [x] Add `ARCHITECTURE.md` summary derived from specs
+- [x] Add `CONFIGURATION.md`
+- [x] Add `TESTING.md`
 
 ---
 
