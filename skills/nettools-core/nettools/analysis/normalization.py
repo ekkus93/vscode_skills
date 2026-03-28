@@ -73,7 +73,13 @@ def _normalize_model(
     return model_type.model_validate(payload)
 
 
-def normalize_client_session(raw_data: dict[str, Any], *, provider: str, raw_ref: str | None = None, collected_at: datetime | None = None) -> ClientSession:
+def normalize_client_session(
+    raw_data: dict[str, Any],
+    *,
+    provider: str,
+    raw_ref: str | None = None,
+    collected_at: datetime | None = None,
+) -> ClientSession:
     return _normalize_model(
         ClientSession,
         raw_data,
@@ -95,7 +101,13 @@ def normalize_client_session(raw_data: dict[str, Any], *, provider: str, raw_ref
     )
 
 
-def normalize_access_point_state(raw_data: dict[str, Any], *, provider: str, raw_ref: str | None = None, collected_at: datetime | None = None) -> AccessPointState:
+def normalize_access_point_state(
+    raw_data: dict[str, Any],
+    *,
+    provider: str,
+    raw_ref: str | None = None,
+    collected_at: datetime | None = None,
+) -> AccessPointState:
     payload = dict(raw_data)
     for radio_key in ("radio_2g", "radio_5g", "radio_6g"):
         radio_payload = payload.get(radio_key)
@@ -117,7 +129,13 @@ def normalize_access_point_state(raw_data: dict[str, Any], *, provider: str, raw
     )
 
 
-def normalize_radio_state(raw_data: dict[str, Any], *, provider: str, raw_ref: str | None = None, collected_at: datetime | None = None) -> RadioState:
+def normalize_radio_state(
+    raw_data: dict[str, Any],
+    *,
+    provider: str,
+    raw_ref: str | None = None,
+    collected_at: datetime | None = None,
+) -> RadioState:
     return _normalize_model(
         RadioState,
         raw_data,
@@ -125,11 +143,21 @@ def normalize_radio_state(raw_data: dict[str, Any], *, provider: str, raw_ref: s
         source_type="wireless",
         raw_ref=raw_ref,
         collected_at=collected_at,
-        field_aliases={"radioId": "radio_id", "widthMHz": "width_mhz", "utilizationPct": "utilization_pct"},
+        field_aliases={
+            "radioId": "radio_id",
+            "widthMHz": "width_mhz",
+            "utilizationPct": "utilization_pct",
+        },
     )
 
 
-def normalize_switch_port_state(raw_data: dict[str, Any], *, provider: str, raw_ref: str | None = None, collected_at: datetime | None = None) -> SwitchPortState:
+def normalize_switch_port_state(
+    raw_data: dict[str, Any],
+    *,
+    provider: str,
+    raw_ref: str | None = None,
+    collected_at: datetime | None = None,
+) -> SwitchPortState:
     return _normalize_model(
         SwitchPortState,
         raw_data,
@@ -137,11 +165,21 @@ def normalize_switch_port_state(raw_data: dict[str, Any], *, provider: str, raw_
         source_type="switch",
         raw_ref=raw_ref,
         collected_at=collected_at,
-        field_aliases={"switchId": "switch_id", "allowedVlans": "allowed_vlans", "speedMbps": "speed_mbps"},
+        field_aliases={
+            "switchId": "switch_id",
+            "allowedVlans": "allowed_vlans",
+            "speedMbps": "speed_mbps",
+        },
     )
 
 
-def normalize_stp_summary(raw_data: dict[str, Any], *, provider: str, raw_ref: str | None = None, collected_at: datetime | None = None) -> StpSummary:
+def normalize_stp_summary(
+    raw_data: dict[str, Any],
+    *,
+    provider: str,
+    raw_ref: str | None = None,
+    collected_at: datetime | None = None,
+) -> StpSummary:
     return _normalize_model(
         StpSummary,
         raw_data,
@@ -153,7 +191,13 @@ def normalize_stp_summary(raw_data: dict[str, Any], *, provider: str, raw_ref: s
     )
 
 
-def normalize_dhcp_summary(raw_data: dict[str, Any], *, provider: str, raw_ref: str | None = None, collected_at: datetime | None = None) -> DhcpSummary:
+def normalize_dhcp_summary(
+    raw_data: dict[str, Any],
+    *,
+    provider: str,
+    raw_ref: str | None = None,
+    collected_at: datetime | None = None,
+) -> DhcpSummary:
     return _normalize_model(
         DhcpSummary,
         raw_data,
@@ -170,7 +214,13 @@ def normalize_dhcp_summary(raw_data: dict[str, Any], *, provider: str, raw_ref: 
     )
 
 
-def normalize_dns_summary(raw_data: dict[str, Any], *, provider: str, raw_ref: str | None = None, collected_at: datetime | None = None) -> DnsSummary:
+def normalize_dns_summary(
+    raw_data: dict[str, Any],
+    *,
+    provider: str,
+    raw_ref: str | None = None,
+    collected_at: datetime | None = None,
+) -> DnsSummary:
     return _normalize_model(
         DnsSummary,
         raw_data,
@@ -178,11 +228,21 @@ def normalize_dns_summary(raw_data: dict[str, Any], *, provider: str, raw_ref: s
         source_type="dns",
         raw_ref=raw_ref,
         collected_at=collected_at,
-        field_aliases={"clientId": "client_id", "overallLatencyMs": "overall_avg_latency_ms", "timeoutPct": "overall_timeout_pct"},
+        field_aliases={
+            "clientId": "client_id",
+            "overallLatencyMs": "overall_avg_latency_ms",
+            "timeoutPct": "overall_timeout_pct",
+        },
     )
 
 
-def normalize_auth_summary(raw_data: dict[str, Any], *, provider: str, raw_ref: str | None = None, collected_at: datetime | None = None) -> AuthSummary:
+def normalize_auth_summary(
+    raw_data: dict[str, Any],
+    *,
+    provider: str,
+    raw_ref: str | None = None,
+    collected_at: datetime | None = None,
+) -> AuthSummary:
     return _normalize_model(
         AuthSummary,
         raw_data,
@@ -194,7 +254,13 @@ def normalize_auth_summary(raw_data: dict[str, Any], *, provider: str, raw_ref: 
     )
 
 
-def normalize_path_probe_result(raw_data: dict[str, Any], *, provider: str, raw_ref: str | None = None, collected_at: datetime | None = None) -> PathProbeResult:
+def normalize_path_probe_result(
+    raw_data: dict[str, Any],
+    *,
+    provider: str,
+    raw_ref: str | None = None,
+    collected_at: datetime | None = None,
+) -> PathProbeResult:
     return _normalize_model(
         PathProbeResult,
         raw_data,
@@ -202,11 +268,21 @@ def normalize_path_probe_result(raw_data: dict[str, Any], *, provider: str, raw_
         source_type="probe",
         raw_ref=raw_ref,
         collected_at=collected_at,
-        field_aliases={"sourceProbeId": "source_probe_id", "avgLatencyMs": "avg_latency_ms", "lossPct": "loss_pct"},
+        field_aliases={
+            "sourceProbeId": "source_probe_id",
+            "avgLatencyMs": "avg_latency_ms",
+            "lossPct": "loss_pct",
+        },
     )
 
 
-def normalize_segmentation_summary(raw_data: dict[str, Any], *, provider: str, raw_ref: str | None = None, collected_at: datetime | None = None) -> SegmentationSummary:
+def normalize_segmentation_summary(
+    raw_data: dict[str, Any],
+    *,
+    provider: str,
+    raw_ref: str | None = None,
+    collected_at: datetime | None = None,
+) -> SegmentationSummary:
     return _normalize_model(
         SegmentationSummary,
         raw_data,
@@ -214,5 +290,9 @@ def normalize_segmentation_summary(raw_data: dict[str, Any], *, provider: str, r
         source_type="inventory",
         raw_ref=raw_ref,
         collected_at=collected_at,
-        field_aliases={"clientMac": "client_mac", "observedVlan": "observed_vlan", "expectedVlan": "expected_vlan"},
+        field_aliases={
+            "clientMac": "client_mac",
+            "observedVlan": "observed_vlan",
+            "expectedVlan": "expected_vlan",
+        },
     )

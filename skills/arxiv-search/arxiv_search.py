@@ -123,10 +123,17 @@ def fetch_xml(query_string: str) -> str:
         request = urllib.request.Request(f"{base_url}?{query_string}", headers=headers)
         try:
             with urllib.request.urlopen(request, timeout=30) as response:
-                return response.read().decode("utf-8", errors="replace")
+                payload = response.read()
+                if isinstance(payload, bytes):
+                    return payload.decode("utf-8", errors="replace")
+                if isinstance(payload, bytearray):
+                    return bytes(payload).decode("utf-8", errors="replace")
+                return str(payload)
         except urllib.error.HTTPError as exc:
             if exc.code == 429:
-                raise RuntimeError("arXiv API rate limited the request (HTTP 429); retry later") from exc
+                raise RuntimeError(
+                    "arXiv API rate limited the request (HTTP 429); retry later"
+                ) from exc
             last_error = exc
         except urllib.error.URLError as exc:
             last_error = exc

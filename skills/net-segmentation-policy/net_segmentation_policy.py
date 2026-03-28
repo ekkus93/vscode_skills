@@ -8,8 +8,12 @@ CORE_DIR = Path(__file__).resolve().parents[1] / "nettools-core"
 if str(CORE_DIR) not in sys.path:
     sys.path.insert(0, str(CORE_DIR))
 
-from nettools.priority2 import main_segmentation_policy
+
+def main() -> int:
+    from nettools.priority2 import main_segmentation_policy
+
+    return main_segmentation_policy()
 
 
 if __name__ == "__main__":
-    raise SystemExit(main_segmentation_policy())
+    raise SystemExit(main())

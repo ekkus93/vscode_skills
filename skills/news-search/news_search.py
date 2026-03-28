@@ -47,7 +47,6 @@ STOPWORDS = {
     "says",
     "search",
     "show",
-    "says",
     "their",
     "there",
     "this",
@@ -160,7 +159,12 @@ def request_feed(url: str) -> bytes:
     )
     try:
         with urllib.request.urlopen(request, timeout=30) as response:
-            return response.read()
+            payload = response.read()
+            if isinstance(payload, bytes):
+                return payload
+            if isinstance(payload, bytearray):
+                return bytes(payload)
+            return str(payload).encode("utf-8")
     except urllib.error.HTTPError as exc:
         if exc.code == 429:
             raise RuntimeError(

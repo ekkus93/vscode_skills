@@ -42,7 +42,7 @@ def test_build_sheet_filename_numbers_and_sanitizes_names() -> None:
     )
 
 
-def test_write_delimited_sheets_writes_tsv(tmp_path) -> None:
+def test_write_delimited_sheets_writes_tsv(tmp_path: pathlib.Path) -> None:
     output_dir = tmp_path / "out"
     excel_to_delimited.write_delimited_sheets(
         [("Summary", [["Company", "Priority"], ["Acme", "1"]])],
@@ -54,7 +54,7 @@ def test_write_delimited_sheets_writes_tsv(tmp_path) -> None:
     assert rendered == "Company\tPriority\nAcme\t1\n"
 
 
-def test_main_writes_csv_files_for_xlsx(tmp_path) -> None:
+def test_main_writes_csv_files_for_xlsx(tmp_path: pathlib.Path) -> None:
     openpyxl = pytest.importorskip("openpyxl")
 
     workbook = openpyxl.Workbook()
@@ -84,7 +84,9 @@ def test_main_writes_csv_files_for_xlsx(tmp_path) -> None:
     )
 
 
-def test_main_honors_request_tsv_filter(tmp_path, monkeypatch) -> None:
+def test_main_honors_request_tsv_filter(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     input_file = tmp_path / "legacy.xls"
     input_file.write_text("placeholder", encoding="utf-8")
 
@@ -107,7 +109,9 @@ def test_main_honors_request_tsv_filter(tmp_path, monkeypatch) -> None:
     )
 
 
-def test_main_rejects_non_excel_input(tmp_path, capsys) -> None:
+def test_main_rejects_non_excel_input(
+    tmp_path: pathlib.Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     input_file = tmp_path / "sample.txt"
     input_file.write_text("hello", encoding="utf-8")
 

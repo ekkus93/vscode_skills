@@ -196,3 +196,90 @@
 - Added `tests/unit/nettools/test_priority2_skills.py` covering healthy, degraded, missing-data, dependency-unavailable, and CLI-smoke scenarios for the four Priority 2 skills.
 - Re-ran `python -m pytest tests/unit/nettools` in the repo venv; the full NETTOOLS unit suite passed with 67 tests.
 - Marked all Phase 6 Priority 2 items complete in `docs/NETTOOLS_TODO.md`.
+
+## 2026-03-28T09:00:11Z - GPT-5.4 - Completed NETTOOLS Phase 7 Priority 3 supporting skills
+- Added `skills/nettools-core/nettools/priority3.py` with first-pass implementations for `net.incident_intake`, `net.incident_correlation`, `net.change_detection`, and `net.capture_trigger`, including complaint parsing, evidence correlation, recent-change ranking, and gated manual capture-plan generation.
+- Replaced the four Phase 0 placeholder wrapper scripts with real entrypoints wired to the shared Priority 3 runtime and updated their `SKILL.md` files to describe implemented behavior and fixture-backed usage.
+- Added `tests/unit/nettools/test_priority3_skills.py` covering intake parsing, multi-source correlation, recent-change detection, unauthorized versus authorized capture planning, and a CLI smoke case.
+- Tightened SSID extraction in the intake parser so normalized SSID values do not over-capture trailing complaint text.
+- Re-ran `python -m pytest tests/unit/nettools`; the full NETTOOLS unit suite passed with 76 tests.
+- Marked all Phase 7 Priority 3 items complete in `docs/NETTOOLS_TODO.md`.
+
+## 2026-03-28T09:06:16Z - GPT-5.4 - Fixed Phase 7 Priority 3 MyPy match handling
+- Updated `skills/nettools-core/nettools/priority3.py` to bind the MAC regex match once before reading `group(0)`, resolving the Phase 7 `union-attr` MyPy error in `evaluate_incident_intake`.
+- Re-ran `pytest tests/unit/nettools/test_priority3_skills.py`; all 9 Phase 7 tests passed.
+- Re-ran MyPy against `skills/nettools-core/nettools/priority3.py` using the workspace venv interpreter; the `priority3.py` error was cleared, and the remaining reported errors are upstream in `skills/nettools-core/nettools/cli.py` and `skills/nettools-core/nettools/priority1.py`.
+
+## 2026-03-28T09:08:54Z - GPT-5.4 - Fixed shared NETTOOLS MyPy status typing
+- Updated `skills/nettools-core/nettools/cli.py` to pass `Status.UNKNOWN` into scaffold `SkillResult` construction instead of a raw string.
+- Updated `skills/nettools-core/nettools/priority1.py` so `_status_from_findings` returns the `Status` enum rather than raw string values, resolving the remaining shared MyPy `arg-type` errors.
+- Re-ran `mypy --python-executable /home/phil/work/vscode_skills/.venv/bin/python skills/nettools-core/nettools/cli.py skills/nettools-core/nettools/priority1.py skills/nettools-core/nettools/priority3.py`; it passed with no issues in 3 files.
+- Re-ran `pytest tests/unit/nettools -q`; the NETTOOLS unit suite passed with 76 tests.
+
+## 2026-03-28T09:16:05Z - GPT-5.4 - Cleared remaining NETTOOLS Ruff and MyPy backlog
+- Reformatted `tests/unit/nettools/test_priority1_skills.py`, `tests/unit/nettools/test_priority2_skills.py`, and `tests/unit/nettools/test_priority3_skills.py` to eliminate the remaining NETTOOLS Ruff issues in the priority skill test modules.
+
+## 2026-03-28T09:58:40Z - GPT-5.4 - Added generated requirements workflow for repo-wide and per-skill installs
+- Added `tools/generate_requirements.py` to derive Python dependency files from `skills/install-manifest.json`, including a root `requirements.txt`, `requirements/README.md`, and per-skill files under `requirements/skills/`.
+- Added `tests/test_generate_requirements.py` to validate repo-wide package union generation, transitive `depends_on_skills` closure resolution, and output writing.
+- Installed `openpyxl` in the repo venv so the Excel skill integration tests no longer skip; full repo pytest now passes with `163 passed`.
+- Documented in `README.md` and `skills/README.md` that the manifest remains the source of truth and the generated requirements files cover only Python packages, not binaries, node packages, post-install steps, or dependent skill folders.
+- Validation for this change set: `ruff check tools/generate_requirements.py tests/test_generate_requirements.py`, `mypy tools/generate_requirements.py tests/test_generate_requirements.py`, `/home/phil/work/vscode_skills/.venv/bin/python -m pytest -q tests/test_generate_requirements.py`, and `/home/phil/work/vscode_skills/.venv/bin/python -m pytest -q` all passed.
+
+## 2026-03-28T09:42:44Z - GPT-5.4 - Finished NETTOOLS Ruff and MyPy cleanup verification
+- Updated the NETTOOLS wrapper entrypoints under `skills/net-*` to import their shared runtimes inside local `main()` functions after the `sys.path` bootstrap, clearing the repo-wide Ruff `E402` findings without changing wrapper behavior.
+- Cleaned the remaining shared NETTOOLS Ruff findings in `skills/nettools-core/nettools/`, including removing the unused abstract-base-class marker from `adapters/base.py` and wrapping the last overlong summary and message strings in `cli.py`, `priority1.py`, and `priority2.py`.
+- Verified NETTOOLS is now absent from repo-wide Ruff output and from repo-wide MyPy output filtered to `tests/unit/nettools`, `skills/nettools-core`, and `skills/net-*`.
+- Re-ran `pytest tests/unit/nettools -q`; the NETTOOLS unit suite still passes with 76 tests.
+- Updated `tests/unit/nettools/test_phase4_analysis.py` so `load_phase4_scenarios` uses a typed local assignment from `json.loads`, resolving the remaining NETTOOLS `no-any-return` MyPy issue.
+- Re-ran `ruff check` against the remaining NETTOOLS test files; all checks passed.
+- Re-ran `mypy --python-executable /home/phil/work/vscode_skills/.venv/bin/python .`; the remaining errors are outside NETTOOLS.
+- Re-ran `pytest tests/unit/nettools -q`; the NETTOOLS unit suite passed with 76 tests.
+
+## 2026-03-28T09:45:06Z - GPT-5.4 - Repo-wide validation baseline after NETTOOLS cleanup
+- Re-ran `ruff check .`; it now reports 7 remaining issues outside NETTOOLS, concentrated in `skills/arxiv-search/`, `skills/excel-to-delimited/`, `skills/excel-to-markdown/`, `skills/news-search/`, and `skills/stock-investment-review/`.
+- Re-ran `mypy --python-executable /home/phil/work/vscode_skills/.venv/bin/python .`; it reports 27 remaining errors in 12 files, again outside NETTOOLS, mainly missing test annotations and a few `no-any-return` / unused-ignore issues in older shared skills.
+- Re-ran `pytest -q`; the full repository test suite passes with `157 passed, 2 skipped`.
+
+## 2026-03-28T09:49:02Z - GPT-5.4 - Installed openpyxl and verified skill dependency tracking approach
+- Installed `openpyxl` into the repo venv so the Excel workbook integration tests can run locally.
+- Re-ran `pytest -q skills/excel-to-delimited/test_excel_to_delimited.py skills/excel-to-markdown/test_excel_to_markdown.py`; the previously skipped Excel tests now execute and pass with 16 tests.
+- Confirmed Python package requirements are tracked primarily in `skills/install-manifest.json` at the per-skill level via `requires.python_packages` and `optional_python_packages`, with `skills/README.md` as the human-readable companion document.
+- Confirmed the current tracking is documentation-oriented rather than automatically enforced by a dedicated validation test or lockfile generator.
+
+## 2026-03-28T10:00:37Z - GPT-5.4 - Added CI freshness guard for generated requirements outputs
+- Extended `tests/test_generate_requirements.py` with a deterministic freshness check that regenerates outputs into a temp directory and compares them to the committed `requirements.txt` and `requirements/` tree.
+- The new test fails with an explicit message instructing the developer to run `python3 tools/generate_requirements.py` whenever generated requirements files are stale.
+- There is currently no checked-in `.github/workflows/` file in this repo, so this guard is designed to run inside any CI job or local validation path that already executes pytest.
+- Validation for this change: `/home/phil/work/vscode_skills/.venv/bin/python -m pytest -q tests/test_generate_requirements.py`, `ruff check tests/test_generate_requirements.py`, and `mypy tests/test_generate_requirements.py` all passed.
+
+## 2026-03-28T10:04:36Z - GPT-5.4 - Added GitHub Actions enforcement for generated requirements freshness
+- Added `.github/workflows/generated-requirements-check.yml` so GitHub Actions runs the generated requirements pytest guard automatically on every push and pull request.
+- Kept the workflow intentionally minimal: checkout, Python 3.10 setup, `pip install pytest`, then `python -m pytest -q tests/test_generate_requirements.py`.
+- Validated the workflow target locally by re-running `/home/phil/work/vscode_skills/.venv/bin/python -m pytest -q tests/test_generate_requirements.py`, which passed with `5 passed`.
+
+## 2026-03-28T10:08:37Z - GPT-5.4 - Expanded GitHub Actions into broader CI job graph
+- Expanded `.github/workflows/generated-requirements-check.yml` into a broader `CI` workflow with four jobs: generated requirements freshness, repo-wide Ruff, repo-wide MyPy, and full pytest.
+- The MyPy and pytest jobs install the small dependency set needed for this repo in CI: `mypy`, `pytest`, `pydantic`, `openpyxl`, `xlrd`, and `yfinance`; the Ruff job installs `ruff` only.
+- Verified the workflow YAML has no editor-detected errors and re-ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest -q tests/test_generate_requirements.py`, which still passed with `5 passed`.
+- Current local baseline for the expanded workflow: full pytest passes with `164 passed`, but repo-wide Ruff still reports 7 pre-existing issues and repo-wide MyPy still reports 51 pre-existing errors, so those two new CI jobs will currently fail until that backlog is cleaned up.
+
+## 2026-03-28T10:12:09Z - GPT-5.4 - Cleared remaining repo-wide Ruff backlog outside MyPy
+- Fixed the 7 remaining repo-wide Ruff issues in `skills/arxiv-search/`, `skills/excel-to-delimited/`, `skills/excel-to-markdown/`, `skills/news-search/`, and `skills/stock-investment-review/` with formatting-only or lint-targeted edits.
+- Specific fixes included wrapping overlong strings, adding `strict=False` to the workbook `zip(...)` call, removing a duplicate set entry in `news_search.py`, and removing extraneous parentheses around a `print(...)` argument.
+- Re-ran `ruff check .`; repo-wide Ruff now passes cleanly.
+- Re-ran targeted tests for the touched skill modules; they passed with `34 passed`.
+- Re-ran full repo pytest with `/home/phil/work/vscode_skills/.venv/bin/python -m pytest -q`; it still passes with `164 passed`.
+- After this cleanup, MyPy is the remaining blocker for a fully green expanded CI workflow.
+
+## 2026-03-28T10:18:06Z - GPT-5.4 - Cleared remaining repo-wide MyPy backlog and reached green CI baseline
+- Installed the CI-aligned Python toolchain into the repo venv for local validation: `mypy`, `pydantic`, `pytest`, `openpyxl`, `xlrd`, and `yfinance`.
+- Reduced the repo-wide MyPy backlog from 27 real errors to zero by adding explicit fixture annotations in the shared skill test modules, adding concrete return types and `cast(...)` usage around dynamic imports and JSON loading, and coercing loosely typed library reads in the `arxiv-search` and `news-search` helpers.
+- Added a narrow `# type: ignore[import-untyped]` on the optional `yfinance` import in `skills/yahoo-finance/yahoo_finance.py` so the helper remains optional at runtime while still type-checking cleanly in CI.
+- Re-ran targeted tests for the touched MyPy cleanup surface; they passed with `74 passed`.
+- Re-ran the full CI-equivalent validation set: `ruff check .`, `/home/phil/work/vscode_skills/.venv/bin/python -m mypy .`, `/home/phil/work/vscode_skills/.venv/bin/python -m pytest -q`, and `/home/phil/work/vscode_skills/.venv/bin/python -m pytest -q tests/test_generate_requirements.py`; all passed, with full pytest at `164 passed`.
+
+## 2026-03-28T11:09:02Z - GPT-5.4 - Renamed GitHub Actions workflow file to ci.yml
+- Renamed the broad GitHub Actions workflow from `.github/workflows/generated-requirements-check.yml` to `.github/workflows/ci.yml` so the filename matches its current scope.
+- Preserved the existing CI contents unchanged: generated requirements freshness, repo-wide Ruff, repo-wide MyPy, and full pytest.
+- Verified the renamed workflow file has no editor-detected errors and re-ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest -q tests/test_generate_requirements.py`, which still passed with `5 passed`.

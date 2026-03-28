@@ -4,14 +4,13 @@ import json
 from pathlib import Path
 
 import pytest
-
 from nettools.adapters import (
     StubAuthAdapter,
     StubDhcpAdapter,
     StubInventoryConfigAdapter,
     StubProbeAdapter,
-    StubSyslogEventAdapter,
     StubSwitchAdapter,
+    StubSyslogEventAdapter,
     StubWirelessControllerAdapter,
 )
 from nettools.errors import DependencyUnavailableError, InsufficientEvidenceError
@@ -29,7 +28,9 @@ from nettools.priority2 import (
 )
 
 
-def build_bundle(fixtures: dict[str, object], *, auth_unavailable: set[str] | None = None) -> AdapterBundle:
+def build_bundle(
+    fixtures: dict[str, object], *, auth_unavailable: set[str] | None = None
+) -> AdapterBundle:
     return AdapterBundle(
         wireless=StubWirelessControllerAdapter(fixtures=fixtures),
         switch=StubSwitchAdapter(fixtures=fixtures),
@@ -48,7 +49,13 @@ def test_roaming_analysis_healthy_roaming() -> None:
             "get_client_session": {"client_id": "client-1", "ap_name": "AP-1", "rssi_dbm": -61},
             "get_client_history": [{"client_id": "client-1", "ap_name": "AP-1"}],
             "get_roam_events": [
-                {"client_id": "client-1", "from_ap_name": "AP-1", "to_ap_name": "AP-2", "latency_ms": 90.0, "success": True}
+                {
+                    "client_id": "client-1",
+                    "from_ap_name": "AP-1",
+                    "to_ap_name": "AP-2",
+                    "latency_ms": 90.0,
+                    "success": True,
+                }
             ],
         }
     )
@@ -65,8 +72,20 @@ def test_roaming_analysis_failed_roam() -> None:
             "get_client_session": {"client_id": "client-1", "ap_name": "AP-1", "rssi_dbm": -67},
             "get_client_history": [{"client_id": "client-1", "ap_name": "AP-1"}],
             "get_roam_events": [
-                {"client_id": "client-1", "from_ap_name": "AP-1", "to_ap_name": "AP-2", "latency_ms": 410.0, "success": False},
-                {"client_id": "client-1", "from_ap_name": "AP-2", "to_ap_name": "AP-3", "latency_ms": 360.0, "success": False},
+                {
+                    "client_id": "client-1",
+                    "from_ap_name": "AP-1",
+                    "to_ap_name": "AP-2",
+                    "latency_ms": 410.0,
+                    "success": False,
+                },
+                {
+                    "client_id": "client-1",
+                    "from_ap_name": "AP-2",
+                    "to_ap_name": "AP-3",
+                    "latency_ms": 360.0,
+                    "success": False,
+                },
             ],
         }
     )
@@ -80,10 +99,22 @@ def test_roaming_analysis_failed_roam() -> None:
 def test_roaming_analysis_sticky_client() -> None:
     bundle = build_bundle(
         {
-            "get_client_session": {"client_id": "client-1", "ap_name": "AP-1", "rssi_dbm": -78, "disconnect_count": 2},
+            "get_client_session": {
+                "client_id": "client-1",
+                "ap_name": "AP-1",
+                "rssi_dbm": -78,
+                "disconnect_count": 2,
+            },
             "get_client_history": [{"client_id": "client-1", "ap_name": "AP-1"}],
             "get_roam_events": [
-                {"client_id": "client-1", "from_ap_name": "AP-1", "to_ap_name": "AP-2", "latency_ms": 180.0, "success": True, "sticky_candidate": True}
+                {
+                    "client_id": "client-1",
+                    "from_ap_name": "AP-1",
+                    "to_ap_name": "AP-2",
+                    "latency_ms": 180.0,
+                    "success": True,
+                    "sticky_candidate": True,
+                }
             ],
         }
     )
@@ -96,8 +127,15 @@ def test_roaming_analysis_sticky_client() -> None:
 def test_auth_8021x_radius_healthy() -> None:
     bundle = build_bundle(
         {
-            "get_auth_event_summaries": {"client_id": "client-1", "auth_success_rate_pct": 99.0, "timeouts": 0, "radius_servers": [{"server": "radius-a", "avg_rtt_ms": 80.0, "reachable": True}]},
-            "get_radius_reachability": [{"server": "radius-a", "avg_rtt_ms": 80.0, "reachable": True}],
+            "get_auth_event_summaries": {
+                "client_id": "client-1",
+                "auth_success_rate_pct": 99.0,
+                "timeouts": 0,
+                "radius_servers": [{"server": "radius-a", "avg_rtt_ms": 80.0, "reachable": True}],
+            },
+            "get_radius_reachability": [
+                {"server": "radius-a", "avg_rtt_ms": 80.0, "reachable": True}
+            ],
             "retrieve_categorized_auth_failures": [],
         }
     )
@@ -110,8 +148,15 @@ def test_auth_8021x_radius_healthy() -> None:
 def test_auth_8021x_radius_timeout_heavy() -> None:
     bundle = build_bundle(
         {
-            "get_auth_event_summaries": {"client_id": "client-1", "auth_success_rate_pct": 73.0, "timeouts": 8, "radius_servers": [{"server": "radius-a", "avg_rtt_ms": 3400.0, "reachable": True}]},
-            "get_radius_reachability": [{"server": "radius-a", "avg_rtt_ms": 3400.0, "reachable": True}],
+            "get_auth_event_summaries": {
+                "client_id": "client-1",
+                "auth_success_rate_pct": 73.0,
+                "timeouts": 8,
+                "radius_servers": [{"server": "radius-a", "avg_rtt_ms": 3400.0, "reachable": True}],
+            },
+            "get_radius_reachability": [
+                {"server": "radius-a", "avg_rtt_ms": 3400.0, "reachable": True}
+            ],
             "retrieve_categorized_auth_failures": [{"category": "timeout", "count": 8}],
         }
     )
@@ -119,15 +164,27 @@ def test_auth_8021x_radius_timeout_heavy() -> None:
     result = evaluate_auth_8021x_radius(Auth8021xRadiusInput(client_id="client-1"), bundle)
 
     assert result.status.value == "fail"
-    assert {finding.code for finding in result.findings} >= {"AUTH_TIMEOUTS", "RADIUS_HIGH_RTT", "LOW_AUTH_SUCCESS_RATE"}
+    assert {finding.code for finding in result.findings} >= {
+        "AUTH_TIMEOUTS",
+        "RADIUS_HIGH_RTT",
+        "LOW_AUTH_SUCCESS_RATE",
+    }
     assert "net.path_probe" in [action.skill for action in result.next_actions]
 
 
 def test_auth_8021x_radius_credential_failure() -> None:
     bundle = build_bundle(
         {
-            "get_auth_event_summaries": {"client_id": "client-1", "auth_success_rate_pct": 84.0, "timeouts": 0, "invalid_credentials": 5, "radius_servers": [{"server": "radius-a", "avg_rtt_ms": 120.0, "reachable": True}]},
-            "get_radius_reachability": [{"server": "radius-a", "avg_rtt_ms": 120.0, "reachable": True}],
+            "get_auth_event_summaries": {
+                "client_id": "client-1",
+                "auth_success_rate_pct": 84.0,
+                "timeouts": 0,
+                "invalid_credentials": 5,
+                "radius_servers": [{"server": "radius-a", "avg_rtt_ms": 120.0, "reachable": True}],
+            },
+            "get_radius_reachability": [
+                {"server": "radius-a", "avg_rtt_ms": 120.0, "reachable": True}
+            ],
             "retrieve_categorized_auth_failures": [{"category": "invalid_credentials", "count": 5}],
         }
     )
@@ -163,14 +220,31 @@ def test_path_probe_clean_path() -> None:
     bundle = build_bundle(
         {
             "run_path_probes": [
-                {"target": "default-gateway", "avg_latency_ms": 5.0, "jitter_ms": 1.0, "loss_pct": 0.0},
-                {"target": "dns-service", "avg_latency_ms": 12.0, "jitter_ms": 2.0, "loss_pct": 0.0},
-                {"target": "internet-edge", "avg_latency_ms": 32.0, "jitter_ms": 5.0, "loss_pct": 0.0},
+                {
+                    "target": "default-gateway",
+                    "avg_latency_ms": 5.0,
+                    "jitter_ms": 1.0,
+                    "loss_pct": 0.0,
+                },
+                {
+                    "target": "dns-service",
+                    "avg_latency_ms": 12.0,
+                    "jitter_ms": 2.0,
+                    "loss_pct": 0.0,
+                },
+                {
+                    "target": "internet-edge",
+                    "avg_latency_ms": 32.0,
+                    "jitter_ms": 5.0,
+                    "loss_pct": 0.0,
+                },
             ]
         }
     )
 
-    result = evaluate_path_probe(PathProbeInput(site_id="hq-1", external_target="internet-edge"), bundle)
+    result = evaluate_path_probe(
+        PathProbeInput(site_id="hq-1", external_target="internet-edge"), bundle
+    )
 
     assert result.status.value == "ok"
 
@@ -179,9 +253,24 @@ def test_path_probe_internal_service_degradation() -> None:
     bundle = build_bundle(
         {
             "run_path_probes": [
-                {"target": "default-gateway", "avg_latency_ms": 5.0, "jitter_ms": 1.0, "loss_pct": 0.0},
-                {"target": "dns-service", "avg_latency_ms": 240.0, "jitter_ms": 25.0, "loss_pct": 1.0},
-                {"target": "radius-service", "avg_latency_ms": 15.0, "jitter_ms": 2.0, "loss_pct": 0.0},
+                {
+                    "target": "default-gateway",
+                    "avg_latency_ms": 5.0,
+                    "jitter_ms": 1.0,
+                    "loss_pct": 0.0,
+                },
+                {
+                    "target": "dns-service",
+                    "avg_latency_ms": 240.0,
+                    "jitter_ms": 25.0,
+                    "loss_pct": 1.0,
+                },
+                {
+                    "target": "radius-service",
+                    "avg_latency_ms": 15.0,
+                    "jitter_ms": 2.0,
+                    "loss_pct": 0.0,
+                },
             ]
         }
     )
@@ -196,9 +285,24 @@ def test_path_probe_site_wide_loss() -> None:
     bundle = build_bundle(
         {
             "run_path_probes": [
-                {"target": "default-gateway", "avg_latency_ms": 180.0, "jitter_ms": 55.0, "loss_pct": 14.0},
-                {"target": "dns-service", "avg_latency_ms": 260.0, "jitter_ms": 70.0, "loss_pct": 16.0},
-                {"target": "radius-service", "avg_latency_ms": 240.0, "jitter_ms": 60.0, "loss_pct": 12.0},
+                {
+                    "target": "default-gateway",
+                    "avg_latency_ms": 180.0,
+                    "jitter_ms": 55.0,
+                    "loss_pct": 14.0,
+                },
+                {
+                    "target": "dns-service",
+                    "avg_latency_ms": 260.0,
+                    "jitter_ms": 70.0,
+                    "loss_pct": 16.0,
+                },
+                {
+                    "target": "radius-service",
+                    "avg_latency_ms": 240.0,
+                    "jitter_ms": 60.0,
+                    "loss_pct": 12.0,
+                },
             ]
         }
     )
@@ -213,8 +317,23 @@ def test_segmentation_policy_correct_placement() -> None:
     bundle = build_bundle(
         {
             "get_client_session": {"client_id": "client-1", "site_id": "hq-1", "ssid": "CorpWiFi"},
-            "get_dhcp_transaction_summaries": [{"client_id": "client-1", "site_id": "hq-1", "ssid": "CorpWiFi", "vlan_id": 120, "scope_name": "corp", "relay_ip": "10.0.120.1"}],
-            "get_expected_policy_mappings": {"site_id": "hq-1", "ssid": "CorpWiFi", "expected_vlan": 120, "expected_policy_group": "corp", "expected_gateway": "10.0.120.1"},
+            "get_dhcp_transaction_summaries": [
+                {
+                    "client_id": "client-1",
+                    "site_id": "hq-1",
+                    "ssid": "CorpWiFi",
+                    "vlan_id": 120,
+                    "scope_name": "corp",
+                    "relay_ip": "10.0.120.1",
+                }
+            ],
+            "get_expected_policy_mappings": {
+                "site_id": "hq-1",
+                "ssid": "CorpWiFi",
+                "expected_vlan": 120,
+                "expected_policy_group": "corp",
+                "expected_gateway": "10.0.120.1",
+            },
         }
     )
 
@@ -227,8 +346,23 @@ def test_segmentation_policy_wrong_vlan() -> None:
     bundle = build_bundle(
         {
             "get_client_session": {"client_id": "client-1", "site_id": "hq-1", "ssid": "CorpWiFi"},
-            "get_dhcp_transaction_summaries": [{"client_id": "client-1", "site_id": "hq-1", "ssid": "CorpWiFi", "vlan_id": 220, "scope_name": "corp", "relay_ip": "10.0.220.1"}],
-            "get_expected_policy_mappings": {"site_id": "hq-1", "ssid": "CorpWiFi", "expected_vlan": 120, "expected_policy_group": "corp", "expected_gateway": "10.0.120.1"},
+            "get_dhcp_transaction_summaries": [
+                {
+                    "client_id": "client-1",
+                    "site_id": "hq-1",
+                    "ssid": "CorpWiFi",
+                    "vlan_id": 220,
+                    "scope_name": "corp",
+                    "relay_ip": "10.0.220.1",
+                }
+            ],
+            "get_expected_policy_mappings": {
+                "site_id": "hq-1",
+                "ssid": "CorpWiFi",
+                "expected_vlan": 120,
+                "expected_policy_group": "corp",
+                "expected_gateway": "10.0.120.1",
+            },
         }
     )
 
@@ -241,8 +375,23 @@ def test_segmentation_policy_wrong_policy_group() -> None:
     bundle = build_bundle(
         {
             "get_client_session": {"client_id": "client-1", "site_id": "hq-1", "ssid": "CorpWiFi"},
-            "get_dhcp_transaction_summaries": [{"client_id": "client-1", "site_id": "hq-1", "ssid": "CorpWiFi", "vlan_id": 120, "scope_name": "guest", "relay_ip": "10.0.120.1"}],
-            "get_expected_policy_mappings": {"site_id": "hq-1", "ssid": "CorpWiFi", "expected_vlan": 120, "expected_policy_group": "corp", "expected_gateway": "10.0.120.1"},
+            "get_dhcp_transaction_summaries": [
+                {
+                    "client_id": "client-1",
+                    "site_id": "hq-1",
+                    "ssid": "CorpWiFi",
+                    "vlan_id": 120,
+                    "scope_name": "guest",
+                    "relay_ip": "10.0.120.1",
+                }
+            ],
+            "get_expected_policy_mappings": {
+                "site_id": "hq-1",
+                "ssid": "CorpWiFi",
+                "expected_vlan": 120,
+                "expected_policy_group": "corp",
+                "expected_gateway": "10.0.120.1",
+            },
         }
     )
 
@@ -252,8 +401,12 @@ def test_segmentation_policy_wrong_policy_group() -> None:
 
 
 def test_segmentation_policy_missing_data() -> None:
-    with pytest.raises(InsufficientEvidenceError, match="Unable to locate observed or expected segmentation data"):
-        evaluate_segmentation_policy(SegmentationPolicyInput(client_id="client-1"), build_bundle({}))
+    with pytest.raises(
+        InsufficientEvidenceError, match="Unable to locate observed or expected segmentation data"
+    ):
+        evaluate_segmentation_policy(
+            SegmentationPolicyInput(client_id="client-1"), build_bundle({})
+        )
 
 
 def test_priority2_cli_smoke_with_fixture_file(tmp_path: Path) -> None:
@@ -262,13 +415,20 @@ def test_priority2_cli_smoke_with_fixture_file(tmp_path: Path) -> None:
         json.dumps(
             {
                 "run_path_probes": [
-                    {"target": "dns-service", "avg_latency_ms": 12.0, "jitter_ms": 1.0, "loss_pct": 0.0}
+                    {
+                        "target": "dns-service",
+                        "avg_latency_ms": 12.0,
+                        "jitter_ms": 1.0,
+                        "loss_pct": 0.0,
+                    }
                 ]
             }
         ),
         encoding="utf-8",
     )
 
-    exit_code = main_path_probe(["--site-id", "hq-1", "--target", "dns-service", "--fixture-file", str(fixture_path)])
+    exit_code = main_path_probe(
+        ["--site-id", "hq-1", "--target", "dns-service", "--fixture-file", str(fixture_path)]
+    )
 
     assert exit_code == 0

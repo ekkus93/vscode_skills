@@ -30,7 +30,7 @@ class SharedInputBase(BaseModel):
     include_raw: bool = False
 
     @model_validator(mode="after")
-    def normalize_time_window(self) -> "SharedInputBase":
+    def normalize_time_window(self) -> SharedInputBase:
         if (self.start_time is None) != (self.end_time is None):
             raise ValueError("start_time and end_time must be provided together")
 
@@ -40,7 +40,11 @@ class SharedInputBase(BaseModel):
             object.__setattr__(self, "start_time", start_time)
             object.__setattr__(self, "end_time", end_time)
 
-        if self.start_time is not None and self.end_time is not None and self.start_time > self.end_time:
+        if (
+            self.start_time is not None
+            and self.end_time is not None
+            and self.start_time > self.end_time
+        ):
             raise ValueError("start_time must be earlier than or equal to end_time")
 
         return self

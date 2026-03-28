@@ -2,16 +2,18 @@ from __future__ import annotations
 
 import argparse
 import os
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from statistics import mean
-from typing import Any, Callable, Sequence, TypeVar
+from typing import Any, TypeVar
 
 from pydantic import Field, ValidationError, model_validator
 
 from .adapters import (
     AdapterContext,
     AuthAdapter,
+    DhcpAdapter,
+    DnsAdapter,
     InventoryConfigAdapter,
     ProbeAdapter,
     StubAuthAdapter,
@@ -25,8 +27,6 @@ from .adapters import (
     SwitchAdapter,
     SyslogEventAdapter,
     WirelessControllerAdapter,
-    DhcpAdapter,
-    DnsAdapter,
     load_stub_fixture_file,
 )
 from .analysis import (
@@ -39,27 +39,21 @@ from .cli import build_common_parser
 from .config import default_threshold_config
 from .errors import (
     BadInputError,
-    DependencyTimeoutError,
     DependencyUnavailableError,
     InsufficientEvidenceError,
     NettoolsError,
     error_to_skill_result,
 )
-from .logging import StructuredLogger, configure_logging
+from .logging import configure_logging
 from .models import (
     AccessPointState,
-    ClientSession,
-    Confidence,
-    DhcpSummary,
-    DnsSummary,
     Finding,
     FindingSeverity,
     NextAction,
     ScopeType,
     SharedInputBase,
     SkillResult,
-    StpSummary,
-    SwitchPortState,
+    Status,
 )
 
 HIGH_PACKET_LOSS_PCT = 2.0
@@ -101,7 +95,7 @@ class AdapterBundle:
 
 class ClientHealthInput(SharedInputBase):
     @model_validator(mode="after")
-    def validate_identifier(self) -> "ClientHealthInput":
+    def validate_identifier(self) -> ClientHealthInput:
         if not (self.client_id or self.client_mac):
             raise ValueError("client_id or client_mac is required")
         return self
@@ -109,7 +103,7 @@ class ClientHealthInput(SharedInputBase):
 
 class ApRfHealthInput(SharedInputBase):
     @model_validator(mode="after")
-    def validate_ap_identifier(self) -> "ApRfHealthInput":
+    def validate_ap_identifier(self) -> ApRfHealthInput:
         if not (self.ap_id or self.ap_name):
             raise ValueError("ap_id or ap_name is required")
         return self
@@ -117,7 +111,7 @@ class ApRfHealthInput(SharedInputBase):
 
 class DhcpPathInput(SharedInputBase):
     @model_validator(mode="after")
-    def validate_scope(self) -> "DhcpPathInput":
+    def validate_scope(self) -> DhcpPathInput:
         if not any((self.client_id, self.client_mac, self.ssid, self.vlan_id, self.site_id)):
             raise ValueError("one of client_id, client_mac, ssid, vlan_id, or site_id is required")
         return self
@@ -129,9 +123,11 @@ class DnsLatencyInput(SharedInputBase):
 
 class ApUplinkHealthInput(SharedInputBase):
     @model_validator(mode="after")
-    def validate_scope(self) -> "ApUplinkHealthInput":
+    def validate_scope(self) -> ApUplinkHealthInput:
         if not (self.ap_id or self.ap_name or (self.switch_id and self.switch_port)):
-            raise ValueError("ap_id or ap_name is required unless switch_id and switch_port are both provided")
+            raise ValueError(
+                "ap_id or ap_name is required unless switch_id and switch_port are both provided"
+            )
         return self
 
 
@@ -175,12 +171,12 @@ def _provider_refs(adapter: Any, *operations: str) -> list[str]:
     return [f"adapter:{provider_name}:{operation}" for operation in operations]
 
 
-def _status_from_findings(findings: Sequence[Finding]) -> str:
+def _status_from_findings(findings: Sequence[Finding]) -> Status:
     if any(finding.severity == FindingSeverity.CRITICAL for finding in findings):
-        return "fail"
+        return Status.FAIL
     if any(finding.severity == FindingSeverity.WARN for finding in findings):
-        return "warn"
-    return "ok"
+        return Status.WARN
+    return Status.OK
 
 
 def _summary_from_findings(ok_summary: str, findings: Sequence[Finding]) -> str:
@@ -256,20 +252,32 @@ def evaluate_client_health(skill_input: ClientHealthInput, adapters: AdapterBund
 
     context = build_adapter_context(skill_input)
     wireless = adapters.wireless
-    session = wireless.get_client_session(client_id=skill_input.client_id, client_mac=skill_input.client_mac, context=context)
-    history = wireless.get_client_history(client_id=skill_input.client_id, client_mac=skill_input.client_mac, context=context)
-    roam_events = wireless.get_roam_events(client_id=skill_input.client_id, client_mac=skill_input.client_mac, context=context)
+    session = wireless.get_client_session(
+        client_id=skill_input.client_id, client_mac=skill_input.client_mac, context=context
+    )
+    history = wireless.get_client_history(
+        client_id=skill_input.client_id, client_mac=skill_input.client_mac, context=context
+    )
+    roam_events = wireless.get_roam_events(
+        client_id=skill_input.client_id, client_mac=skill_input.client_mac, context=context
+    )
 
     if session is None and not history:
-        raise InsufficientEvidenceError("Unable to locate client session data for the requested client.")
+        raise InsufficientEvidenceError(
+            "Unable to locate client session data for the requested client."
+        )
 
     thresholds = default_threshold_config().wireless
     resolved_session = session or history[0]
     ap_state = None
     neighbors: list[AccessPointState] = []
     if resolved_session.ap_id or resolved_session.ap_name:
-        ap_state = wireless.get_ap_state(ap_id=resolved_session.ap_id, ap_name=resolved_session.ap_name, context=context)
-        neighbors = wireless.get_neighboring_ap_data(ap_id=resolved_session.ap_id, ap_name=resolved_session.ap_name, context=context)
+        ap_state = wireless.get_ap_state(
+            ap_id=resolved_session.ap_id, ap_name=resolved_session.ap_name, context=context
+        )
+        neighbors = wireless.get_neighboring_ap_data(
+            ap_id=resolved_session.ap_id, ap_name=resolved_session.ap_name, context=context
+        )
 
     findings: list[Finding] = []
     evidence = {
@@ -285,7 +293,12 @@ def evaluate_client_health(skill_input: ClientHealthInput, adapters: AdapterBund
         "reassociation_count": resolved_session.reassociation_count,
     }
 
-    if resolved_session.rssi_dbm is not None and compare_to_threshold("rssi_dbm", resolved_session.rssi_dbm, thresholds.low_rssi_dbm, direction="lte").breached:
+    if (
+        resolved_session.rssi_dbm is not None
+        and compare_to_threshold(
+            "rssi_dbm", resolved_session.rssi_dbm, thresholds.low_rssi_dbm, direction="lte"
+        ).breached
+    ):
         _add_finding(
             findings,
             code="LOW_RSSI",
@@ -295,7 +308,12 @@ def evaluate_client_health(skill_input: ClientHealthInput, adapters: AdapterBund
             value=resolved_session.rssi_dbm,
             threshold=thresholds.low_rssi_dbm,
         )
-    if resolved_session.snr_db is not None and compare_to_threshold("snr_db", resolved_session.snr_db, thresholds.low_snr_db, direction="lte").breached:
+    if (
+        resolved_session.snr_db is not None
+        and compare_to_threshold(
+            "snr_db", resolved_session.snr_db, thresholds.low_snr_db, direction="lte"
+        ).breached
+    ):
         _add_finding(
             findings,
             code="LOW_SNR",
@@ -305,7 +323,12 @@ def evaluate_client_health(skill_input: ClientHealthInput, adapters: AdapterBund
             value=resolved_session.snr_db,
             threshold=thresholds.low_snr_db,
         )
-    if resolved_session.retry_pct is not None and compare_to_threshold("retry_pct", resolved_session.retry_pct, thresholds.high_retry_pct, direction="gte").breached:
+    if (
+        resolved_session.retry_pct is not None
+        and compare_to_threshold(
+            "retry_pct", resolved_session.retry_pct, thresholds.high_retry_pct, direction="gte"
+        ).breached
+    ):
         _add_finding(
             findings,
             code="HIGH_RETRY_RATE",
@@ -315,7 +338,15 @@ def evaluate_client_health(skill_input: ClientHealthInput, adapters: AdapterBund
             value=resolved_session.retry_pct,
             threshold=thresholds.high_retry_pct,
         )
-    if resolved_session.packet_loss_pct is not None and compare_to_threshold("packet_loss_pct", resolved_session.packet_loss_pct, HIGH_PACKET_LOSS_PCT, direction="gte").breached:
+    if (
+        resolved_session.packet_loss_pct is not None
+        and compare_to_threshold(
+            "packet_loss_pct",
+            resolved_session.packet_loss_pct,
+            HIGH_PACKET_LOSS_PCT,
+            direction="gte",
+        ).breached
+    ):
         _add_finding(
             findings,
             code="HIGH_PACKET_LOSS",
@@ -326,7 +357,9 @@ def evaluate_client_health(skill_input: ClientHealthInput, adapters: AdapterBund
             threshold=HIGH_PACKET_LOSS_PCT,
         )
 
-    roam_count = resolved_session.roam_count if resolved_session.roam_count is not None else len(roam_events)
+    roam_count = (
+        resolved_session.roam_count if resolved_session.roam_count is not None else len(roam_events)
+    )
     if roam_count and roam_count >= HIGH_ROAM_COUNT:
         _add_finding(
             findings,
@@ -337,7 +370,9 @@ def evaluate_client_health(skill_input: ClientHealthInput, adapters: AdapterBund
             value=roam_count,
             threshold=HIGH_ROAM_COUNT,
         )
-    reconnect_cycles = (resolved_session.disconnect_count or 0) + (resolved_session.reassociation_count or 0)
+    reconnect_cycles = (resolved_session.disconnect_count or 0) + (
+        resolved_session.reassociation_count or 0
+    )
     if reconnect_cycles >= HIGH_RECONNECT_COUNT:
         _add_finding(
             findings,
@@ -348,7 +383,12 @@ def evaluate_client_health(skill_input: ClientHealthInput, adapters: AdapterBund
             value=reconnect_cycles,
             threshold=HIGH_RECONNECT_COUNT,
         )
-    if neighbors and resolved_session.rssi_dbm is not None and resolved_session.rssi_dbm <= thresholds.low_rssi_dbm and roam_count == 0:
+    if (
+        neighbors
+        and resolved_session.rssi_dbm is not None
+        and resolved_session.rssi_dbm <= thresholds.low_rssi_dbm
+        and roam_count == 0
+    ):
         _add_finding(
             findings,
             code="STICKY_CLIENT",
@@ -358,12 +398,26 @@ def evaluate_client_health(skill_input: ClientHealthInput, adapters: AdapterBund
 
     next_actions = build_next_actions(
         [
-            ("net.ap_rf_health", "RF indicators on the current AP should be validated.", bool(findings)),
-            ("net.roaming_analysis", "Roam activity or sticky behavior needs deeper review.", any(f.code in {"EXCESSIVE_ROAMING", "STICKY_CLIENT"} for f in findings)),
-            ("net.ap_uplink_health", "Client symptoms could also reflect AP uplink issues.", any(f.code in {"HIGH_RETRY_RATE", "HIGH_PACKET_LOSS"} for f in findings)),
+            (
+                "net.ap_rf_health",
+                "RF indicators on the current AP should be validated.",
+                bool(findings),
+            ),
+            (
+                "net.roaming_analysis",
+                "Roam activity or sticky behavior needs deeper review.",
+                any(f.code in {"EXCESSIVE_ROAMING", "STICKY_CLIENT"} for f in findings),
+            ),
+            (
+                "net.ap_uplink_health",
+                "Client symptoms could also reflect AP uplink issues.",
+                any(f.code in {"HIGH_RETRY_RATE", "HIGH_PACKET_LOSS"} for f in findings),
+            ),
         ]
     )
-    raw_refs = _provider_refs(wireless, "get_client_session", "get_client_history", "get_roam_events")
+    raw_refs = _provider_refs(
+        wireless, "get_client_session", "get_client_history", "get_roam_events"
+    )
     if ap_state is not None:
         raw_refs.extend(_provider_refs(wireless, "get_ap_state", "get_neighboring_ap_data"))
 
@@ -394,10 +448,16 @@ def evaluate_ap_rf_health(skill_input: ApRfHealthInput, adapters: AdapterBundle)
         raise DependencyUnavailableError("Wireless adapter is not configured.")
     wireless = adapters.wireless
     context = build_adapter_context(skill_input)
-    ap_state = wireless.get_ap_state(ap_id=skill_input.ap_id, ap_name=skill_input.ap_name, context=context)
+    ap_state = wireless.get_ap_state(
+        ap_id=skill_input.ap_id, ap_name=skill_input.ap_name, context=context
+    )
     if ap_state is None:
         raise InsufficientEvidenceError("Unable to locate AP state for the requested AP.")
-    neighbors = wireless.get_neighboring_ap_data(ap_id=skill_input.ap_id or ap_state.ap_id, ap_name=skill_input.ap_name or ap_state.ap_name, context=context)
+    neighbors = wireless.get_neighboring_ap_data(
+        ap_id=skill_input.ap_id or ap_state.ap_id,
+        ap_name=skill_input.ap_name or ap_state.ap_name,
+        context=context,
+    )
 
     thresholds = default_threshold_config().wireless
     findings: list[Finding] = []
@@ -405,7 +465,15 @@ def evaluate_ap_rf_health(skill_input: ApRfHealthInput, adapters: AdapterBundle)
 
     for radio_name, radio in _iter_radios(ap_state):
         radio_evidence[radio_name] = radio.model_dump(mode="json", exclude_none=True)
-        if radio.utilization_pct is not None and compare_to_threshold("utilization_pct", radio.utilization_pct, thresholds.high_channel_utilization_pct, direction="gte").breached:
+        if (
+            radio.utilization_pct is not None
+            and compare_to_threshold(
+                "utilization_pct",
+                radio.utilization_pct,
+                thresholds.high_channel_utilization_pct,
+                direction="gte",
+            ).breached
+        ):
             _add_finding(
                 findings,
                 code="HIGH_CHANNEL_UTILIZATION",
@@ -447,7 +515,10 @@ def evaluate_ap_rf_health(skill_input: ApRfHealthInput, adapters: AdapterBundle)
                 value=radio.reset_count,
                 threshold=HIGH_RADIO_RESETS,
             )
-        if radio.interference_score is not None and radio.interference_score >= HIGH_INTERFERENCE_SCORE:
+        if (
+            radio.interference_score is not None
+            and radio.interference_score >= HIGH_INTERFERENCE_SCORE
+        ):
             _add_finding(
                 findings,
                 code="POTENTIAL_CO_CHANNEL_INTERFERENCE",
@@ -458,7 +529,10 @@ def evaluate_ap_rf_health(skill_input: ApRfHealthInput, adapters: AdapterBundle)
                 threshold=HIGH_INTERFERENCE_SCORE,
             )
 
-    if ap_state.radio_resets_last_24h is not None and ap_state.radio_resets_last_24h >= HIGH_RADIO_RESETS:
+    if (
+        ap_state.radio_resets_last_24h is not None
+        and ap_state.radio_resets_last_24h >= HIGH_RADIO_RESETS
+    ):
         _add_finding(
             findings,
             code="RADIO_RESETS",
@@ -468,7 +542,11 @@ def evaluate_ap_rf_health(skill_input: ApRfHealthInput, adapters: AdapterBundle)
             value=ap_state.radio_resets_last_24h,
             threshold=HIGH_RADIO_RESETS,
         )
-    if neighbors and len(neighbors) >= 3 and any(f.code == "HIGH_CHANNEL_UTILIZATION" for f in findings):
+    if (
+        neighbors
+        and len(neighbors) >= 3
+        and any(f.code == "HIGH_CHANNEL_UTILIZATION" for f in findings)
+    ):
         _add_finding(
             findings,
             code="POTENTIAL_CO_CHANNEL_INTERFERENCE",
@@ -478,8 +556,16 @@ def evaluate_ap_rf_health(skill_input: ApRfHealthInput, adapters: AdapterBundle)
 
     next_actions = build_next_actions(
         [
-            ("net.client_health", "Validate whether affected clients show session-level symptoms.", bool(findings)),
-            ("net.ap_uplink_health", "Confirm the AP uplink is clean before attributing symptoms to RF.", any(f.code in {"RADIO_RESETS", "HIGH_CHANNEL_UTILIZATION"} for f in findings)),
+            (
+                "net.client_health",
+                "Validate whether affected clients show session-level symptoms.",
+                bool(findings),
+            ),
+            (
+                "net.ap_uplink_health",
+                "Confirm the AP uplink is clean before attributing symptoms to RF.",
+                any(f.code in {"RADIO_RESETS", "HIGH_CHANNEL_UTILIZATION"} for f in findings),
+            ),
         ]
     )
     raw_refs = _provider_refs(wireless, "get_ap_state", "get_neighboring_ap_data")
@@ -538,9 +624,19 @@ def evaluate_dhcp_path(skill_input: DhcpPathInput, adapters: AdapterBundle) -> S
     findings: list[Finding] = []
     evidence = summary.model_dump(mode="json", exclude_none=True)
     if relay_metadata:
-        evidence["relay_path"] = [item.model_dump(mode="json", exclude_none=True) for item in relay_metadata]
+        evidence["relay_path"] = [
+            item.model_dump(mode="json", exclude_none=True) for item in relay_metadata
+        ]
 
-    if summary.avg_offer_latency_ms is not None and compare_to_threshold("avg_offer_latency_ms", summary.avg_offer_latency_ms, thresholds.high_dhcp_latency_ms, direction="gte").breached:
+    if (
+        summary.avg_offer_latency_ms is not None
+        and compare_to_threshold(
+            "avg_offer_latency_ms",
+            summary.avg_offer_latency_ms,
+            thresholds.high_dhcp_latency_ms,
+            direction="gte",
+        ).breached
+    ):
         _add_finding(
             findings,
             code="HIGH_DHCP_OFFER_LATENCY",
@@ -550,7 +646,15 @@ def evaluate_dhcp_path(skill_input: DhcpPathInput, adapters: AdapterBundle) -> S
             value=summary.avg_offer_latency_ms,
             threshold=thresholds.high_dhcp_latency_ms,
         )
-    if summary.avg_ack_latency_ms is not None and compare_to_threshold("avg_ack_latency_ms", summary.avg_ack_latency_ms, thresholds.high_dhcp_latency_ms, direction="gte").breached:
+    if (
+        summary.avg_ack_latency_ms is not None
+        and compare_to_threshold(
+            "avg_ack_latency_ms",
+            summary.avg_ack_latency_ms,
+            thresholds.high_dhcp_latency_ms,
+            direction="gte",
+        ).breached
+    ):
         _add_finding(
             findings,
             code="HIGH_DHCP_ACK_LATENCY",
@@ -580,7 +684,15 @@ def evaluate_dhcp_path(skill_input: DhcpPathInput, adapters: AdapterBundle) -> S
             value=summary.missing_acks,
             threshold=0,
         )
-    if summary.scope_utilization_pct is not None and compare_to_threshold("scope_utilization_pct", summary.scope_utilization_pct, HIGH_SCOPE_UTILIZATION_PCT, direction="gte").breached:
+    if (
+        summary.scope_utilization_pct is not None
+        and compare_to_threshold(
+            "scope_utilization_pct",
+            summary.scope_utilization_pct,
+            HIGH_SCOPE_UTILIZATION_PCT,
+            direction="gte",
+        ).breached
+    ):
         _add_finding(
             findings,
             code="SCOPE_UTILIZATION_HIGH",
@@ -590,7 +702,12 @@ def evaluate_dhcp_path(skill_input: DhcpPathInput, adapters: AdapterBundle) -> S
             value=summary.scope_utilization_pct,
             threshold=HIGH_SCOPE_UTILIZATION_PCT,
         )
-    if relay_metadata and summary.relay_ip and relay_metadata[0].relay_ip and summary.relay_ip != relay_metadata[0].relay_ip:
+    if (
+        relay_metadata
+        and summary.relay_ip
+        and relay_metadata[0].relay_ip
+        and summary.relay_ip != relay_metadata[0].relay_ip
+    ):
         _add_finding(
             findings,
             code="RELAY_PATH_MISMATCH",
@@ -600,11 +717,24 @@ def evaluate_dhcp_path(skill_input: DhcpPathInput, adapters: AdapterBundle) -> S
 
     next_actions = build_next_actions(
         [
-            ("net.segmentation_policy", "DHCP scope or relay issues may reflect the wrong network placement.", any(f.code in {"SCOPE_UTILIZATION_HIGH", "RELAY_PATH_MISMATCH"} for f in findings)),
-            ("net.path_probe", "Service-path validation can confirm whether DHCP latency is network-wide.", any(f.code in {"HIGH_DHCP_OFFER_LATENCY", "HIGH_DHCP_ACK_LATENCY", "DHCP_TIMEOUTS"} for f in findings)),
+            (
+                "net.segmentation_policy",
+                "DHCP scope or relay issues may reflect the wrong network placement.",
+                any(f.code in {"SCOPE_UTILIZATION_HIGH", "RELAY_PATH_MISMATCH"} for f in findings),
+            ),
+            (
+                "net.path_probe",
+                "Service-path validation can confirm whether DHCP latency is network-wide.",
+                any(
+                    f.code in {"HIGH_DHCP_OFFER_LATENCY", "HIGH_DHCP_ACK_LATENCY", "DHCP_TIMEOUTS"}
+                    for f in findings
+                ),
+            ),
         ]
     )
-    raw_refs = _provider_refs(dhcp, "get_dhcp_transaction_summaries", "get_scope_utilization", "get_relay_path_metadata")
+    raw_refs = _provider_refs(
+        dhcp, "get_dhcp_transaction_summaries", "get_scope_utilization", "get_relay_path_metadata"
+    )
     return _build_result(
         skill_name="net.dhcp_path",
         scope_type=ScopeType.SERVICE,
@@ -623,7 +753,9 @@ def evaluate_dns_latency(skill_input: DnsLatencyInput, adapters: AdapterBundle) 
         raise DependencyUnavailableError("DNS adapter is not configured.")
     dns = adapters.dns
     context = build_adapter_context(skill_input)
-    summary = dns.retrieve_dns_telemetry(site_id=skill_input.site_id, client_id=skill_input.client_id, context=context)
+    summary = dns.retrieve_dns_telemetry(
+        site_id=skill_input.site_id, client_id=skill_input.client_id, context=context
+    )
     if summary is None:
         summary = dns.run_dns_probes(
             queries=skill_input.queries,
@@ -640,7 +772,15 @@ def evaluate_dns_latency(skill_input: DnsLatencyInput, adapters: AdapterBundle) 
     evidence = summary.model_dump(mode="json", exclude_none=True)
     latency_issues = []
     for resolver in summary.resolver_results:
-        if resolver.avg_latency_ms is not None and compare_to_threshold("avg_latency_ms", resolver.avg_latency_ms, thresholds.high_dns_latency_ms, direction="gte").breached:
+        if (
+            resolver.avg_latency_ms is not None
+            and compare_to_threshold(
+                "avg_latency_ms",
+                resolver.avg_latency_ms,
+                thresholds.high_dns_latency_ms,
+                direction="gte",
+            ).breached
+        ):
             latency_issues.append(resolver.avg_latency_ms)
     if latency_issues:
         _add_finding(
@@ -652,9 +792,22 @@ def evaluate_dns_latency(skill_input: DnsLatencyInput, adapters: AdapterBundle) 
             value=max(latency_issues),
             threshold=thresholds.high_dns_latency_ms,
         )
-    timeout_values = [resolver.timeout_pct for resolver in summary.resolver_results if resolver.timeout_pct is not None]
-    overall_timeout = summary.overall_timeout_pct if summary.overall_timeout_pct is not None else (max(timeout_values) if timeout_values else None)
-    if overall_timeout is not None and compare_to_threshold("overall_timeout_pct", overall_timeout, HIGH_DNS_TIMEOUT_PCT, direction="gte").breached:
+    timeout_values = [
+        resolver.timeout_pct
+        for resolver in summary.resolver_results
+        if resolver.timeout_pct is not None
+    ]
+    overall_timeout = (
+        summary.overall_timeout_pct
+        if summary.overall_timeout_pct is not None
+        else (max(timeout_values) if timeout_values else None)
+    )
+    if (
+        overall_timeout is not None
+        and compare_to_threshold(
+            "overall_timeout_pct", overall_timeout, HIGH_DNS_TIMEOUT_PCT, direction="gte"
+        ).breached
+    ):
         _add_finding(
             findings,
             code="DNS_TIMEOUT_RATE",
@@ -667,12 +820,18 @@ def evaluate_dns_latency(skill_input: DnsLatencyInput, adapters: AdapterBundle) 
 
     baseline_reference = None
     if summary.overall_avg_latency_ms is not None:
-        baseline_reference = compare_to_baseline("dns_latency_ms", summary.overall_avg_latency_ms, 18.0)
+        baseline_reference = compare_to_baseline(
+            "dns_latency_ms", summary.overall_avg_latency_ms, 18.0
+        )
         evidence["baseline_comparison"] = baseline_reference.model_dump(mode="json")
 
     next_actions = build_next_actions(
         [
-            ("net.path_probe", "Path probing can confirm whether DNS is the isolated bottleneck.", bool(findings)),
+            (
+                "net.path_probe",
+                "Path probing can confirm whether DNS is the isolated bottleneck.",
+                bool(findings),
+            ),
         ]
     )
     raw_refs = _provider_refs(dns, "retrieve_dns_telemetry", "run_dns_probes")
@@ -690,7 +849,9 @@ def evaluate_dns_latency(skill_input: DnsLatencyInput, adapters: AdapterBundle) 
     )
 
 
-def evaluate_ap_uplink_health(skill_input: ApUplinkHealthInput, adapters: AdapterBundle) -> SkillResult:
+def evaluate_ap_uplink_health(
+    skill_input: ApUplinkHealthInput, adapters: AdapterBundle
+) -> SkillResult:
     if adapters.switch is None:
         raise DependencyUnavailableError("Switch adapter is not configured.")
     switch = adapters.switch
@@ -699,18 +860,28 @@ def evaluate_ap_uplink_health(skill_input: ApUplinkHealthInput, adapters: Adapte
 
     port_state = None
     if skill_input.switch_id and skill_input.switch_port:
-        port_state = switch.get_switch_port_state(switch_id=skill_input.switch_id, port=skill_input.switch_port, context=context)
+        port_state = switch.get_switch_port_state(
+            switch_id=skill_input.switch_id, port=skill_input.switch_port, context=context
+        )
     else:
-        port_state = switch.resolve_ap_to_switch_port(ap_id=skill_input.ap_id, ap_name=skill_input.ap_name, context=context)
+        port_state = switch.resolve_ap_to_switch_port(
+            ap_id=skill_input.ap_id, ap_name=skill_input.ap_name, context=context
+        )
     if port_state is None:
         raise InsufficientEvidenceError("Unable to resolve the AP to a switch port.")
 
     counters = None
     if port_state.switch_id and port_state.port:
-        counters = switch.get_interface_counters(switch_id=port_state.switch_id, port=port_state.port, context=context)
+        counters = switch.get_interface_counters(
+            switch_id=port_state.switch_id, port=port_state.port, context=context
+        )
     expectation = None
     if inventory is not None:
-        expectation = inventory.get_expected_ap_uplink_characteristics(ap_id=skill_input.ap_id or port_state.ap_id, ap_name=skill_input.ap_name or port_state.ap_name, context=context)
+        expectation = inventory.get_expected_ap_uplink_characteristics(
+            ap_id=skill_input.ap_id or port_state.ap_id,
+            ap_name=skill_input.ap_name or port_state.ap_name,
+            context=context,
+        )
 
     thresholds = default_threshold_config().wired
     findings: list[Finding] = []
@@ -720,7 +891,11 @@ def evaluate_ap_uplink_health(skill_input: ApUplinkHealthInput, adapters: Adapte
     if expectation is not None:
         evidence["expected_uplink"] = expectation.model_dump(mode="json", exclude_none=True)
 
-    expected_speed = expectation.expected_speed_mbps if expectation and expectation.expected_speed_mbps is not None else 1000
+    expected_speed = (
+        expectation.expected_speed_mbps
+        if expectation and expectation.expected_speed_mbps is not None
+        else 1000
+    )
     if port_state.speed_mbps is not None and port_state.speed_mbps < expected_speed:
         _add_finding(
             findings,
@@ -747,7 +922,9 @@ def evaluate_ap_uplink_health(skill_input: ApUplinkHealthInput, adapters: Adapte
         _add_finding(
             findings,
             code="UPLINK_ERROR_RATE",
-            severity=FindingSeverity.CRITICAL if total_errors >= thresholds.high_crc_errors * 2 else FindingSeverity.WARN,
+            severity=FindingSeverity.CRITICAL
+            if total_errors >= thresholds.high_crc_errors * 2
+            else FindingSeverity.WARN,
             message="The AP uplink shows elevated CRC or interface error counts.",
             metric="interface_errors",
             value=total_errors,
@@ -765,21 +942,36 @@ def evaluate_ap_uplink_health(skill_input: ApUplinkHealthInput, adapters: Adapte
             threshold=HIGH_UPLINK_FLAPS,
         )
     if expectation is not None:
-        if expectation.expected_trunk is not None and port_state.trunk is not None and expectation.expected_trunk != port_state.trunk:
+        if (
+            expectation.expected_trunk is not None
+            and port_state.trunk is not None
+            and expectation.expected_trunk != port_state.trunk
+        ):
             _add_finding(
                 findings,
                 code="UPLINK_VLAN_MISMATCH",
                 severity=FindingSeverity.WARN,
-                message="The AP uplink trunk/access state does not match the expected configuration.",
+                message=(
+                    "The AP uplink trunk/access state does not match the expected configuration."
+                ),
             )
-        if expectation.expected_native_vlan is not None and port_state.native_vlan is not None and expectation.expected_native_vlan != port_state.native_vlan:
+        if (
+            expectation.expected_native_vlan is not None
+            and port_state.native_vlan is not None
+            and expectation.expected_native_vlan != port_state.native_vlan
+        ):
             _add_finding(
                 findings,
                 code="UPLINK_VLAN_MISMATCH",
                 severity=FindingSeverity.WARN,
                 message="The AP uplink native VLAN does not match the expected configuration.",
             )
-    if expectation is not None and expectation.expected_poe_watts is not None and port_state.poe_watts is not None and port_state.poe_watts < expectation.expected_poe_watts * 0.5:
+    if (
+        expectation is not None
+        and expectation.expected_poe_watts is not None
+        and port_state.poe_watts is not None
+        and port_state.poe_watts < expectation.expected_poe_watts * 0.5
+    ):
         _add_finding(
             findings,
             code="POE_INSTABILITY",
@@ -789,10 +981,16 @@ def evaluate_ap_uplink_health(skill_input: ApUplinkHealthInput, adapters: Adapte
 
     next_actions = build_next_actions(
         [
-            ("net.ap_rf_health", "If the uplink is clean but symptoms persist, validate RF conditions next.", not findings),
+            (
+                "net.ap_rf_health",
+                "If the uplink is clean but symptoms persist, validate RF conditions next.",
+                not findings,
+            ),
         ]
     )
-    raw_refs = _provider_refs(switch, "resolve_ap_to_switch_port", "get_switch_port_state", "get_interface_counters")
+    raw_refs = _provider_refs(
+        switch, "resolve_ap_to_switch_port", "get_switch_port_state", "get_interface_counters"
+    )
     if inventory is not None:
         raw_refs.extend(_provider_refs(inventory, "get_expected_ap_uplink_characteristics"))
 
@@ -809,15 +1007,26 @@ def evaluate_ap_uplink_health(skill_input: ApUplinkHealthInput, adapters: Adapte
     )
 
 
-def evaluate_stp_loop_anomaly(skill_input: StpLoopAnomalyInput, adapters: AdapterBundle) -> SkillResult:
+def evaluate_stp_loop_anomaly(
+    skill_input: StpLoopAnomalyInput, adapters: AdapterBundle
+) -> SkillResult:
     if adapters.switch is None:
         raise DependencyUnavailableError("Switch adapter is not configured.")
     switch = adapters.switch
     context = build_adapter_context(skill_input)
-    stp_summaries = switch.get_topology_change_summaries(site_id=skill_input.site_id, switch_id=skill_input.switch_id, context=context)
-    mac_flaps = switch.get_mac_flap_events(site_id=skill_input.site_id, switch_id=skill_input.switch_id, port=skill_input.switch_port, context=context)
+    stp_summaries = switch.get_topology_change_summaries(
+        site_id=skill_input.site_id, switch_id=skill_input.switch_id, context=context
+    )
+    mac_flaps = switch.get_mac_flap_events(
+        site_id=skill_input.site_id,
+        switch_id=skill_input.switch_id,
+        port=skill_input.switch_port,
+        context=context,
+    )
     if not stp_summaries and not mac_flaps:
-        raise InsufficientEvidenceError("Unable to locate STP or MAC-flap telemetry for the requested scope.")
+        raise InsufficientEvidenceError(
+            "Unable to locate STP or MAC-flap telemetry for the requested scope."
+        )
 
     topology_changes = sum(summary.topology_changes or 0 for summary in stp_summaries)
     root_bridge_changes = sum(summary.root_bridge_changes or 0 for summary in stp_summaries)
@@ -856,7 +1065,10 @@ def evaluate_stp_loop_anomaly(skill_input: StpLoopAnomalyInput, adapters: Adapte
             value=mac_flap_count,
             threshold=HIGH_MAC_FLAP_EVENTS,
         )
-    if any(summary.broadcast_storm_detected or summary.multicast_storm_detected for summary in stp_summaries):
+    if any(
+        summary.broadcast_storm_detected or summary.multicast_storm_detected
+        for summary in stp_summaries
+    ):
         _add_finding(
             findings,
             code="STORM_INDICATORS",
@@ -866,8 +1078,16 @@ def evaluate_stp_loop_anomaly(skill_input: StpLoopAnomalyInput, adapters: Adapte
 
     next_actions = build_next_actions(
         [
-            ("net.change_detection", "Recent switching changes should be reviewed alongside the STP anomaly.", bool(findings)),
-            ("net.ap_uplink_health", "Investigate AP-connected suspect ports where relevant.", bool(suspect_ports)),
+            (
+                "net.change_detection",
+                "Recent switching changes should be reviewed alongside the STP anomaly.",
+                bool(findings),
+            ),
+            (
+                "net.ap_uplink_health",
+                "Investigate AP-connected suspect ports where relevant.",
+                bool(suspect_ports),
+            ),
         ]
     )
     raw_refs = _provider_refs(switch, "get_topology_change_summaries", "get_mac_flap_events")

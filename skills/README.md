@@ -252,6 +252,26 @@ sudo ln -sf "$(npm bin -g)/yahoo-finance" /usr/local/bin/yf
 
 If you do not need every skill, you can install only the subset required by the skills you plan to enable.
 
+### Generated Python requirements views
+
+The repo also generates convenience Python dependency files from `skills/install-manifest.json`:
+
+- `requirements.txt` at the repo root for full-library development
+- `requirements/skills/<skill>.txt` for one registered skill plus the Python packages required by its transitive `depends_on_skills`
+
+Refresh them with:
+
+```bash
+python3 tools/generate_requirements.py
+```
+
+These generated files are only Python-package views. For partial OpenClaw installs, keep using `skills/install-manifest.json` as the authoritative source for:
+
+- binaries
+- node packages
+- post-install steps
+- dependent skill folders
+
 ## Per-Skill Dependency Matrix
 
 | Skill | Needs installable dependencies? | What to install | Notes |

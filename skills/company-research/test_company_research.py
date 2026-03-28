@@ -3,6 +3,8 @@ import pathlib
 from datetime import datetime, timezone
 from types import ModuleType
 
+import pytest
+
 
 def load_module(name: str, path: pathlib.Path) -> ModuleType:
     spec = importlib.util.spec_from_file_location(name, path)
@@ -186,7 +188,9 @@ def test_build_news_query_candidates_adds_disambiguating_hint() -> None:
     assert candidates == ["Lemonade", '"Lemonade" insurance', "Lemonade insurance"]
 
 
-def test_build_news_items_retries_with_disambiguating_query(monkeypatch) -> None:
+def test_build_news_items_retries_with_disambiguating_query(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     generic_items = [
         {
             "title": "kids run lemonade stand for charity",
@@ -210,7 +214,9 @@ def test_build_news_items_retries_with_disambiguating_query(monkeypatch) -> None
         }
     ]
 
-    def fake_request(query_text: str, news_window: str, limit: int):
+    def fake_request(
+        query_text: str, news_window: str, limit: int
+    ) -> list[dict[str, object]]:
         if query_text == "Lemonade":
             return generic_items
         if query_text == '"Lemonade" insurance':
@@ -230,8 +236,12 @@ def test_build_news_items_retries_with_disambiguating_query(monkeypatch) -> None
     assert items == company_items
 
 
-def test_build_news_items_skips_irrelevant_fallback_results(monkeypatch) -> None:
-    def fake_request(query_text: str, news_window: str, limit: int):
+def test_build_news_items_skips_irrelevant_fallback_results(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_request(
+        query_text: str, news_window: str, limit: int
+    ) -> list[dict[str, object]]:
         if query_text == "Lemonade":
             return [
                 {

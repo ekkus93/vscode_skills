@@ -8,8 +8,12 @@ CORE_DIR = Path(__file__).resolve().parents[1] / "nettools-core"
 if str(CORE_DIR) not in sys.path:
     sys.path.insert(0, str(CORE_DIR))
 
-from nettools.priority1 import main_ap_uplink_health
+
+def main() -> int:
+    from nettools.priority1 import main_ap_uplink_health
+
+    return main_ap_uplink_health()
 
 
 if __name__ == "__main__":
-    raise SystemExit(main_ap_uplink_health())
+    raise SystemExit(main())

@@ -123,7 +123,9 @@ def load_xlsx_sheets(input_file: str) -> list[tuple[str, list[list[str]]]]:
     formula_workbook = load_workbook(filename=input_file, read_only=True, data_only=False)
     try:
         sheets: list[tuple[str, list[list[str]]]] = []
-        for data_sheet, formula_sheet in zip(data_workbook.worksheets, formula_workbook.worksheets):
+        for data_sheet, formula_sheet in zip(
+            data_workbook.worksheets, formula_workbook.worksheets, strict=False
+        ):
             rows: list[list[str]] = []
             for data_row, formula_row in zip_longest(
                 data_sheet.iter_rows(values_only=True),
@@ -196,7 +198,11 @@ def main() -> int:
     args = parser.parse_args()
 
     input_file = os.path.abspath(args.input_file)
-    output_file = os.path.abspath(args.output_file) if args.output_file else default_output_path(input_file)
+    output_file = (
+        os.path.abspath(args.output_file)
+        if args.output_file
+        else default_output_path(input_file)
+    )
 
     if not os.path.isfile(input_file):
         print(f"Input file not found: {input_file}", file=sys.stderr)

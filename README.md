@@ -287,6 +287,26 @@ For the Excel conversion skills, install the workbook readers with:
 python3 -m pip install openpyxl xlrd
 ```
 
+### Generated Python requirements
+
+This repo now supports two Python dependency views derived from `skills/install-manifest.json`:
+
+- `requirements.txt`: whole-repo convenience file for working on the full shared skill library
+- `requirements/skills/<skill>.txt`: per-skill Python requirements, resolved across `depends_on_skills`
+
+Generate or refresh them with:
+
+```bash
+python3 tools/generate_requirements.py
+```
+
+Important:
+
+- `skills/install-manifest.json` remains the source of truth
+- the generated requirements files only cover Python packages
+- binaries, node packages, post-install steps, and dependent skill folders still come from the manifest
+- if you want to install only one skill on another OpenClaw instance, use the matching file under `requirements/skills/` and also follow that skill's manifest entry
+
 ## Day-To-Day Workflow
 
 Typical usage looks like this:

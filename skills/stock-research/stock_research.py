@@ -4,7 +4,7 @@ import pathlib
 import sys
 from datetime import datetime, timezone
 from types import ModuleType
-from typing import Any
+from typing import Any, cast
 
 JsonDict = dict[str, Any]
 
@@ -153,10 +153,13 @@ def build_market_news_queries(company_name: str, ticker: str) -> list[str]:
 
 def fetch_market_news(query_text: str, news_window: str, limit: int) -> list[JsonDict]:
     request = news_search.parse_request(f"{query_text} | time:{news_window} | limit:{limit}")
-    items = news_search.filter_low_signal_sources(
+    items = cast(
+        list[JsonDict],
+        news_search.filter_low_signal_sources(
         news_search.parse_feed_items(news_search.request_feed(news_search.build_feed_url(request)))
+        ),
     )
-    return news_search.dedupe_articles(items)[:limit]
+    return cast(list[JsonDict], news_search.dedupe_articles(items)[:limit])
 
 
 def news_item_key(item: JsonDict) -> tuple[str, str]:

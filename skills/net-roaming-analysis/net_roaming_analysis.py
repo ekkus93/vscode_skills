@@ -8,8 +8,12 @@ CORE_DIR = Path(__file__).resolve().parents[1] / "nettools-core"
 if str(CORE_DIR) not in sys.path:
     sys.path.insert(0, str(CORE_DIR))
 
-from nettools.priority2 import main_roaming_analysis
+
+def main() -> int:
+    from nettools.priority2 import main_roaming_analysis
+
+    return main_roaming_analysis()
 
 
 if __name__ == "__main__":
-    raise SystemExit(main_roaming_analysis())
+    raise SystemExit(main())

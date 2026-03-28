@@ -575,10 +575,8 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     print(
-        (
-            f"Created {todo_path.name} and {report_path.name} for "
-            f"{request['ticker']} with horizon {request['horizon']}."
-        )
+        f"Created {todo_path.name} and {report_path.name} for "
+        f"{request['ticker']} with horizon {request['horizon']}."
     )
     return 0
 

@@ -612,46 +612,46 @@ Implementation assumption for v1:
 ## 9. Phase 7 - Implement Priority 3 supporting skills
 
 ## 9.1 Implement `net.incident_intake`
-- [ ] Create `skills/net-incident-intake/SKILL.md`
-- [ ] Create `skills/net-incident-intake/net_incident_intake.py`
-- [ ] Define incident schema
-- [ ] Define prompt/parse logic for structured intake
+- [x] Create `skills/net-incident-intake/SKILL.md`
+- [x] Create `skills/net-incident-intake/net_incident_intake.py`
+- [x] Define incident schema
+- [x] Define prompt/parse logic for structured intake
 - [ ] Normalize:
-  - [ ] location
-  - [ ] time
-  - [ ] device type
-  - [ ] affected SSID
-  - [ ] stationary vs moving
-  - [ ] wired vs wireless comparison
-  - [ ] reconnect behavior
-- [ ] Add tests for common complaint formats
+  - [x] location
+  - [x] time
+  - [x] device type
+  - [x] affected SSID
+  - [x] stationary vs moving
+  - [x] wired vs wireless comparison
+  - [x] reconnect behavior
+- [x] Add tests for common complaint formats
 
 ## 9.2 Implement `net.incident_correlation`
-- [ ] Create `skills/net-incident-correlation/SKILL.md`
-- [ ] Create `skills/net-incident-correlation/net_incident_correlation.py`
-- [ ] Accept incident record and time window
-- [ ] Pull relevant data from prior skills or source adapters
-- [ ] Rank correlated anomalies
-- [ ] Emit likely cause clusters
-- [ ] Add tests for multi-source correlation
+- [x] Create `skills/net-incident-correlation/SKILL.md`
+- [x] Create `skills/net-incident-correlation/net_incident_correlation.py`
+- [x] Accept incident record and time window
+- [x] Pull relevant data from prior skills or source adapters
+- [x] Rank correlated anomalies
+- [x] Emit likely cause clusters
+- [x] Add tests for multi-source correlation
 
 ## 9.3 Implement `net.change_detection`
-- [ ] Create `skills/net-change-detection/SKILL.md`
-- [ ] Create `skills/net-change-detection/net_change_detection.py`
-- [ ] Query config/inventory change sources
-- [ ] Query firmware/event changes
-- [ ] Rank changes by temporal correlation and scope overlap
-- [ ] Add tests for “recent hardware change likely relevant” scenarios
+- [x] Create `skills/net-change-detection/SKILL.md`
+- [x] Create `skills/net-change-detection/net_change_detection.py`
+- [x] Query config/inventory change sources
+- [x] Query firmware/event changes
+- [x] Rank changes by temporal correlation and scope overlap
+- [x] Add tests for “recent hardware change likely relevant” scenarios
 
 ## 9.4 Implement `net.capture_trigger`
-- [ ] Create `skills/net-capture-trigger/SKILL.md`
-- [ ] Create `skills/net-capture-trigger/net_capture_trigger.py`
-- [ ] Define capture request schema
-- [ ] Define authorization gating
-- [ ] Define safe trigger rules
-- [ ] Emit capture plan output
-- [ ] Optionally integrate capture execution later
-- [ ] Add tests for unauthorized vs authorized behavior
+- [x] Create `skills/net-capture-trigger/SKILL.md`
+- [x] Create `skills/net-capture-trigger/net_capture_trigger.py`
+- [x] Define capture request schema
+- [x] Define authorization gating
+- [x] Define safe trigger rules
+- [x] Emit capture plan output
+- [x] Optionally integrate capture execution later
+- [x] Add tests for unauthorized vs authorized behavior
 
 ---
 

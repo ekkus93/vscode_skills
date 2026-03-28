@@ -2,6 +2,8 @@ import importlib.util
 import pathlib
 from types import ModuleType
 
+import pytest
+
 
 def load_module(name: str, path: pathlib.Path) -> ModuleType:
     spec = importlib.util.spec_from_file_location(name, path)
@@ -64,7 +66,9 @@ def test_build_request_from_inputs_accepts_flags() -> None:
   assert result["limit"] == 2
 
 
-def test_main_accepts_query_flag_alias(monkeypatch, capsys) -> None:
+def test_main_accepts_query_flag_alias(
+  monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
   monkeypatch.setattr(news_search, "request_feed", lambda _url: SAMPLE_FEED)
   exit_code = news_search.main(["--query", "openai", "--time", "month", "--limit", "2"])
   captured = capsys.readouterr()

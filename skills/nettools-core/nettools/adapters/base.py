@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 import json
-from abc import ABC
 from datetime import datetime
 from pathlib import Path
 from typing import Any, TypeVar
 
 from pydantic import ConfigDict, Field, PositiveInt, field_validator
 
-from ..errors import BadInputError, DependencyTimeoutError, DependencyUnavailableError, UnsupportedProviderOperationError
+from ..errors import (
+    BadInputError,
+    DependencyTimeoutError,
+    DependencyUnavailableError,
+    UnsupportedProviderOperationError,
+)
 from ..models import NormalizedModel, SourceMetadata, TimeWindow
 
 ModelType = TypeVar("ModelType", bound=NormalizedModel)
@@ -130,7 +134,7 @@ class PolicyMapping(NormalizedModel):
     expected_gateway: str | None = None
 
 
-class BaseAdapter(ABC):
+class BaseAdapter:
     def __init__(
         self,
         *,
@@ -153,7 +157,9 @@ class BaseAdapter(ABC):
             return context
         return AdapterContext(timeout_seconds=self.default_timeout_seconds)
 
-    def raise_for_operation(self, operation: str, context: AdapterContext | None = None) -> AdapterContext:
+    def raise_for_operation(
+        self, operation: str, context: AdapterContext | None = None
+    ) -> AdapterContext:
         resolved_context = self.resolve_context(context)
         if operation in self.timeout_operations:
             raise DependencyTimeoutError(
@@ -177,7 +183,9 @@ class BaseAdapter(ABC):
         self.raise_for_operation(operation, context)
         return self.fixture_data.get(operation)
 
-    def load_model(self, operation: str, model_type: type[ModelType], context: AdapterContext | None = None) -> ModelType | None:
+    def load_model(
+        self, operation: str, model_type: type[ModelType], context: AdapterContext | None = None
+    ) -> ModelType | None:
         payload = self.load_fixture_payload(operation, context)
         if payload is None:
             return None
@@ -203,7 +211,9 @@ def load_stub_fixture_file(path: str | Path) -> dict[str, Any]:
     return payload
 
 
-def build_stub_source_metadata(provider_name: str, raw_ref: str, *, collected_at: datetime | None = None) -> list[SourceMetadata]:
+def build_stub_source_metadata(
+    provider_name: str, raw_ref: str, *, collected_at: datetime | None = None
+) -> list[SourceMetadata]:
     return [
         SourceMetadata(
             provider=provider_name,

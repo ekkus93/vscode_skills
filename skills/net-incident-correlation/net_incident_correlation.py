@@ -8,14 +8,12 @@ CORE_DIR = Path(__file__).resolve().parents[1] / "nettools-core"
 if str(CORE_DIR) not in sys.path:
     sys.path.insert(0, str(CORE_DIR))
 
-from nettools.cli import run_placeholder_skill
+
+def main() -> int:
+    from nettools.priority3 import main_incident_correlation
+
+    return main_incident_correlation()
 
 
 if __name__ == "__main__":
-    raise SystemExit(
-        run_placeholder_skill(
-            skill_name="net.incident_correlation",
-            scope_type="site",
-            description="Correlate incident timing with network telemetry and events.",
-        )
-    )
+    raise SystemExit(main())

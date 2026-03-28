@@ -41,9 +41,10 @@ def redact_mapping(payload: dict[str, Any]) -> dict[str, Any]:
 class JsonFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         payload: dict[str, Any] = {
-            "timestamp": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace(
-                "+00:00", "Z"
-            ),
+            "timestamp": datetime.now(timezone.utc)
+            .replace(microsecond=0)
+            .isoformat()
+            .replace("+00:00", "Z"),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),

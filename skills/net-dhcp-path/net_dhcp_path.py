@@ -8,8 +8,12 @@ CORE_DIR = Path(__file__).resolve().parents[1] / "nettools-core"
 if str(CORE_DIR) not in sys.path:
     sys.path.insert(0, str(CORE_DIR))
 
-from nettools.priority1 import main_dhcp_path
+
+def main() -> int:
+    from nettools.priority1 import main_dhcp_path
+
+    return main_dhcp_path()
 
 
 if __name__ == "__main__":
-    raise SystemExit(main_dhcp_path())
+    raise SystemExit(main())

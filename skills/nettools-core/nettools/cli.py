@@ -1,15 +1,22 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timedelta, timezone
-from typing import Any
+from datetime import datetime, timezone
 
 from pydantic import ValidationError
 
 from .errors import BadInputError, error_to_skill_result
 from .findings import NOT_IMPLEMENTED
 from .logging import configure_logging
-from .models import Confidence, Finding, FindingSeverity, ScopeType, SharedInputBase, SkillResult
+from .models import (
+    Confidence,
+    Finding,
+    FindingSeverity,
+    ScopeType,
+    SharedInputBase,
+    SkillResult,
+    Status,
+)
 
 
 def utc_now() -> datetime:
@@ -47,7 +54,7 @@ def build_placeholder_result(
     shared_input: SharedInputBase,
 ) -> SkillResult:
     return SkillResult(
-        status="unknown",
+        status=Status.UNKNOWN,
         skill_name=skill_name,
         scope_type=scope_type,
         scope_id=shared_input.scope_id,
@@ -63,7 +70,10 @@ def build_placeholder_result(
             Finding(
                 code=NOT_IMPLEMENTED,
                 severity=FindingSeverity.INFO,
-                message="Phase 1 shared contracts are in place, but the skill analysis logic is not implemented yet.",
+                message=(
+                    "Phase 1 shared contracts are in place, but the skill "
+                    "analysis logic is not implemented yet."
+                ),
             )
         ],
         next_actions=[],

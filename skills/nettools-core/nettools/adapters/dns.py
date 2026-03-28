@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Sequence
+from collections.abc import Sequence
 
 from ..models import DnsSummary, ResolverResult
 from .base import AdapterContext, BaseAdapter

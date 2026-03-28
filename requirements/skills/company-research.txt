@@ -1,0 +1,5 @@
+# Generated from skills/install-manifest.json for the company-research skill.
+# Resolved skills: news-search, company-research
+# Non-Python dependencies and skill-folder dependencies remain in the install manifest.
+
+# No required Python packages for this scope.

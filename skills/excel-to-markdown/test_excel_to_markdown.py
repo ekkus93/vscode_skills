@@ -3,6 +3,7 @@ import pathlib
 import sys
 import types
 from types import ModuleType
+from typing import Any
 
 import pytest
 
@@ -17,7 +18,7 @@ def load_module(name: str, path: pathlib.Path) -> ModuleType:
     return module
 
 
-def pytest_import_openpyxl():
+def pytest_import_openpyxl() -> Any:
     return pytest.importorskip("openpyxl")
 
 
@@ -58,9 +59,9 @@ def test_workbook_to_markdown_includes_all_sheet_sections() -> None:
     assert "_Empty sheet._" in markdown
 
 
-def test_load_xls_sheets_reads_legacy_workbook(monkeypatch) -> None:
+def test_load_xls_sheets_reads_legacy_workbook(monkeypatch: pytest.MonkeyPatch) -> None:
     class FakeCell:
-        def __init__(self, ctype: int, value):
+        def __init__(self, ctype: int, value: object) -> None:
             self.ctype = ctype
             self.value = value
 
@@ -97,7 +98,7 @@ def test_load_xls_sheets_reads_legacy_workbook(monkeypatch) -> None:
     assert sheets == [("Legacy", [["Name", "Enabled"], ["Acme", "TRUE"]])]
 
 
-def test_main_writes_markdown_file_for_xlsx(tmp_path) -> None:
+def test_main_writes_markdown_file_for_xlsx(tmp_path: pathlib.Path) -> None:
     openpyxl = pytest_import_openpyxl()
 
     workbook = openpyxl.Workbook()
@@ -129,7 +130,9 @@ def test_main_writes_markdown_file_for_xlsx(tmp_path) -> None:
     assert "## Detail" in rendered
 
 
-def test_main_rejects_non_excel_input(tmp_path, capsys) -> None:
+def test_main_rejects_non_excel_input(
+    tmp_path: pathlib.Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     input_file = tmp_path / "sample.txt"
     input_file.write_text("hello", encoding="utf-8")
 

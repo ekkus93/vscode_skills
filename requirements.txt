@@ -1,0 +1,6 @@
+# Generated from skills/install-manifest.json for whole-repo development.
+# Use per-skill files under requirements/skills for partial OpenClaw installs.
+
+openpyxl
+xlrd
+yfinance

@@ -1,0 +1,5 @@
+# Generated from skills/install-manifest.json for the weather skill.
+# Resolved skills: weather
+# Non-Python dependencies and skill-folder dependencies remain in the install manifest.
+
+# No required Python packages for this scope.

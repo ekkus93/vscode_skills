@@ -3,7 +3,7 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 JsonDict = dict[str, Any]
 
@@ -12,7 +12,10 @@ DEFAULT_CASES_DIR = REPO_ROOT / "evals" / "cases"
 
 
 def load_json_file(path: Path) -> JsonDict:
-    return json.loads(path.read_text(encoding="utf-8"))
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError(f"Expected JSON object in {path}")
+    return cast(JsonDict, payload)
 
 
 def discover_case_files(cases_dir: Path, skill: str | None = None) -> list[Path]:

@@ -33,7 +33,12 @@ SAMPLE_FEED = """<?xml version="1.0" encoding="utf-8"?>
     <author><name>Alice Example</name></author>
     <author><name>Bob Example</name></author>
     <link href="http://arxiv.org/abs/1234.5678v1" rel="alternate" type="text/html" />
-    <link title="pdf" href="http://arxiv.org/pdf/1234.5678v1" rel="related" type="application/pdf" />
+        <link
+            title="pdf"
+            href="http://arxiv.org/pdf/1234.5678v1"
+            rel="related"
+            type="application/pdf"
+        />
     <arxiv:primary_category term="cs.LG" scheme="http://arxiv.org/schemas/atom" />
     <category term="cs.LG" scheme="http://arxiv.org/schemas/atom" />
     <category term="cs.AI" scheme="http://arxiv.org/schemas/atom" />

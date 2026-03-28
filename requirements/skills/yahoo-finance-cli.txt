@@ -1,0 +1,5 @@
+# Generated from skills/install-manifest.json for the yahoo-finance-cli skill.
+# Resolved skills: yahoo-finance-cli
+# Non-Python dependencies and skill-folder dependencies remain in the install manifest.
+
+# No required Python packages for this scope.

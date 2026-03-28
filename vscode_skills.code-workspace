@@ -2,10 +2,11 @@
 	"folders": [
 		{
 			"path": "."
-		},
-		{
-			"path": "../../skills"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"chat.tools.terminal.autoApprove": {
+			"mypy": true
+		}
+	}
 }

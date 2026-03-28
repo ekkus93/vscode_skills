@@ -4,18 +4,20 @@ import importlib.util
 import os
 import re
 import sys
+from collections.abc import Callable
+from typing import cast
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def load_read_workbook_sheets():
+def load_read_workbook_sheets() -> Callable[[str], list[tuple[str, list[list[str]]]]]:
     module_path = os.path.join(SCRIPT_DIR, "..", "excel-to-markdown", "excel_to_markdown.py")
     spec = importlib.util.spec_from_file_location("excel_to_markdown", module_path)
     if spec is None or spec.loader is None:
         raise RuntimeError("Failed to load excel_to_markdown helper")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    return module.read_workbook_sheets
+    return cast(Callable[[str], list[tuple[str, list[list[str]]]]], module.read_workbook_sheets)
 
 
 read_workbook_sheets = load_read_workbook_sheets()
@@ -103,7 +105,11 @@ def main() -> int:
             output_format = args.format
 
         input_file = os.path.abspath(input_file_value)
-        output_dir = os.path.abspath(args.output_dir) if args.output_dir else default_output_dir(input_file, output_format)
+        output_dir = (
+            os.path.abspath(args.output_dir)
+            if args.output_dir
+            else default_output_dir(input_file, output_format)
+        )
 
         if not os.path.isfile(input_file):
             print(f"Input file not found: {input_file}", file=sys.stderr)

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Any, Iterable, Mapping
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 from ..models import TimeWindow
 from .common import SuspectedCause
@@ -13,13 +14,17 @@ def time_window_overlap_ratio(first: TimeWindow, second: TimeWindow) -> float:
     if latest_start >= earliest_end:
         return 0.0
     overlap_seconds = (earliest_end - latest_start).total_seconds()
-    max_span = max((first.end - first.start).total_seconds(), (second.end - second.start).total_seconds())
+    max_span = max(
+        (first.end - first.start).total_seconds(), (second.end - second.start).total_seconds()
+    )
     if max_span <= 0:
         return 0.0
     return overlap_seconds / max_span
 
 
-def correlation_score(*, overlap_ratio: float, shared_scope: bool, shared_sources: int = 0) -> float:
+def correlation_score(
+    *, overlap_ratio: float, shared_scope: bool, shared_sources: int = 0
+) -> float:
     score = overlap_ratio
     if shared_scope:
         score += 0.25

@@ -3,6 +3,8 @@ import pathlib
 import sys
 from types import ModuleType
 
+import pytest
+
 
 def load_module(name: str, path: pathlib.Path) -> ModuleType:
     spec = importlib.util.spec_from_file_location(name, path)
@@ -106,7 +108,7 @@ def test_format_result_contains_expected_sections() -> None:
     assert "Business summary:" in rendered
 
 
-def test_main_rejects_invalid_ticker(capsys) -> None:
+def test_main_rejects_invalid_ticker(capsys: pytest.CaptureFixture[str]) -> None:
     original_argv = sys.argv
     sys.argv = ["yahoo_finance.py", "bad ticker!"]
     try:
@@ -118,7 +120,7 @@ def test_main_rejects_invalid_ticker(capsys) -> None:
     assert "unsupported characters" in captured.err.lower()
 
 
-def test_main_rejects_query_and_ticker_mix(capsys) -> None:
+def test_main_rejects_query_and_ticker_mix(capsys: pytest.CaptureFixture[str]) -> None:
     original_argv = sys.argv
     sys.argv = ["yahoo_finance.py", "LMND | period:1y", "--ticker", "LMND"]
     try:

@@ -8,8 +8,12 @@ CORE_DIR = Path(__file__).resolve().parents[1] / "nettools-core"
 if str(CORE_DIR) not in sys.path:
     sys.path.insert(0, str(CORE_DIR))
 
-from nettools.priority1 import main_stp_loop_anomaly
+
+def main() -> int:
+    from nettools.priority1 import main_stp_loop_anomaly
+
+    return main_stp_loop_anomaly()
 
 
 if __name__ == "__main__":
-    raise SystemExit(main_stp_loop_anomaly())
+    raise SystemExit(main())

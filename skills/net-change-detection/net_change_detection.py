@@ -8,14 +8,12 @@ CORE_DIR = Path(__file__).resolve().parents[1] / "nettools-core"
 if str(CORE_DIR) not in sys.path:
     sys.path.insert(0, str(CORE_DIR))
 
-from nettools.cli import run_placeholder_skill
+
+def main() -> int:
+    from nettools.priority3 import main_change_detection
+
+    return main_change_detection()
 
 
 if __name__ == "__main__":
-    raise SystemExit(
-        run_placeholder_skill(
-            skill_name="net.change_detection",
-            scope_type="site",
-            description="Detect recent network changes relevant to an issue window.",
-        )
-    )
+    raise SystemExit(main())

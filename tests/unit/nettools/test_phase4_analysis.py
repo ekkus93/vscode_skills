@@ -31,7 +31,10 @@ from nettools.models import Confidence, FindingSeverity, TimeWindow
 
 def load_phase4_scenarios() -> dict[str, dict[str, dict[str, object]]]:
     path = Path("tests/fixtures/nettools/phase4_scenarios.json")
-    return json.loads(path.read_text(encoding="utf-8"))
+    scenarios: dict[str, dict[str, dict[str, object]]] = json.loads(
+        path.read_text(encoding="utf-8")
+    )
+    return scenarios
 
 
 def test_normalization_helpers_preserve_source_metadata_and_aliases() -> None:
@@ -116,7 +119,10 @@ def test_threshold_scoring_and_recommendation_helpers() -> None:
     assert comparisons[0].breached is True
     assert baseline.regression is True
     assert severity_from_comparisons(comparisons) == FindingSeverity.CRITICAL
-    assert confidence_from_evidence(evidence_count=3, source_count=2, baseline_present=True) == Confidence.HIGH
+    assert (
+        confidence_from_evidence(evidence_count=3, source_count=2, baseline_present=True)
+        == Confidence.HIGH
+    )
     assert [action.skill for action in actions] == ["net.ap_rf_health", "net.path_probe"]
 
 
@@ -137,10 +143,12 @@ def test_correlation_and_cache_helpers() -> None:
         shared_scope=True,
         shared_sources=2,
     )
-    evidence = aggregate_evidence([
-        {"site_id": "site-1", "symptom": "slow_dns"},
-        {"site_id": "site-1", "symptom": "slow_dhcp"},
-    ])
+    evidence = aggregate_evidence(
+        [
+            {"site_id": "site-1", "symptom": "slow_dns"},
+            {"site_id": "site-1", "symptom": "slow_dhcp"},
+        ]
+    )
     ranked = rank_suspected_causes(
         [
             SuspectedCause(code="DNS_SLOW", score=0.7, reason="Resolver RTT elevated."),

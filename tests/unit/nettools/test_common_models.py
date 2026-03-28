@@ -2,7 +2,16 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from nettools.models import Confidence, Finding, FindingSeverity, NextAction, ScopeType, SkillResult, Status, TimeWindow
+from nettools.models import (
+    Confidence,
+    Finding,
+    FindingSeverity,
+    NextAction,
+    ScopeType,
+    SkillResult,
+    Status,
+    TimeWindow,
+)
 
 
 def test_skill_result_serializes_to_expected_contract_shape() -> None:

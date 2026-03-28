@@ -46,7 +46,7 @@ class TimeWindow(BaseModel):
     end: datetime
 
     @model_validator(mode="after")
-    def validate_order(self) -> "TimeWindow":
+    def validate_order(self) -> TimeWindow:
         if self.start > self.end:
             raise ValueError("time window start must be earlier than or equal to end")
         return self

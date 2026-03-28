@@ -3,7 +3,9 @@ from __future__ import annotations
 from .common import BaselineComparison, MetricComparison
 
 
-def compare_to_threshold(metric: str, value: float, threshold: float, *, direction: str) -> MetricComparison:
+def compare_to_threshold(
+    metric: str, value: float, threshold: float, *, direction: str
+) -> MetricComparison:
     if direction not in {"gte", "lte"}:
         raise ValueError("direction must be either 'gte' or 'lte'")
     breached = value >= threshold if direction == "gte" else value <= threshold
@@ -20,7 +22,9 @@ def compare_to_threshold(metric: str, value: float, threshold: float, *, directi
     )
 
 
-def compare_to_baseline(metric: str, current: float, baseline: float, *, higher_is_worse: bool = True) -> BaselineComparison:
+def compare_to_baseline(
+    metric: str, current: float, baseline: float, *, higher_is_worse: bool = True
+) -> BaselineComparison:
     delta = current - baseline
     delta_pct = None if baseline == 0 else (delta / baseline) * 100.0
     regression = current > baseline if higher_is_worse else current < baseline

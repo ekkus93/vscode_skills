@@ -184,9 +184,9 @@ def history_metrics(rows: list[JsonDict]) -> JsonDict:
     }
 
 
-def require_yfinance():
+def require_yfinance() -> Any:
     try:
-        import yfinance as yf  # type: ignore[import-not-found,import-untyped]
+        import yfinance as yf  # type: ignore[import-untyped]
     except ImportError as exc:
         raise RuntimeError(
             "Missing required Python package: yfinance. "

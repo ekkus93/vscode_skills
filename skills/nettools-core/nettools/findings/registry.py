@@ -14,7 +14,5 @@ UNSUPPORTED_PROVIDER_OPERATION = "UNSUPPORTED_PROVIDER_OPERATION"
 
 def validate_finding_code(code: str) -> str:
     if not FINDING_CODE_PATTERN.fullmatch(code):
-        raise ValueError(
-            "Finding codes must be uppercase snake case, for example HIGH_RETRY_RATE"
-        )
+        raise ValueError("Finding codes must be uppercase snake case, for example HIGH_RETRY_RATE")
     return code

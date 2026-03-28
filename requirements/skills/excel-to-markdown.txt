@@ -1,0 +1,6 @@
+# Generated from skills/install-manifest.json for the excel-to-markdown skill.
+# Resolved skills: excel-to-markdown
+# Non-Python dependencies and skill-folder dependencies remain in the install manifest.
+
+openpyxl
+xlrd

@@ -3,6 +3,8 @@ import pathlib
 import sys
 from types import ModuleType
 
+import pytest
+
 
 def load_module(name: str, path: pathlib.Path) -> ModuleType:
     spec = importlib.util.spec_from_file_location(name, path)
@@ -152,7 +154,7 @@ def test_format_result_contains_sections() -> None:
     assert "Recent company news:" in rendered
 
 
-def test_research_stock_wires_helpers(monkeypatch) -> None:
+def test_research_stock_wires_helpers(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         stock_research.yahoo_finance,
         "fetch_snapshot",
@@ -224,7 +226,9 @@ def test_research_stock_wires_helpers(monkeypatch) -> None:
     assert result["company_result"]["site_url"] == "https://www.lemonade.com"
 
 
-def test_choose_market_news_falls_back_when_company_news_overlaps(monkeypatch) -> None:
+def test_choose_market_news_falls_back_when_company_news_overlaps(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     responses = {
         "Lemonade, Inc. LMND stock": [
             {
@@ -271,7 +275,7 @@ def test_choose_market_news_falls_back_when_company_news_overlaps(monkeypatch) -
     assert items[0]["title"] == "Fresh earnings headline"
 
 
-def test_main_rejects_bad_limit(capsys) -> None:
+def test_main_rejects_bad_limit(capsys: pytest.CaptureFixture[str]) -> None:
     original_argv = sys.argv
     sys.argv = ["stock_research.py", "AAPL | limit:5"]
     try:
@@ -282,7 +286,9 @@ def test_main_rejects_bad_limit(capsys) -> None:
     assert "limit must be an integer between 1 and 3" in captured.err
 
 
-def test_main_accepts_colon_style_news_flag(monkeypatch, capsys) -> None:
+def test_main_accepts_colon_style_news_flag(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
     monkeypatch.setattr(
         stock_research,
         "build_request_from_inputs",
