@@ -56,7 +56,7 @@ jobs:
       - name: Install MyPy and typing dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install mypy pydantic openpyxl xlrd yfinance
+          python -m pip install mypy pytest pydantic openpyxl xlrd yfinance
 
       - name: Run MyPy
         run: python -m mypy .

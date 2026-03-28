@@ -243,6 +243,11 @@
 - Committed the skill-index and README refresh as `4da9e16` with the message `Register NETTOOLS skills in docs`.
 - Pushed `master` to `origin/master`, advancing the remote from `3c5cd31` to `4da9e16`.
 - Verified the worktree was clean immediately after the push before recording this checkpoint.
+
+## 2026-03-28T21:16:29Z - GPT-5.4 - Fixed CI mypy environment to include pytest
+- Updated `.github/workflows/ci.yml` so the `mypy` job installs `pytest` alongside `mypy`, `pydantic`, `openpyxl`, `xlrd`, and `yfinance`.
+- Root cause: the workflow runs `python -m mypy .`, which type-checks test modules under `tests/` and `skills/`, but the CI mypy environment did not install `pytest`, causing `import-not-found` failures that do not reproduce locally when `pytest` is already present.
+- Kept the fix in CI rather than weakening mypy coverage, because the repository currently intends to type-check the test modules too.
 - Added `tests/unit/nettools/test_phase2_models.py` to cover partial-data tolerance, nested serialization, and source/version metadata behavior across the new models.
 - Re-ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest tests/unit/nettools`; the full NETTOOLS unit suite passed with 16 tests.
 - Marked all Phase 2 items complete in `docs/NETTOOLS_TODO.md`.
