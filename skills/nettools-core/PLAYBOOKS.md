@@ -312,6 +312,244 @@ When handing off or closing the investigation, capture:
 - `9.1 Playbook: single_client_wifi_issue` in `docs/NETWORK_DIAGNOSIS_ORCHESTRATOR_SPECS.md`
 - `docs/NETTOOLS_FINDING_CODES.md` for operator actions by finding code
 
+## Area-Based Wireless Complaint
+
+### When to Use
+
+Use this playbook when:
+
+- multiple users in one floor, wing, room cluster, or AP cell are affected
+- the impact is broader than one client but not clearly site-wide
+- the complaint still sounds primarily wireless rather than wired-core or WAN-wide
+
+Typical examples:
+
+- everyone near one conference suite reports poor Wi-Fi at the same time
+- one floor shows repeated reconnects or slow app access while the rest of the site looks normal
+- several users on one side of the building complain about the same AP cluster
+
+### Goal
+
+Determine whether the dominant failure domain is:
+
+- overloaded or degraded AP RF in the affected area
+- one or more AP uplink issues behind the area complaint
+- representative client RF or roaming problems that only appear clustered because they share the same cell
+- localized DHCP or DNS service issues that present as area-based symptoms
+
+### Required Inputs
+
+Collect as many of these as possible before starting:
+
+- `site-id`
+- `ssid`
+- one or more affected areas, floors, or room labels
+- one or more representative AP names or AP IDs from the affected area
+- one or more representative client identifiers when available
+- approximate incident time or time window
+- whether movement matters, whether reconnecting helps, and whether the issue is slow, drops, or cannot-connect
+
+If the area scope is still vague, begin with `net.incident_intake` and capture the strongest area, SSID, AP, or client hints you have.
+
+### Fast Path
+
+If you want the orchestrator to drive the sequence, start here:
+
+```bash
+python3 "{baseDir}/../net-diagnose-incident/net_diagnose_incident.py" \
+  --site-id "hq-1" \
+  --ssid "CorpWiFi" \
+  --candidate-area "north-wing" \
+  --candidate-ap-name "AP-2F-NORTH-03" \
+  --comparison-ap-name "AP-2F-SOUTH-01" \
+  --complaint "Several users in the north wing say Wi-Fi is slow and reconnecting only helps briefly"
+```
+
+Use the manual sequence below when you need to choose the representative APs and clients yourself or explain each step during live triage.
+
+### Manual Sequence
+
+#### Step 1. Normalize the area-scoped complaint
+
+Run `net.incident_intake` if the complaint is still freeform or incomplete.
+
+```bash
+python3 "{baseDir}/../net-incident-intake/net_incident_intake.py" \
+  --site-id "hq-1" \
+  --complaint "Several users in the north wing say Wi-Fi is slow and reconnecting only helps briefly"
+```
+
+What to look for:
+
+- whether the complaint clearly stays inside one area instead of the whole site
+- whether the issue sounds like RF degradation, roaming, slow access after connect, or onboarding failure
+- whether you have enough scope to choose one or two representative APs and a small client sample
+
+Proceed when the complaint is clearly broader than one client but still localized.
+
+#### Step 2. Check representative AP RF health first
+
+Run `net.ap_rf_health` on one or two representative APs from the affected area.
+
+```bash
+python3 "{baseDir}/../net-ap-rf-health/net_ap_rf_health.py" \
+  --site-id "hq-1" \
+  --ap-name "AP-2F-NORTH-03"
+```
+
+Primary signs to watch:
+
+- `HIGH_CHANNEL_UTILIZATION`
+- `HIGH_AP_CLIENT_LOAD`
+- `UNSUITABLE_CHANNEL_WIDTH`
+- `RADIO_RESETS`
+- `POTENTIAL_CO_CHANNEL_INTERFERENCE`
+
+Interpretation:
+
+- If multiple representative APs show the same RF stress, the complaint is likely localized wireless capacity or interference.
+- If sampled AP RF is clean, move quickly to uplink, representative client, or service-path checks.
+
+#### Step 3. Validate AP uplinks for the affected area
+
+Run `net.ap_uplink_health` on the same representative APs when the area symptoms remain ambiguous.
+
+```bash
+python3 "{baseDir}/../net-ap-uplink-health/net_ap_uplink_health.py" \
+  --site-id "hq-1" \
+  --ap-name "AP-2F-NORTH-03"
+```
+
+Primary signs to watch:
+
+- `UPLINK_SPEED_MISMATCH`
+- `UPLINK_ERROR_RATE`
+- `UPLINK_FLAPPING`
+- `UPLINK_VLAN_MISMATCH`
+- `POE_INSTABILITY`
+
+Interpretation:
+
+- Uplink findings on multiple representative APs suggest the complaint is localized but wired rather than radio-only.
+- Clean uplinks push the investigation back toward client, roaming, DNS, or DHCP branches.
+
+#### Step 4. Sample representative client health
+
+Run `net.client_health` for one or more representative affected clients from the area.
+
+```bash
+python3 "{baseDir}/../net-client-health/net_client_health.py" \
+  --site-id "hq-1" \
+  --client-id "client-42"
+```
+
+Primary signs to watch:
+
+- `LOW_RSSI`
+- `LOW_SNR`
+- `HIGH_RETRY_RATE`
+- `HIGH_PACKET_LOSS`
+- `RAPID_RECONNECTS`
+- `STICKY_CLIENT`
+
+Interpretation:
+
+- Consistent client findings across sampled users reinforce the area hypothesis.
+- Divergent client results suggest the complaint may be mixing a local AP issue with individual endpoint conditions.
+
+#### Step 5. Check roaming if movement matters inside the affected area
+
+Run `net.roaming_analysis` when users are moving within the impacted floor or room cluster.
+
+```bash
+python3 "{baseDir}/../net-roaming-analysis/net_roaming_analysis.py" \
+  --site-id "hq-1" \
+  --client-id "client-42" \
+  --time-window-minutes 60
+```
+
+Primary signs to watch:
+
+- `FAILED_ROAMS`
+- `HIGH_ROAM_LATENCY`
+- `EXCESSIVE_ROAM_COUNT`
+- `STICKY_CLIENT_PATTERN`
+
+Interpretation:
+
+- Roaming problems suggest mobility tuning, neighbor coverage, or auth latency in the area.
+- Clean roaming results shift attention back to AP health or service-path issues.
+
+#### Step 6. Check DNS or DHCP only if the area users are connected but still unusable
+
+Run `net.dns_latency` when the complaint sounds like slow name-based access after connection.
+
+```bash
+python3 "{baseDir}/../net-dns-latency/net_dns_latency.py" \
+  --site-id "hq-1"
+```
+
+Run `net.dhcp_path` when reconnecting helps briefly or address acquisition appears delayed.
+
+```bash
+python3 "{baseDir}/../net-dhcp-path/net_dhcp_path.py" \
+  --site-id "hq-1"
+```
+
+Interpretation:
+
+- If DNS or DHCP findings are present only for the affected area sample, the complaint may still be localized even though the failing domain is a shared service path.
+- If service checks are clean, return to the strongest AP or client branch instead of expanding prematurely to site-wide triage.
+
+#### Step 7. Correlate the area incident window before handoff
+
+Run `net.incident_correlation` after the direct checks so the final handoff can tie the localized evidence back to recent events or change windows.
+
+```bash
+python3 "{baseDir}/../net-incident-correlation/net_incident_correlation.py" \
+  --site-id "hq-1" \
+  --incident-summary "North wing users started seeing Wi-Fi degradation around 10:15 AM"
+```
+
+Primary signs to watch:
+
+- `CORRELATED_NETWORK_EVIDENCE`
+- `CORRELATED_CHANGE_WINDOW`
+
+Interpretation:
+
+- Use this final step to explain whether the area complaint lines up with a local AP cluster issue, uplink degradation, service slowdown, or a relevant change window.
+
+### Stop Conditions
+
+You can usually stop this playbook when one of these is true:
+
+- one localized failure domain has clear supporting evidence across representative AP or client samples
+- the likely remediation owner is clear, such as wireless operations, switching, DHCP, or DNS
+- expanding from the area scope to the whole site is no longer justified by the evidence
+
+Escalate or re-scope when:
+
+- multiple additional areas begin showing the same symptoms
+- wired users in other areas are also affected
+- the strongest evidence now points to a site-wide path or topology issue
+
+### Recommended Final Summary
+
+When handing off or closing the investigation, capture:
+
+- affected area or floor scope
+- representative APs and clients sampled
+- time window investigated
+- top AP, client, roaming, DNS, or DHCP findings observed
+- whether the complaint remained localized or started expanding site-wide
+- the primary suspected domain and owning team
+
+### Related References
+
+- `area_based_wifi_issue` in `skills/nettools-core/nettools/orchestrator/playbooks.py`
+- `docs/NETTOOLS_FINDING_CODES.md` for operator actions by finding code
+
 ## Site-Wide Slowdown
 
 ### When to Use

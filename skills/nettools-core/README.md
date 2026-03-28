@@ -14,12 +14,14 @@ Operator documentation in this folder now includes:
 - `CONFIGURATION.md` for runtime and policy configuration guidance
 - `TESTING.md` for validation guidance
 - `PLAYBOOKS.md` for human-driven troubleshooting playbooks aligned with the current orchestrator and wrapper docs
+- `DEVELOPMENT.md` for extending playbooks, domains, branch rules, and scoring safely
 
 Current status:
 
 - the public NETTOOLS skill folders exist under `skills/`
 - each skill has a `SKILL.md` wrapper and a Python entrypoint
-- the entrypoints currently return scaffold output until the Phase 1 and Phase 5 implementations are completed
+- the Priority 1 through Priority 3 helpers and `net.diagnose_incident` now emit typed `SkillResult` output backed by the shared NETTOOLS core package
+- replay scenarios, canonical fixtures, and orchestrator report models are documented and covered by deterministic tests
 
 Quick local check:
 

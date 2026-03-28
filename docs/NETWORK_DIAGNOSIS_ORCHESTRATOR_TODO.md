@@ -475,18 +475,18 @@ Notes:
 ## 17. Phase 15 - Documentation and operator playbooks
 
 ### 17.1 Skill documentation
-- [ ] document `net.diagnose_incident`
+- [x] document `net.diagnose_incident`
   - [x] purpose
   - [x] inputs
-  - [ ] state model
+  - [x] state model
   - [x] outputs
-  - [ ] playbook selection
-  - [ ] stop conditions
-  - [ ] example traces
+  - [x] playbook selection
+  - [x] stop conditions
+  - [x] example traces
 
 ### 17.2 Operator runbook docs
 - [x] document single-client troubleshooting path
-- [ ] document area-based troubleshooting path
+- [x] document area-based troubleshooting path
 - [x] document site-wide troubleshooting path
 - [x] document auth/onboarding troubleshooting path
 
@@ -494,10 +494,10 @@ Notes:
 - A `recent hardware change` operator playbook is also documented in `skills/nettools-core/PLAYBOOKS.md`.
 
 ### 17.3 Developer docs
-- [ ] how to add a new playbook
-- [ ] how to add a new diagnostic domain
-- [ ] how to add a new branch rule
-- [ ] how to adjust score weights safely
+- [x] how to add a new playbook
+- [x] how to add a new diagnostic domain
+- [x] how to add a new branch rule
+- [x] how to adjust score weights safely
 
 ---
 

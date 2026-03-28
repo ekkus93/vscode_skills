@@ -140,6 +140,11 @@
 - Pushed `master` to `origin/master`, advancing the remote from `a2cd2c0` to `7b08bd6`.
 - Verified the worktree was clean immediately after the push before recording this checkpoint.
 
+## 2026-03-28T20:35:11Z - GPT-5.4 - Completed Phase 17 documentation and operator playbook updates
+- Expanded `skills/net-diagnose-incident/SKILL.md` with the implemented state model, playbook-selection rules, stop conditions, replay inputs, and example trace shapes so the wrapper docs match the current orchestrator behavior.
+- Added the missing area-based operator runbook to `skills/nettools-core/PLAYBOOKS.md`, updated `skills/nettools-core/README.md` to reflect the live NETTOOLS status, and added `skills/nettools-core/DEVELOPMENT.md` with extension guidance for playbooks, diagnostic domains, branch rules, and score changes.
+- Marked the remaining Phase 17.1, 17.2, and 17.3 TODO items complete in `docs/NETWORK_DIAGNOSIS_ORCHESTRATOR_TODO.md` and validated the documentation slice with `git diff --check`.
+
 ## 2026-03-28T20:13:18Z - GPT-5.4 - Refreshed full repo validation baseline after primitive skill adapter changes
 - Ran `/home/phil/.local/bin/ruff check .` from the repo root; Ruff passed cleanly.
 - Ran `/home/phil/work/vscode_skills/.venv/bin/python -m mypy .`; MyPy reported success with no issues in 121 source files.
@@ -163,6 +168,11 @@
 - Reviewed `docs/NETTOOLS_SPECS.md` and `docs/NETTOOLS_TODO.md` as requirements only; no code changes made in this session.
 - NETTOOLS is intended as a layered diagnostics framework for office Wi-Fi and LAN issues, with OpenClaw-facing skills on top of provider adapters, normalization models, analysis utilities, and optional cache/baseline storage.
 - The shared output contract is central: every skill should emit a standardized `SkillResult`-style structure with status, scope, evidence, findings, next actions, timestamps, and raw references.
+
+## 2026-03-28T20:38:29Z - GPT-5.4 - Revalidated full repo baseline after Phase 17 documentation changes
+- Ran `ruff check .` from the repo root; Ruff passed cleanly.
+- Ran `/home/phil/work/vscode_skills/.venv/bin/python -m mypy --python-executable /home/phil/work/vscode_skills/.venv/bin/python .`; MyPy reported success with no issues in 122 source files.
+- Ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest -q`; the full suite passed with 291 tests.
 - Priority 1 implementation order is explicitly defined: common contracts/config/errors/logging first, then normalized models and adapter interfaces, then the six initial skills `net.client_health`, `net.ap_rf_health`, `net.dhcp_path`, `net.dns_latency`, `net.ap_uplink_health`, and `net.stp_loop_anomaly`.
 - The design is intentionally vendor-adaptable, read-only by default in v1, evidence-first, threshold-driven, and expected to degrade cleanly under partial source failure rather than crashing unrelated skills.
 
