@@ -274,41 +274,41 @@ Implementation assumption for v1:
 ## 6. Phase 4 - Normalization and analysis utilities
 
 ### 6.1 Normalization helpers
-- [ ] Create converters from raw wireless data to normalized models
-- [ ] Create converters from switch data to normalized models
-- [ ] Create converters from DHCP/DNS/auth data to normalized models
-- [ ] Create converters for path probe results
-- [ ] Preserve raw source references
+- [x] Create converters from raw wireless data to normalized models
+- [x] Create converters from switch data to normalized models
+- [x] Create converters from DHCP/DNS/auth data to normalized models
+- [x] Create converters for path probe results
+- [x] Preserve raw source references
 
 ### 6.2 Analysis helper library
-- [ ] Create threshold comparison helpers
-- [ ] Create severity scoring helpers
-- [ ] Create confidence scoring helpers
-- [ ] Create baseline comparison helpers
-- [ ] Create recommendation builder helpers
+- [x] Create threshold comparison helpers
+- [x] Create severity scoring helpers
+- [x] Create confidence scoring helpers
+- [x] Create baseline comparison helpers
+- [x] Create recommendation builder helpers
 
 ### 6.3 Correlation helpers
-- [ ] Implement time-window overlap logic
-- [ ] Implement event correlation scoring
-- [ ] Implement multi-source evidence aggregation
-- [ ] Implement ranking of suspected causes
+- [x] Implement time-window overlap logic
+- [x] Implement event correlation scoring
+- [x] Implement multi-source evidence aggregation
+- [x] Implement ranking of suspected causes
 
 ### 6.4 Cache/baseline utilities
-- [ ] Create cache abstraction
-- [ ] Add TTL support
-- [ ] Add optional persistent baseline storage
-- [ ] Add current vs baseline comparison helpers
+- [x] Create cache abstraction
+- [x] Add TTL support
+- [x] Add optional persistent baseline storage
+- [x] Add current vs baseline comparison helpers
 
 ### 6.5 Shared test fixtures
-- [ ] Create representative fixture data for:
-  - [ ] weak signal client
-  - [ ] overloaded AP
-  - [ ] DHCP slowness
-  - [ ] DNS slowness
-  - [ ] auth timeout
-  - [ ] bad AP uplink
-  - [ ] STP loop symptoms
-  - [ ] wrong VLAN/policy
+- [x] Create representative fixture data for:
+  - [x] weak signal client
+  - [x] overloaded AP
+  - [x] DHCP slowness
+  - [x] DNS slowness
+  - [x] auth timeout
+  - [x] bad AP uplink
+  - [x] STP loop symptoms
+  - [x] wrong VLAN/policy
 
 ---
 

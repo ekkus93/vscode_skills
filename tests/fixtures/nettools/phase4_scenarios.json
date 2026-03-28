@@ -1,0 +1,81 @@
+{
+  "weak_signal_client": {
+    "wireless": {
+      "clientId": "client-weak-1",
+      "clientMac": "00:11:22:33:44:55",
+      "apId": "ap-12",
+      "ssid": "corp-wifi",
+      "rssi": -81,
+      "snr": 14,
+      "retryPct": 24.5
+    }
+  },
+  "overloaded_ap": {
+    "wireless": {
+      "apId": "ap-77",
+      "apName": "floor-7-east",
+      "client_count": 48,
+      "radio_resets_last_24h": 2,
+      "radio_5g": {
+        "radioId": "5g",
+        "channel": 36,
+        "utilizationPct": 88.0,
+        "client_count": 37
+      }
+    }
+  },
+  "dhcp_slowness": {
+    "dhcp": {
+      "clientMac": "00:11:22:33:44:55",
+      "offerLatencyMs": 2100,
+      "ackLatencyMs": 1800,
+      "successRatePct": 82.0,
+      "timeouts": 4
+    }
+  },
+  "dns_slowness": {
+    "dns": {
+      "clientId": "client-weak-1",
+      "overallLatencyMs": 320.0,
+      "timeoutPct": 12.0,
+      "sample_queries": ["intranet.local"]
+    }
+  },
+  "auth_timeout": {
+    "auth": {
+      "clientMac": "00:11:22:33:44:55",
+      "successRatePct": 71.0,
+      "timeouts": 9,
+      "radius_servers": [
+        {"server": "radius-a", "avg_rtt_ms": 3400, "reachable": true}
+      ]
+    }
+  },
+  "bad_ap_uplink": {
+    "switch": {
+      "switchId": "sw-1",
+      "port": "Gi1/0/24",
+      "speedMbps": 100,
+      "crc_errors": 245,
+      "input_errors": 311,
+      "ap_id": "ap-12"
+    }
+  },
+  "stp_loop_symptoms": {
+    "stp": {
+      "switchId": "sw-1",
+      "topologyChanges": 27,
+      "mac_flap_events": 14,
+      "suspect_ports": ["Gi1/0/24", "Gi1/0/30"]
+    }
+  },
+  "wrong_vlan_policy": {
+    "segmentation": {
+      "clientMac": "00:11:22:33:44:55",
+      "observedVlan": 220,
+      "expectedVlan": 120,
+      "policy_group": "guest",
+      "expected_policy_group": "corp"
+    }
+  }
+}

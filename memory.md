@@ -170,3 +170,12 @@
 - Added `tests/fixtures/nettools/adapter_stub_payloads.json` and `tests/unit/nettools/test_adapters.py` to validate fixture loading, normalized return types, timeout handling, and the stub-backed adapter surface.
 - Re-ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest tests/unit/nettools`; the full NETTOOLS unit suite passed with 21 tests.
 - Marked all Phase 3 items complete in `docs/NETTOOLS_TODO.md`.
+
+## 2026-03-28T08:18:16Z - GPT-5.4 - Completed NETTOOLS Phase 4 normalization and analysis utilities
+- Added `skills/nettools-core/nettools/analysis/` utility modules for normalization, threshold and baseline comparison, severity and confidence scoring, recommendation building, event correlation, and lightweight caching.
+- Added normalization helpers that convert raw wireless, switch, DHCP, DNS, auth, path-probe, and segmentation payloads into the shared Phase 2 Pydantic models while attaching source metadata and raw references.
+- Added deterministic analysis helpers for threshold comparison, current-vs-baseline comparison, suspected-cause ranking, evidence aggregation, and next-action construction so later skill implementations can share the same scoring and recommendation logic.
+- Added a small in-memory TTL cache and a JSON-backed baseline store to cover the v1 cache and persistent-baseline requirements without bringing in extra dependencies.
+- Added `tests/fixtures/nettools/phase4_scenarios.json` with representative weak-signal, overloaded-AP, DHCP, DNS, auth, uplink, STP, and VLAN/policy scenarios for shared fixture reuse.
+- Added `tests/unit/nettools/test_phase4_analysis.py` and re-ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest tests/unit/nettools`; the full NETTOOLS unit suite passed with 24 tests.
+- Marked all Phase 4 items complete in `docs/NETTOOLS_TODO.md`.

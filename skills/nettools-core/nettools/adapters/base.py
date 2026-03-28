@@ -203,11 +203,12 @@ def load_stub_fixture_file(path: str | Path) -> dict[str, Any]:
     return payload
 
 
-def build_stub_source_metadata(provider_name: str, raw_ref: str) -> list[SourceMetadata]:
+def build_stub_source_metadata(provider_name: str, raw_ref: str, *, collected_at: datetime | None = None) -> list[SourceMetadata]:
     return [
         SourceMetadata(
             provider=provider_name,
             source_type="stub",
+            collected_at=collected_at,
             raw_ref=raw_ref,
         )
     ]
