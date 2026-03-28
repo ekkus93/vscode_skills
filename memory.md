@@ -161,3 +161,12 @@
 - Added `tests/unit/nettools/test_phase2_models.py` to cover partial-data tolerance, nested serialization, and source/version metadata behavior across the new models.
 - Re-ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest tests/unit/nettools`; the full NETTOOLS unit suite passed with 16 tests.
 - Marked all Phase 2 items complete in `docs/NETTOOLS_TODO.md`.
+
+## 2026-03-28T08:07:24Z - GPT-5.4 - Completed NETTOOLS Phase 3 adapter interfaces
+- Added the Phase 3 adapter contract package under `skills/nettools-core/nettools/adapters/`, including shared adapter-side request and record models such as `AdapterContext`, `InterfaceCounters`, `RelayPathMetadata`, `ProbeRequest`, `PolicyMapping`, `UplinkExpectation`, and `AdapterEvent`.
+- Added one abstract interface per source domain: wireless controller, switch, DHCP, DNS, auth, probe, inventory/config, and syslog/event.
+- Added fixture-backed local stub adapters for every Phase 3 interface so later skills can run against deterministic JSON fixture data without vendor SDKs or live infrastructure.
+- Kept timeout and dependency failure semantics aligned with the shared NETTOOLS error taxonomy by having stub adapters raise the existing dependency timeout and unavailable errors for configured operations.
+- Added `tests/fixtures/nettools/adapter_stub_payloads.json` and `tests/unit/nettools/test_adapters.py` to validate fixture loading, normalized return types, timeout handling, and the stub-backed adapter surface.
+- Re-ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest tests/unit/nettools`; the full NETTOOLS unit suite passed with 21 tests.
+- Marked all Phase 3 items complete in `docs/NETTOOLS_TODO.md`.

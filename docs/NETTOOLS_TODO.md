@@ -206,68 +206,68 @@ Implementation assumption for v1:
 ## 5. Phase 3 - Adapter interfaces
 
 ### 5.1 Wireless controller adapter interface
-- [ ] Define abstract interface for:
-  - [ ] get client session
-  - [ ] get client history
-  - [ ] get AP state
-  - [ ] get neighboring AP data
-  - [ ] get roam events
-  - [ ] get auth events if controller exposes them
-- [ ] Define normalized response expectations
-- [ ] Add timeout/error semantics
+- [x] Define abstract interface for:
+  - [x] get client session
+  - [x] get client history
+  - [x] get AP state
+  - [x] get neighboring AP data
+  - [x] get roam events
+  - [x] get auth events if controller exposes them
+- [x] Define normalized response expectations
+- [x] Add timeout/error semantics
 
 ### 5.2 Switch adapter interface
-- [ ] Define abstract interface for:
-  - [ ] resolve AP to switch port
-  - [ ] get switch port state
-  - [ ] get interface counters
-  - [ ] get STP events
-  - [ ] get MAC flap events
-  - [ ] get topology change summaries
+- [x] Define abstract interface for:
+  - [x] resolve AP to switch port
+  - [x] get switch port state
+  - [x] get interface counters
+  - [x] get STP events
+  - [x] get MAC flap events
+  - [x] get topology change summaries
 
 ### 5.3 DHCP adapter interface
-- [ ] Define abstract interface for:
-  - [ ] get DHCP transaction summaries
-  - [ ] get scope utilization
-  - [ ] get relay path metadata
+- [x] Define abstract interface for:
+  - [x] get DHCP transaction summaries
+  - [x] get scope utilization
+  - [x] get relay path metadata
 
 ### 5.4 DNS adapter interface
-- [ ] Define abstract interface for:
-  - [ ] run DNS probes
-  - [ ] retrieve DNS telemetry if available
-  - [ ] compare resolver results
+- [x] Define abstract interface for:
+  - [x] run DNS probes
+  - [x] retrieve DNS telemetry if available
+  - [x] compare resolver results
 
 ### 5.5 Auth adapter interface
-- [ ] Define abstract interface for:
-  - [ ] get auth event summaries
-  - [ ] get RADIUS reachability / timing
-  - [ ] retrieve categorized auth failures
+- [x] Define abstract interface for:
+  - [x] get auth event summaries
+  - [x] get RADIUS reachability / timing
+  - [x] retrieve categorized auth failures
 
 ### 5.6 Probe adapter interface
-- [ ] Define abstract interface for:
-  - [ ] run path probes
-  - [ ] define probe source
-  - [ ] define destination set
-  - [ ] capture latency/jitter/loss summaries
+- [x] Define abstract interface for:
+  - [x] run path probes
+  - [x] define probe source
+  - [x] define destination set
+  - [x] capture latency/jitter/loss summaries
 
 ### 5.7 Inventory/config adapter interface
-- [ ] Define abstract interface for:
-  - [ ] expected VLAN by SSID/client role
-  - [ ] expected AP uplink characteristics
-  - [ ] expected policy mappings
-  - [ ] recent config changes
+- [x] Define abstract interface for:
+  - [x] expected VLAN by SSID/client role
+  - [x] expected AP uplink characteristics
+  - [x] expected policy mappings
+  - [x] recent config changes
 
 ### 5.8 Syslog/event adapter interface
-- [ ] Define abstract interface for:
-  - [ ] fetch events by time window
-  - [ ] fetch STP related events
-  - [ ] fetch AP/controller events
-  - [ ] fetch auth/DHCP/DNS related events
+- [x] Define abstract interface for:
+  - [x] fetch events by time window
+  - [x] fetch STP related events
+  - [x] fetch AP/controller events
+  - [x] fetch auth/DHCP/DNS related events
 
 ### 5.9 Stub implementations
-- [ ] Create local stub adapters for all interfaces
-- [ ] Ensure skills can run in test mode with fixtures only
-- [ ] Ensure stub-backed skills can run on Debian without vendor-specific dependencies installed
+- [x] Create local stub adapters for all interfaces
+- [x] Ensure skills can run in test mode with fixtures only
+- [x] Ensure stub-backed skills can run on Debian without vendor-specific dependencies installed
 
 ---
 

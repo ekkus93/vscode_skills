@@ -1,0 +1,144 @@
+{
+  "get_client_session": {
+    "client_id": "client-123",
+    "client_mac": "aa:bb:cc:dd:ee:ff",
+    "ap_id": "ap-42",
+    "ssid": "corp-wifi",
+    "rssi_dbm": -62.0,
+    "snr_db": 27.0,
+    "retry_pct": 8.5
+  },
+  "get_roam_events": [
+    {
+      "client_id": "client-123",
+      "from_ap_id": "ap-41",
+      "to_ap_id": "ap-42",
+      "latency_ms": 91.2,
+      "success": true
+    }
+  ],
+  "resolve_ap_to_switch_port": {
+    "switch_id": "sw-core-1",
+    "port": "Gi1/0/24",
+    "speed_mbps": 1000,
+    "trunk": true,
+    "ap_id": "ap-42"
+  },
+  "get_interface_counters": {
+    "switch_id": "sw-core-1",
+    "port": "Gi1/0/24",
+    "input_errors": 2,
+    "output_errors": 0,
+    "crc_errors": 1,
+    "utilization_pct": 14.7
+  },
+  "get_dhcp_transaction_summaries": [
+    {
+      "client_id": "client-123",
+      "success_rate_pct": 100.0,
+      "avg_offer_latency_ms": 32.5,
+      "avg_ack_latency_ms": 41.8,
+      "dhcp_server": "10.0.0.10"
+    }
+  ],
+  "get_relay_path_metadata": [
+    {
+      "site_id": "site-1",
+      "vlan_id": 120,
+      "relay_ip": "10.0.120.1",
+      "dhcp_server": "10.0.0.10"
+    }
+  ],
+  "run_dns_probes": {
+    "site_id": "site-1",
+    "overall_avg_latency_ms": 12.3,
+    "overall_timeout_pct": 0.0,
+    "resolver_results": [
+      {
+        "resolver": "10.0.0.53",
+        "avg_latency_ms": 12.3,
+        "timeout_pct": 0.0
+      }
+    ]
+  },
+  "compare_resolver_results": [
+    {
+      "resolver": "10.0.0.53",
+      "avg_latency_ms": 12.3,
+      "timeout_pct": 0.0
+    },
+    {
+      "resolver": "10.0.0.54",
+      "avg_latency_ms": 15.9,
+      "timeout_pct": 1.0
+    }
+  ],
+  "get_auth_event_summaries": {
+    "client_id": "client-123",
+    "auth_success_rate_pct": 98.0,
+    "timeouts": 1,
+    "radius_servers": [
+      {
+        "server": "radius-a",
+        "avg_rtt_ms": 28.0,
+        "reachable": true
+      }
+    ]
+  },
+  "retrieve_categorized_auth_failures": [
+    {
+      "category": "timeout",
+      "count": 1,
+      "examples": ["EAP timeout"]
+    }
+  ],
+  "run_path_probes": [
+    {
+      "source_probe_id": "probe-1",
+      "target": "10.0.0.1",
+      "protocol": "icmp",
+      "avg_latency_ms": 3.8,
+      "jitter_ms": 0.4,
+      "loss_pct": 0.0,
+      "sample_count": 4
+    }
+  ],
+  "get_expected_vlan_by_ssid_client_role": {
+    "site_id": "site-1",
+    "ssid": "corp-wifi",
+    "client_role": "employee",
+    "expected_vlan": 120,
+    "expected_policy_group": "corp"
+  },
+  "get_expected_ap_uplink_characteristics": {
+    "ap_id": "ap-42",
+    "expected_switch_id": "sw-core-1",
+    "expected_port": "Gi1/0/24",
+    "expected_speed_mbps": 1000,
+    "expected_trunk": true
+  },
+  "get_recent_config_changes": [
+    {
+      "change_id": "chg-77",
+      "category": "switch",
+      "summary": "Updated AP uplink trunk allowed VLANs",
+      "device_id": "sw-core-1"
+    }
+  ],
+  "fetch_events_by_time_window": [
+    {
+      "event_type": "syslog",
+      "severity": "warn",
+      "summary": "STP topology change detected",
+      "site_id": "site-1"
+    }
+  ],
+  "fetch_auth_dhcp_dns_related_events": [
+    {
+      "event_type": "radius",
+      "severity": "warn",
+      "summary": "Authentication timeout spike",
+      "site_id": "site-1"
+    }
+  ]
+}
