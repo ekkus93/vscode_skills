@@ -512,100 +512,100 @@ Implementation assumption for v1:
 ## 8.1 Implement `net.roaming_analysis`
 
 ### 8.1.1 Data collection
-- [ ] Create `skills/net-roaming-analysis/SKILL.md`
-- [ ] Create `skills/net-roaming-analysis/net_roaming_analysis.py`
-- [ ] Query roam event history
-- [ ] Query associated client metrics over same window
-- [ ] Resolve AP transitions
+- [x] Create `skills/net-roaming-analysis/SKILL.md`
+- [x] Create `skills/net-roaming-analysis/net_roaming_analysis.py`
+- [x] Query roam event history
+- [x] Query associated client metrics over same window
+- [x] Resolve AP transitions
 
 ### 8.1.2 Analysis
-- [ ] Detect excessive roam count
-- [ ] Detect high roam latency
-- [ ] Detect failed roams
-- [ ] Detect sticky-client patterns
+- [x] Detect excessive roam count
+- [x] Detect high roam latency
+- [x] Detect failed roams
+- [x] Detect sticky-client patterns
 
 ### 8.1.3 Recommendations
-- [ ] Recommend AP RF health
-- [ ] Recommend client health review
-- [ ] Recommend site tuning review
+- [x] Recommend AP RF health
+- [x] Recommend client health review
+- [x] Recommend site tuning review
 
 ### 8.1.4 Tests
-- [ ] healthy roaming test
-- [ ] failed roam test
-- [ ] sticky client test
+- [x] healthy roaming test
+- [x] failed roam test
+- [x] sticky client test
 
 ## 8.2 Implement `net.auth_8021x_radius`
 
 ### 8.2.1 Data collection
-- [ ] Create `skills/net-auth-8021x-radius/SKILL.md`
-- [ ] Create `skills/net-auth-8021x-radius/net_auth_8021x_radius.py`
-- [ ] Query auth events
-- [ ] Query RADIUS RTT/reachability
-- [ ] Categorize failure causes
+- [x] Create `skills/net-auth-8021x-radius/SKILL.md`
+- [x] Create `skills/net-auth-8021x-radius/net_auth_8021x_radius.py`
+- [x] Query auth events
+- [x] Query RADIUS RTT/reachability
+- [x] Categorize failure causes
 
 ### 8.2.2 Analysis
-- [ ] Compute auth success rate
-- [ ] Detect timeouts
-- [ ] Separate credential issues from infra issues
-- [ ] Detect certificate-related recurring failures if visible
+- [x] Compute auth success rate
+- [x] Detect timeouts
+- [x] Separate credential issues from infra issues
+- [x] Detect certificate-related recurring failures if visible
 
 ### 8.2.3 Recommendations
-- [ ] Recommend service path checks
-- [ ] Recommend credential/policy review
-- [ ] Recommend segmentation/policy checks
+- [x] Recommend service path checks
+- [x] Recommend credential/policy review
+- [x] Recommend segmentation/policy checks
 
 ### 8.2.4 Tests
-- [ ] healthy auth test
-- [ ] timeout-heavy auth test
-- [ ] credential failure test
-- [ ] RADIUS unreachable test
+- [x] healthy auth test
+- [x] timeout-heavy auth test
+- [x] credential failure test
+- [x] RADIUS unreachable test
 
 ## 8.3 Implement `net.path_probe`
 
 ### 8.3.1 Data collection
-- [ ] Create `skills/net-path-probe/SKILL.md`
-- [ ] Create `skills/net-path-probe/net_path_probe.py`
-- [ ] Define probe request model
-- [ ] Select destinations
-- [ ] Invoke probe adapter
-- [ ] Collect latency/jitter/loss summaries
+- [x] Create `skills/net-path-probe/SKILL.md`
+- [x] Create `skills/net-path-probe/net_path_probe.py`
+- [x] Define probe request model
+- [x] Select destinations
+- [x] Invoke probe adapter
+- [x] Collect latency/jitter/loss summaries
 
 ### 8.3.2 Analysis
-- [ ] Compare internal targets
-- [ ] Compare optional external target
-- [ ] Identify failing segment category
+- [x] Compare internal targets
+- [x] Compare optional external target
+- [x] Identify failing segment category
 
 ### 8.3.3 Recommendations
-- [ ] Recommend DNS/DHCP/auth follow-up based on failing service
-- [ ] Recommend AP/client follow-up if only Wi-Fi probe nodes degrade
+- [x] Recommend DNS/DHCP/auth follow-up based on failing service
+- [x] Recommend AP/client follow-up if only Wi-Fi probe nodes degrade
 
 ### 8.3.4 Tests
-- [ ] clean path test
-- [ ] internal service degradation test
-- [ ] site-wide loss test
+- [x] clean path test
+- [x] internal service degradation test
+- [x] site-wide loss test
 
 ## 8.4 Implement `net.segmentation_policy`
 
 ### 8.4.1 Data collection
-- [ ] Create `skills/net-segmentation-policy/SKILL.md`
-- [ ] Create `skills/net-segmentation-policy/net_segmentation_policy.py`
-- [ ] Query observed client placement
-- [ ] Query expected VLAN/policy mapping
-- [ ] Query DHCP scope/gateway alignment
+- [x] Create `skills/net-segmentation-policy/SKILL.md`
+- [x] Create `skills/net-segmentation-policy/net_segmentation_policy.py`
+- [x] Query observed client placement
+- [x] Query expected VLAN/policy mapping
+- [x] Query DHCP scope/gateway alignment
 
 ### 8.4.2 Analysis
-- [ ] Detect expected vs actual VLAN mismatch
-- [ ] Detect policy mismatch
-- [ ] Detect wrong gateway/scope alignment
+- [x] Detect expected vs actual VLAN mismatch
+- [x] Detect policy mismatch
+- [x] Detect wrong gateway/scope alignment
 
 ### 8.4.3 Recommendations
-- [ ] Recommend auth/NAC review
-- [ ] Recommend DHCP / SSID mapping review
+- [x] Recommend auth/NAC review
+- [x] Recommend DHCP / SSID mapping review
 
 ### 8.4.4 Tests
-- [ ] correct placement test
-- [ ] wrong VLAN test
-- [ ] wrong policy group test
+- [x] correct placement test
+- [x] wrong VLAN test
+- [x] wrong policy group test
 
 ---
 

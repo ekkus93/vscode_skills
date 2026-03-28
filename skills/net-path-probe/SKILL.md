@@ -13,16 +13,18 @@ Use this skill to compare path quality between key internal targets so LAN, serv
 
 ## Status
 
-Phase 0 scaffold. The wrapper and helper entrypoint exist, but the diagnostic implementation is not complete yet.
+Implemented first-pass Priority 2 skill. The bundled helper now runs deterministic internal and optional external path probes, classifies degraded targets, and recommends follow-up service or wireless checks.
 
 ## Commands
 
 ```bash
-python3 "{baseDir}/net_path_probe.py" --site-id "hq-1"
-python3 "{baseDir}/net_path_probe.py" --site-id "hq-1" --include-raw
+python3 "{baseDir}/net_path_probe.py" --site-id "hq-1" --source-role "wireless"
+python3 "{baseDir}/net_path_probe.py" --site-id "hq-1" --target "dns-service" --target "radius-service" --external-target "internet-edge"
+python3 "{baseDir}/net_path_probe.py" --site-id "hq-1" --target "dns-service" --fixture-file "/path/to/fixtures.json"
 ```
 
 ## Constraints
 
 - Use the bundled helper.
 - Do not guess latency, jitter, loss, or destination comparisons.
+- If no provider implementation is configured, use fixture-backed test mode rather than inventing data.

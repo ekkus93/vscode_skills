@@ -13,16 +13,18 @@ Use this skill to verify whether a client has been placed into the correct VLAN 
 
 ## Status
 
-Phase 0 scaffold. The wrapper and helper entrypoint exist, but the diagnostic implementation is not complete yet.
+Implemented first-pass Priority 2 skill. The bundled helper now compares observed client placement from wireless and DHCP telemetry against expected VLAN and policy mappings from inventory data.
 
 ## Commands
 
 ```bash
 python3 "{baseDir}/net_segmentation_policy.py" --client-id "client-123"
 python3 "{baseDir}/net_segmentation_policy.py" --client-mac "aa:bb:cc:dd:ee:ff" --ssid "CorpWiFi"
+python3 "{baseDir}/net_segmentation_policy.py" --client-id "client-123" --client-role "corp" --fixture-file "/path/to/fixtures.json"
 ```
 
 ## Constraints
 
 - Use the bundled helper.
 - Do not guess VLAN mappings, NAC outcomes, or policy placement.
+- If no provider implementation is configured, use fixture-backed test mode rather than inventing data.

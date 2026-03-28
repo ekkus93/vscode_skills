@@ -8,14 +8,8 @@ CORE_DIR = Path(__file__).resolve().parents[1] / "nettools-core"
 if str(CORE_DIR) not in sys.path:
     sys.path.insert(0, str(CORE_DIR))
 
-from nettools.cli import run_placeholder_skill
+from nettools.priority2 import main_auth_8021x_radius
 
 
 if __name__ == "__main__":
-    raise SystemExit(
-        run_placeholder_skill(
-            skill_name="net.auth_8021x_radius",
-            scope_type="service",
-            description="Assess 802.1X and RADIUS authentication health.",
-        )
-    )
+    raise SystemExit(main_auth_8021x_radius())

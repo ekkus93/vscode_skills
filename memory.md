@@ -188,3 +188,11 @@
 - Updated the six Priority 1 `SKILL.md` files so they no longer describe the helpers as scaffolds and now document fixture-backed execution when no live provider implementation is configured yet.
 - Re-ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest tests/unit/nettools`; the full NETTOOLS unit suite passed with 51 tests.
 - Marked all Phase 5 Priority 1 items complete in `docs/NETTOOLS_TODO.md`.
+
+## 2026-03-28T08:44:03Z - GPT-5.4 - Completed NETTOOLS Phase 6 Priority 2 skills
+- Extended the shared NETTOOLS adapter bundle so the same fixture-loading path now supports auth and probe adapters alongside the existing wireless, DHCP, DNS, switch, inventory, and syslog stubs.
+- Added `skills/nettools-core/nettools/priority2.py` with first-pass implementations for `net.roaming_analysis`, `net.auth_8021x_radius`, `net.path_probe`, and `net.segmentation_policy`, including validated input models, shared CLI entrypoints, structured findings, and follow-up `next_actions`.
+- Replaced the four Phase 0 placeholder wrapper scripts with real entrypoints wired to the new shared Priority 2 runtime and updated the four `SKILL.md` files to document implemented behavior and fixture-backed execution.
+- Added `tests/unit/nettools/test_priority2_skills.py` covering healthy, degraded, missing-data, dependency-unavailable, and CLI-smoke scenarios for the four Priority 2 skills.
+- Re-ran `python -m pytest tests/unit/nettools` in the repo venv; the full NETTOOLS unit suite passed with 67 tests.
+- Marked all Phase 6 Priority 2 items complete in `docs/NETTOOLS_TODO.md`.

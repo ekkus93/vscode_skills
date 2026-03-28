@@ -11,10 +11,14 @@ from pydantic import Field, ValidationError, model_validator
 
 from .adapters import (
     AdapterContext,
+    AuthAdapter,
     InventoryConfigAdapter,
+    ProbeAdapter,
+    StubAuthAdapter,
     StubDhcpAdapter,
     StubDnsAdapter,
     StubInventoryConfigAdapter,
+    StubProbeAdapter,
     StubSwitchAdapter,
     StubSyslogEventAdapter,
     StubWirelessControllerAdapter,
@@ -89,6 +93,8 @@ class AdapterBundle:
     switch: SwitchAdapter | None = None
     dhcp: DhcpAdapter | None = None
     dns: DnsAdapter | None = None
+    auth: AuthAdapter | None = None
+    probe: ProbeAdapter | None = None
     inventory: InventoryConfigAdapter | None = None
     syslog: SyslogEventAdapter | None = None
 
@@ -139,6 +145,8 @@ def build_stub_adapter_bundle(fixtures: dict[str, Any]) -> AdapterBundle:
         switch=StubSwitchAdapter(fixtures=fixtures),
         dhcp=StubDhcpAdapter(fixtures=fixtures),
         dns=StubDnsAdapter(fixtures=fixtures),
+        auth=StubAuthAdapter(fixtures=fixtures),
+        probe=StubProbeAdapter(fixtures=fixtures),
         inventory=StubInventoryConfigAdapter(fixtures=fixtures),
         syslog=StubSyslogEventAdapter(fixtures=fixtures),
     )
@@ -953,7 +961,7 @@ def run_priority1_cli(
         return 1
 
     logger.info(
-        "priority 1 skill executed",
+        "priority skill executed",
         skill_name=skill_name,
         scope_type=scope_type.value,
         scope_id=result.scope_id,

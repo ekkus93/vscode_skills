@@ -8,14 +8,8 @@ CORE_DIR = Path(__file__).resolve().parents[1] / "nettools-core"
 if str(CORE_DIR) not in sys.path:
     sys.path.insert(0, str(CORE_DIR))
 
-from nettools.cli import run_placeholder_skill
+from nettools.priority2 import main_path_probe
 
 
 if __name__ == "__main__":
-    raise SystemExit(
-        run_placeholder_skill(
-            skill_name="net.path_probe",
-            scope_type="path",
-            description="Measure latency, jitter, and loss between internal points.",
-        )
-    )
+    raise SystemExit(main_path_probe())
