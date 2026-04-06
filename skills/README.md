@@ -195,6 +195,7 @@ When changing an existing skill:
 According to `SKILL_LIST.md`, the currently registered shared skills are:
 
 - `arxiv-search`: search arXiv for relevant papers and return concise, source-linked results
+- `audio-transcribe`: transcribe local audio or video into a clean plain-text workspace artifact with offline local tooling
 - `bitcoin-price`: get the current Bitcoin price in USD
 - `current-date-time`: get the current local date, time, or datetime from the system clock
 - `docx-to-markdown`: convert `.docx` and legacy `.doc` files into Markdown `.md` files
@@ -256,6 +257,7 @@ These cover most of the registered skills:
 
 ### Extra binaries or CLIs used by specific skills
 
+- `ffmpeg` for `audio-transcribe`
 - `pandoc` for `docx-to-markdown`
 - `soffice` or LibreOffice for legacy `.doc` input in `docx-to-markdown`
 - `tesseract` for `image-ocr`
@@ -265,6 +267,7 @@ These cover most of the registered skills:
 
 ### Python packages used by specific skills
 
+- `faster-whisper` for `audio-transcribe`
 - `yfinance` for `yahoo-finance`, `stock-research`, `stock-investment-review`, and `stock-review-market-context`
 - `openpyxl` for `.xlsx` support in `excel-to-markdown` and `excel-to-delimited`
 - `xlrd` for `.xls` support in `excel-to-markdown` and `excel-to-delimited`
@@ -293,8 +296,8 @@ Ubuntu or Debian baseline:
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y python3 curl jq pandoc tesseract-ocr nodejs npm libreoffice
-python3 -m pip install yfinance openpyxl xlrd
+sudo apt-get install -y python3 curl jq pandoc ffmpeg tesseract-ocr nodejs npm libreoffice
+python3 -m pip install faster-whisper yfinance openpyxl xlrd
 npm install -g yahoo-finance2
 sudo ln -sf "$(npm bin -g)/yahoo-finance" /usr/local/bin/yf
 ```
@@ -303,7 +306,8 @@ macOS with Homebrew baseline:
 
 ```bash
 brew install python curl jq pandoc tesseract node libreoffice
-python3 -m pip install yfinance openpyxl xlrd
+brew install ffmpeg
+python3 -m pip install faster-whisper yfinance openpyxl xlrd
 npm install -g yahoo-finance2
 sudo ln -sf "$(npm bin -g)/yahoo-finance" /usr/local/bin/yf
 ```

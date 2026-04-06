@@ -56,6 +56,11 @@ This file lists reusable skills available in the shared workspace skill library.
 - Use for: searching arXiv for papers by topic, author, category, title, or abstract query
 - Typical outputs: concise paper shortlist, abstract links, PDF links, short metadata summaries
 
+### audio-transcribe
+- Path: `skills/audio-transcribe/`
+- Use for: transcribing a local audio or video file fully offline into a clean plain-text workspace artifact
+- Typical outputs: `outputs/transcripts/<original-file-prefix>_transcript.txt`, saved transcript path confirmation
+
 ### yahoo-finance-cli
 - Path: `skills/yahoo-finance-cli/`
 - Use for: fetching stock prices, financial data, and market summaries using Yahoo Finance CLI

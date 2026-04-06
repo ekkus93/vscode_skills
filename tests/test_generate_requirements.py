@@ -34,6 +34,7 @@ def test_build_repo_python_packages_uses_registered_skills() -> None:
     )
 
     assert generate_requirements.build_repo_python_packages(skill_requirements) == [
+        "faster-whisper",
         "openpyxl",
         "xlrd",
         "yfinance",
@@ -89,6 +90,7 @@ def test_write_requirements_outputs_writes_repo_and_per_skill_files(tmp_path: pa
     repo_requirements = requirements_path.read_text(encoding="utf-8")
     skill_requirements = (per_skill_dir / "excel-to-delimited.txt").read_text(encoding="utf-8")
 
+    assert "faster-whisper" in repo_requirements
     assert "openpyxl" in repo_requirements
     assert "yfinance" in repo_requirements
     assert "Resolved skills: excel-to-markdown, excel-to-delimited" in skill_requirements

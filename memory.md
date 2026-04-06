@@ -259,6 +259,93 @@
 - Chose the action upgrades instead of the temporary `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` opt-in because both upstream actions now publish Node 24-based major versions.
 - This should remove the GitHub warning about deprecated Node.js 20 JavaScript actions on the CI jobs `generated-requirements`, `ruff`, `mypy`, and `pytest`.
 
+## 2026-03-28T21:53:30Z - GPT-5.4 - Compared office Wi-Fi behavior after moving to the kitchen area
+- After moving, the laptop reassociated from 2.4 GHz channel 8 to 5 GHz on 5520 MHz (`CircuitLaunch`, BSSID `f0:9f:c2:6a:d9:76`) with VHT rates around 324 Mbps RX / 200 Mbps TX and signal around `-63 dBm`.
+- Gateway latency improved sharply versus the prior location: `ping 10.1.1.1` showed 0% loss with `1.67/6.95/73.43 ms` min/avg/max instead of the earlier severe sustained jitter on the same Wi-Fi network.
+- Local same-LAN latency to `faceless.local` remained abnormally high despite the move and 5 GHz reassociation: `42.9/211.7/377.7 ms` min/avg/max with 0% loss, while direct SSH setup to `debian@faceless.local` still succeeded.
+- Current evidence points to a Wi-Fi/AP-path issue that improves with location and band selection, but some high local-path latency remains even from the kitchen area.
+
+## 2026-03-28T21:57:23Z - GPT-5.4 - Narrowed remaining kitchen-area latency to the laptop side more than faceless.local
+- Confirmed `faceless.local` in Open Desks is itself on Wi-Fi (`wlp2s0`, `10.1.2.230/22`), but its own first-hop path is healthy: `ping 10.1.1.1` from `faceless.local` showed `2.84/3.86/5.22 ms` min/avg/max with 0% loss.
+- Reverse-direction pings from `faceless.local` back to the kitchen-area laptop (`10.1.3.12`) were still spiky at `4.13/74.16/207.48 ms`, so the residual host-to-host delay is not explained by `faceless.local` alone.
+- Direct pings from the laptop to `10.1.2.230` remained poor at `4.83/128.35/194.72 ms`, while the laptop's gateway path stayed much better than before, indicating the move helped but did not fully clear the laptop-side wireless behavior.
+- The kitchen-area laptop currently has `iw dev wlo1 get power_save` reporting `Power save: on`, which is a plausible contributor to the remaining peer-to-peer latency spikes.
+
+## 2026-03-28T22:02:26Z - GPT-5.4 - Disabling laptop Wi-Fi power save materially improved the kitchen-area path
+- Temporarily disabled Wi-Fi power saving on the laptop with `sudo iw dev wlo1 set power_save off`; `iw dev wlo1 get power_save` then reported `Power save: off`.
+- With power save off, the laptop's first-hop latency became clean and stable: `ping 10.1.1.1` showed `1.52/2.47/3.67 ms` min/avg/max with 0% loss, eliminating the earlier kitchen-area spikes.
+- Reverse-direction latency from `faceless.local` back to the laptop also normalized: `ping 10.1.3.12` from `faceless.local` showed `4.54/6.13/7.43 ms` min/avg/max with 0% loss instead of large spikes.
+- Direct laptop-to-`faceless.local` latency improved substantially but did not fully normalize: `ping 10.1.2.230` improved from `4.83/128.35/194.72 ms` to `4.21/58.32/180.87 ms`, suggesting laptop power save was a major factor, with some residual path variability still present between the two Wi-Fi clients.
+
+## 2026-03-28T22:05:57Z - GPT-5.4 - Wired-host control test isolated the remaining issue away from the general LAN
+- Resolved and reached the wired host `gyropalm-h7.local` at `10.1.3.75`; SSH succeeded and showed it is on ethernet (`enp4s0`, `10.1.3.75/22`) with `wlo1` down.
+- Laptop-to-wired-host latency was clean: `ping gyropalm-h7.local` showed `1.47/2.28/3.06 ms` min/avg/max with 0% loss.
+- Reverse wired-host-to-laptop latency was also clean: `ping 10.1.3.12` from `gyropalm-h7.local` showed `1.46/2.09/2.92 ms` min/avg/max with 0% loss.
+- This rules out a broad LAN/core switching problem for the current moment and points the remaining variability more specifically at Wi-Fi-to-Wi-Fi paths and/or AP behavior affecting wireless clients.
+
+## 2026-03-28T22:12:16Z - GPT-5.4 - Think Circuits office retest showed worse last-hop behavior than the kitchen
+- In the Think Circuits office area, the laptop stayed on 5 GHz `CircuitLaunch` but reassociated to BSSID `f0:9f:c2:61:df:50` on 5720 MHz with signal around `-61 dBm` and VHT rates around 400 Mbps RX / 200 Mbps TX.
+- Despite the solid-looking link rate and signal, first-hop latency regressed versus the kitchen: `ping 10.1.1.1` showed `1.67/7.64/60.54 ms` min/avg/max with 0% loss.
+- Laptop-to-`faceless.local` latency was poor again at `4.78/96.46/345.81 ms`, and reverse `faceless.local`-to-laptop latency was also poor at `4.57/56.63/207.97 ms`, confirming a degraded Wi-Fi-to-Wi-Fi path at this location.
+- Even laptop-to-wired-host `gyropalm-h7.local` regressed at this location (`1.68/16.90/78.27 ms`), and reverse wired-host-to-laptop latency also worsened (`1.58/42.43/109.73 ms`), indicating the Think Circuits office area is affecting the laptop's current wireless last hop, not just the Open Desks Wi-Fi reference host.
+- Local `iw dev wlo1 station dump` still showed no TX retries or failures, but beacon loss remained elevated (`69`) after only ~21 seconds associated, reinforcing that AP/location-specific wireless behavior is part of the problem.
+
+## 2026-03-28T22:16:17Z - GPT-5.4 - Gyropalm office retest landed between the kitchen and Think Circuits office
+- In the Gyropalm office area, the laptop reassociated to 5 GHz `CircuitLaunch` BSSID `24:5a:4c:1b:d8:56` on 5220 MHz with stronger signal around `-53 dBm` and VHT rates around 400 Mbps RX / 200 Mbps TX.
+- First-hop behavior was mixed: most gateway pings were near 1.5 ms, but intermittent spikes returned, giving `ping 10.1.1.1` a `0.98/14.36/94.15 ms` min/avg/max profile.
+- Laptop-to-wired-host `gyropalm-h7.local` was better than in the Think Circuits office but not kitchen-clean: `1.08/6.36/53.68 ms`, while reverse wired-host-to-laptop latency was `1.13/13.99/106.61 ms`.
+- Wi-Fi-to-Wi-Fi path to `faceless.local` remained clearly degraded: laptop-to-`faceless.local` measured `19.18/85.22/167.85 ms`, and reverse `faceless.local`-to-laptop latency measured `3.93/44.90/142.83 ms`.
+- Local station stats still showed zero TX retries but now included nonzero TX failures (`2`) and continued high beacon loss (`70`) within about 80 seconds associated, consistent with ongoing AP/location-specific wireless instability rather than a simple signal-strength problem.
+
+## 2026-03-28T22:19:19Z - GPT-5.4 - Gentiam office showed very strong signal but continued intermittent Wi-Fi instability
+- In the Gentiam office area, the laptop reassociated to 5 GHz `CircuitLaunch` BSSID `f0:9f:c2:6a:eb:d6` on 5320 MHz with very strong signal around `-41 dBm` and VHT rates around 400 Mbps RX / 200 Mbps TX.
+- Despite the excellent RSSI, first-hop latency still showed intermittent spikes: `ping 10.1.1.1` measured `1.80/8.63/85.77 ms` min/avg/max.
+- Laptop-to-wired-host `gyropalm-h7.local` remained better than the Wi-Fi-to-Wi-Fi path but was not clean: `1.38/8.22/45.12 ms`, and reverse wired-host-to-laptop latency was `1.65/39.97/100.47 ms`.
+- Wi-Fi-to-Wi-Fi path to `faceless.local` stayed poor: laptop-to-`faceless.local` measured `4.22/129.11/316.14 ms`, and reverse `faceless.local`-to-laptop latency measured `3.34/47.74/99.43 ms`.
+- Local station stats again showed zero TX retries but nonzero TX failures (`4`) and continued high beacon loss (`74`) within about 72 seconds associated, reinforcing that the issue is not simply low signal strength and likely involves AP/location-specific wireless behavior.
+
+## 2026-03-28T22:21:53Z - GPT-5.4 - Ubo desk looked very similar to the Gentiam office zone
+- At the Ubo desk, the laptop remained associated to the same 5 GHz `CircuitLaunch` BSSID `f0:9f:c2:6a:eb:d6` on 5320 MHz with strong signal around `-43 dBm` and the same VHT rates around 400 Mbps RX / 200 Mbps TX.
+- First-hop latency was still unstable: `ping 10.1.1.1` measured `1.75/14.87/84.88 ms` min/avg/max, which is worse than the kitchen and close to the Gentiam/Gyropalm intermittent-spike pattern.
+- Laptop-to-wired-host `gyropalm-h7.local` was degraded (`1.83/12.83/65.75 ms`), and reverse wired-host-to-laptop latency was also poor (`12.17/50.31/109.83 ms`), showing the laptop's current last hop is impaired here too.
+- Wi-Fi-to-Wi-Fi path to `faceless.local` remained very poor: laptop-to-`faceless.local` measured `3.08/129.04/383.43 ms`, and reverse `faceless.local`-to-laptop latency measured `4.38/16.72/93.31 ms`.
+- Station stats stayed effectively unchanged from the Gentiam association, with zero TX retries, `4` TX failures, and `74` beacon-loss events, suggesting the Ubo desk sits in the same problematic AP/coverage zone as Gentiam rather than a distinctly better pocket.
+
+## 2026-03-28T22:24:26Z - GPT-5.4 - Laser cutter area partially improved the wired-control path but not the Open Desks Wi-Fi path
+- In the laser cutter area, the laptop stayed on the same 5 GHz `CircuitLaunch` BSSID `f0:9f:c2:6a:eb:d6` at 5320 MHz, but signal fell to about `-67 dBm` and RX bitrate dropped to about 324 Mbps.
+- First-hop latency remained spiky rather than kitchen-clean: `ping 10.1.1.1` measured `1.35/7.48/70.98 ms` min/avg/max.
+- Laptop-to-wired-host `gyropalm-h7.local` improved versus Gentiam/Ubo desk (`1.82/4.03/31.69 ms`), but reverse wired-host-to-laptop latency was still poor (`1.58/47.46/100.84 ms`), so the current last hop is only partially better here.
+- Wi-Fi-to-Wi-Fi path to `faceless.local` remained very poor: laptop-to-`faceless.local` measured `5.30/137.51/411.50 ms`, and reverse `faceless.local`-to-laptop latency measured `5.78/51.69/141.01 ms`.
+- Local station stats at this spot briefly showed zero TX failures but continued high beacon loss (`76`) within about 10 seconds associated, which still fits the pattern of AP/airtime instability rather than a clean stable cell.
+
+## 2026-03-28T22:26:14Z - GPT-5.4 - Repeat test on the current laser-cutter-side zone showed similar but slightly improved behavior
+- The laptop remained on the same 5 GHz `CircuitLaunch` BSSID `f0:9f:c2:6a:eb:d6` at 5320 MHz with similar weak-to-moderate signal around `-67 dBm`, but RX bitrate dropped further to about 300 Mbps.
+- First-hop behavior was still unstable but slightly better on average than the previous sample: `ping 10.1.1.1` measured `1.68/6.23/69.65 ms` min/avg/max.
+- Laptop-to-wired-host `gyropalm-h7.local` stayed better than the Wi-Fi-to-Wi-Fi path yet still showed spikes (`1.63/9.42/75.40 ms`), confirming this zone is not kitchen-clean even on the wired control path.
+- Laptop-to-`faceless.local` remained poor though slightly improved versus the prior sample (`40.91/124.92/207.45 ms`), which is still far outside normal LAN latency.
+- The repeat confirms this AP/zone is consistently unstable over time rather than only producing one-off outliers, even if the exact spike sizes vary run to run.
+
+## 2026-03-28T23:26:41Z - GPT-5.4 - Bio lab produced the worst current-sample wireless behavior so far
+- In the bio lab, the laptop associated to `CircuitLaunch` on a weak 5 GHz link: BSSID `f0:9f:c2:6a:eb:d7`, 5200 MHz, about `-75 dBm`, with reduced VHT rates around 135 Mbps RX / 108 Mbps TX.
+- First-hop behavior degraded severely enough to include packet loss: `ping 10.1.1.1` measured `2.25/199.54/1033.53 ms` min/avg/max with `5%` packet loss, including multi-hundred-millisecond and ~1 second spikes.
+- Laptop-to-wired-host `gyropalm-h7.local` was also severely degraded (`2.01/37.89/209.68 ms`), and reverse wired-host-to-laptop latency showed matching instability with `5%` loss (`1.58/38.21/150.65 ms`).
+- Wi-Fi-to-Wi-Fi path to `faceless.local` remained extremely poor: laptop-to-`faceless.local` measured `4.95/133.13/321.22 ms`, and reverse `faceless.local`-to-laptop latency measured `5.32/79.29/208.65 ms`.
+- Local station stats showed a rapidly climbing beacon-loss count (`104`) within about 30 seconds associated, reinforcing that the bio lab is the strongest evidence so far of a genuinely bad RF/AP zone rather than mere intermittent nuisance jitter.
+
+## 2026-03-28T23:28:55Z - GPT-5.4 - Front desk landed on a new 5 GHz BSSID with moderate but persistent instability
+- At the front desk, the laptop associated to a different 5 GHz `CircuitLaunch` BSSID `f0:9f:c2:2e:ee:98` on 5200 MHz with good signal around `-51 dBm` and VHT rates around 300 Mbps RX / 200 Mbps TX.
+- First-hop latency was better than the worst zones but still not clean: `ping 10.1.1.1` measured `1.19/13.17/91.02 ms` min/avg/max with 0% loss.
+- Laptop-to-wired-host `gyropalm-h7.local` showed intermittent spikes (`1.11/15.61/109.56 ms`), and reverse wired-host-to-laptop latency was also poor (`1.00/47.29/100.69 ms`), so the last hop remains unstable at this location.
+- Wi-Fi-to-Wi-Fi path to `faceless.local` remained poor: laptop-to-`faceless.local` measured `3.89/108.12/208.24 ms`, and reverse `faceless.local`-to-laptop latency measured `4.16/66.72/147.21 ms`.
+- Local station stats showed low TX failure count (`1`) but a continued high beacon-loss count (`106`) within about 60 seconds associated, suggesting that even this different BSSID is not providing a consistently stable cell.
+
+## 2026-03-28T23:31:31Z - GPT-5.4 - Silicon Valley Robotics office had one of the cleaner first-hop paths but still poor wireless client-to-client behavior
+- In the Silicon Valley Robotics office, the laptop associated to 5 GHz `CircuitLaunch` BSSID `f0:9f:c2:6a:d9:76` on 5520 MHz with signal around `-58 dBm` and strong VHT rates around 400 Mbps RX / 200 Mbps TX.
+- First-hop latency was among the better non-kitchen results: `ping 10.1.1.1` measured `1.70/4.10/23.62 ms` min/avg/max with 0% loss.
+- Laptop-to-wired-host `gyropalm-h7.local` still showed intermittent spikes (`1.45/14.69/136.88 ms`), and reverse wired-host-to-laptop latency remained elevated (`2.23/40.33/101.02 ms`), so the current last hop is improved but not fully clean.
+- Wi-Fi-to-Wi-Fi path to `faceless.local` remained poor: laptop-to-`faceless.local` measured `4.01/150.84/416.11 ms`, and reverse `faceless.local`-to-laptop latency measured `4.96/59.73/204.13 ms`.
+- Station stats still showed nonzero TX failures (`2`) and high beacon loss (`108`) within about 84 seconds associated, indicating that even one of the better spots still suffers from unstable wireless behavior under the current office conditions.
+
 ## 2026-03-28T21:21:11Z - GPT-5.4 - Pushed Node 24 GitHub Actions upgrade to origin/master
 - Committed the workflow action-version upgrade as `b8820c1` with the message `Upgrade CI actions to Node 24`.
 - Pushed `master` to `origin/master`, advancing the remote from `337909e` to `b8820c1`.
@@ -681,6 +768,11 @@
 - Revalidated the focused module with `ruff check --fix tests/unit/nettools/test_orchestration.py`, `pytest --collect-only -q tests/unit/nettools/test_orchestration.py`, and `pytest -q tests/unit/nettools/test_orchestration.py`, which now collects 10 tests and passes cleanly.
 - Updated `docs/NETWORK_DIAGNOSIS_ORCHESTRATOR_TODO.md` so all items under Phase 4.4 test coverage are now marked complete.
 
+## 2026-03-28T23:35:02Z - GPT-5.4 - Wrote office Wi-Fi field investigation report to tmp/network.md
+- Added `tmp/network.md` with a structured report covering methodology, fixed-host controls, per-location results, suspected BSSIDs, strongest evidence, ranking of tested areas, assessment of likely Wi-Fi issues, and remediation suggestions.
+- The report captures both the laptop-specific confounder that was fixed (`wlo1` power save) and the remaining broader office Wi-Fi problem that persisted across multiple locations and BSSIDs.
+- Bottom-line conclusion in the report: the office Wi-Fi issue is repeatable, location-dependent, not limited to one AP, and most consistent with RF/AP tuning, channel planning, airtime contention, roaming, or interference problems rather than a general wired-LAN outage.
+
 ## 2026-03-28T17:11:03Z - GPT-5.4 - Implemented raw-result capture in the execution wrapper
 - `SkillExecutionRecord` in `skills/nettools-core/nettools/orchestrator/execution.py` now preserves a JSON-safe snapshot of the handler's raw return payload, including malformed outputs that fail `SkillResult` validation.
 - `ExecutionRecord` in `skills/nettools-core/nettools/orchestrator/state.py` now persists that captured raw payload through incident-state serialization.
@@ -723,3 +815,47 @@
 - The new test proves the orchestrator reports `dependency_blocked`, emits a blocked final result status, records the dependency failure for `net.incident_correlation`, and returns no further automated follow-up skills.
 - Focused validation is green: `/home/phil/work/vscode_skills/.venv/bin/python -m pytest -q tests/unit/nettools/test_orchestrator_diagnose_incident.py` passed with 12 tests, `/home/phil/work/vscode_skills/.venv/bin/python -m mypy tests/unit/nettools/test_orchestrator_diagnose_incident.py` passed, and `/home/phil/.local/bin/ruff check tests/unit/nettools/test_orchestrator_diagnose_incident.py` passed.
 - Updated `docs/NETWORK_DIAGNOSIS_ORCHESTRATOR_TODO.md` so the remaining blocked dependency end-to-end test item is now marked complete.
+
+## 2026-04-06T05:42:13Z - GPT-5.4 - Discussing possible audio transcription skill
+- The user wants to explore a new shared skill that takes an audio file and produces a transcription, but does not want implementation yet.
+- Initial design discussion should cover feasibility, likely runtime choices, expected outputs, and how the skill would fit the existing repo-local shared skill library conventions.
+
+## 2026-04-06T05:45:19Z - GPT-5.4 - Confirmed V1 requirements for local transcription skill
+- The user wants a local/offline transcription skill with clean-text output only, no diarization or extra summarization.
+- The skill should accept both audio and video inputs, and save transcript output either beside the source file or somewhere inside the workspace.
+
+## 2026-04-06T05:47:43Z - GPT-5.4 - Refined transcription output contract
+- The planned transcription skill should write output under a workspace folder rather than beside the source media file.
+- The transcript filename should use the original media filename prefix with the suffix `_transcript.txt`.
+
+## 2026-04-06T05:50:11Z - GPT-5.4 - OpenClaw portability requirement for transcription skill
+- The user ultimately wants the transcription skill to move cleanly into a real OpenClaw environment, so output handling should match an agent workspace model rather than this repo's local development-only conventions.
+- The transcript should be written into a workspace-managed output location suitable for OpenClaw-style execution, not assumed to live beside the source media file.
+
+## 2026-04-06T05:51:01Z - GPT-5.4 - Finalized transcript workspace output directory
+- The planned transcription skill should use `outputs/transcripts/` as its canonical workspace-relative output directory.
+- Output filenames should remain `<original-file-prefix>_transcript.txt` for OpenClaw-friendly generated artifacts.
+
+## 2026-04-06T05:54:05Z - GPT-5.4 - Finalized V1 transcription formats and runtime
+- The planned transcription skill should support `.wav`, `.mp3`, `.m4a`, and `.ogg` for audio input, plus `.mp4` for video input.
+- The agreed implementation stack is `ffmpeg` for media handling and `faster-whisper` for local/offline transcription.
+- The user is ready to move from design discussion into drafting the actual skill definition when needed.
+
+## 2026-04-06T05:56:32Z - GPT-5.4 - Drafted unregistered audio transcription skill contract
+- Added `skills/audio-transcribe/SKILL.md` as a draft OpenClaw-style contract for a local/offline transcription skill that writes `outputs/transcripts/<original-file-prefix>_transcript.txt`.
+- The draft captures the agreed V1 scope: `.wav`, `.mp3`, `.m4a`, `.ogg`, and `.mp4` inputs; `ffmpeg` plus `faster-whisper`; plain-text output only; explicit failure handling for missing files, unsupported formats, and missing dependencies.
+- Left the skill out of `skills/SKILL_LIST.md` intentionally so the repo does not advertise it as officially available before the bundled helper implementation exists.
+
+## 2026-04-06T06:04:48Z - GPT-5.4 - Implemented and registered the audio transcription skill
+- Added `skills/audio-transcribe/audio_transcribe.py` and `skills/audio-transcribe/test_audio_transcribe.py` for the new local/offline transcription skill, with workspace-relative output to `outputs/transcripts/<original-file-prefix>_transcript.txt`.
+- Updated `skills/audio-transcribe/SKILL.md` from a draft contract into an implemented helper-backed skill, then registered `audio-transcribe` in `skills/SKILL_LIST.md`.
+- Updated `skills/install-manifest.json`, regenerated `requirements.txt` and `requirements/skills/audio-transcribe.txt`, and refreshed the repo and skills README files so `ffmpeg` and `faster-whisper` are documented as required dependencies.
+- Focused validation passed: `ruff check skills/audio-transcribe/audio_transcribe.py skills/audio-transcribe/test_audio_transcribe.py tests/test_generate_requirements.py tools/generate_requirements.py`, `mypy` on the same Python files, and `pytest skills/audio-transcribe/test_audio_transcribe.py tests/test_generate_requirements.py`.
+
+## 2026-04-06T06:08:09Z - GPT-5.4 - Added skill-local install guide for audio-transcribe
+- Added `skills/audio-transcribe/INSTALL.md` as a short operator-facing setup guide covering required binaries, Python dependency installation, generated requirements usage, install verification, smoke testing, and common failure cases.
+- Added a brief pointer in `skills/audio-transcribe/SKILL.md` so operators can discover the install guide from the main skill definition.
+
+## 2026-04-06T06:09:23Z - GPT-5.4 - Refreshed repo-wide validation baseline after audio-transcribe additions
+- Ran `ruff check .` from the repo root and the full repository lint pass completed cleanly.
+- Ran `/home/phil/work/vscode_skills/.venv/bin/python -m pytest` and the full repository test suite passed with 305 tests.

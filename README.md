@@ -68,6 +68,7 @@ For compatibility, `${HOME}/skills` points to the same directory via symlink.
 Examples currently in the shared library include:
 
 - `arxiv-search`
+- `audio-transcribe`
 - `bitcoin-price`
 - `current-date-time`
 - `docx-to-markdown`
@@ -150,6 +151,7 @@ vscode_skills/
 	skills/
 		SKILL_LIST.md
 		arxiv-search/
+			audio-transcribe/
 		company-research/
 		excel-to-delimited/
 		excel-to-markdown/
@@ -187,6 +189,10 @@ ${HOME}/work/vscode_skills/skills/
 		SKILL.md
 		arxiv_search.py
 		test_arxiv_search.py
+	audio-transcribe/
+		SKILL.md
+		audio_transcribe.py
+		test_audio_transcribe.py
 	bitcoin-price/
 		SKILL.md
 	current-date-time/
@@ -329,6 +335,7 @@ If you move the skills directory somewhere else again, update any references and
 For the skills currently in the shared library:
 
 - `arxiv-search` needs `python3`
+- `audio-transcribe` needs `python3`, `ffmpeg`, and the `faster-whisper` Python package
 - `bitcoin-price` needs `curl` and `python3`
 - `current-date-time` needs the system `date` command
 - `docx-to-markdown` needs `pandoc`
@@ -361,6 +368,12 @@ For the Excel conversion skills, install the workbook readers with:
 
 ```bash
 python3 -m pip install openpyxl xlrd
+```
+
+For local transcription support, install the speech-to-text helper package with:
+
+```bash
+python3 -m pip install faster-whisper
 ```
 
 ### Generated Python requirements

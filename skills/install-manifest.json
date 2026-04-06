@@ -10,12 +10,14 @@
         "curl",
         "jq",
         "pandoc",
+        "ffmpeg",
         "tesseract-ocr",
         "nodejs",
         "npm",
         "libreoffice"
       ],
       "pip": [
+        "faster-whisper",
         "yfinance",
         "openpyxl",
         "xlrd"
@@ -33,11 +35,13 @@
         "curl",
         "jq",
         "pandoc",
+        "ffmpeg",
         "tesseract",
         "node",
         "libreoffice"
       ],
       "pip": [
+        "faster-whisper",
         "yfinance",
         "openpyxl",
         "xlrd"
@@ -95,6 +99,16 @@
       ],
       "python_packages": [],
       "node_packages": []
+    },
+    "media_transcription": {
+      "bins": [
+        "python3",
+        "ffmpeg"
+      ],
+      "python_packages": [
+        "faster-whisper"
+      ],
+      "node_packages": []
     }
   },
   "skills": {
@@ -115,6 +129,28 @@
       "depends_on_skills": [],
       "notes": [
         "Uses the bundled Python helper to query arXiv."
+      ]
+    },
+    "audio-transcribe": {
+      "path": "skills/audio-transcribe/",
+      "registered": true,
+      "user_invocable": true,
+      "requires": {
+        "bins": [
+          "python3",
+          "ffmpeg"
+        ],
+        "python_packages": [
+          "faster-whisper"
+        ],
+        "node_packages": [],
+        "optional_bins": [],
+        "optional_python_packages": []
+      },
+      "network_access": false,
+      "depends_on_skills": [],
+      "notes": [
+        "Uses the bundled Python helper, ffmpeg normalization, and faster-whisper for local transcription."
       ]
     },
     "bitcoin-price": {
