@@ -11,13 +11,20 @@ from nettools.models import (
     DnsSummary,
     IncidentRecord,
     MacFlapEvent,
+    NeighborRecord,
+    NetworkEdge,
+    NetworkNode,
+    NodeType,
     PathProbeResult,
     RadioState,
     RoamEvent,
     SegmentationSummary,
+    ServiceAdvertisement,
     SourceMetadata,
     StpSummary,
+    SubnetInventorySummary,
     SwitchPortState,
+    TopologyGraph,
 )
 
 
@@ -37,6 +44,12 @@ def test_phase2_models_accept_partial_data() -> None:
         PathProbeResult(target="10.10.0.1"),
         IncidentRecord(summary="Wi-Fi slow near east wing"),
         ChangeRecord(summary="AP firmware change"),
+        NeighborRecord(protocol="lldp"),
+        NetworkNode(node_id="ap-1", node_type=NodeType.ACCESS_POINT),
+        NetworkEdge(local_node_id="ap-1", remote_node_id="sw-1"),
+        TopologyGraph(),
+        ServiceAdvertisement(service_type="_ssh._tcp", instance_name="host._ssh._tcp.local"),
+        SubnetInventorySummary(subnet_cidr="10.0.120.0/24"),
     ]
 
     assert all(model.model_version == "1.0" for model in models)

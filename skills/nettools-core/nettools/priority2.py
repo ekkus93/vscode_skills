@@ -586,6 +586,11 @@ def evaluate_path_probe(skill_input: PathProbeInput, adapters: AdapterBundle) ->
                 bool(internal_degraded)
                 and (skill_input.source_role or "").lower() in {"wireless", "wifi", "ap"},
             ),
+            (
+                "net.topology_map",
+                "Path degradation persists and topology context can narrow the failing segment.",
+                bool(internal_degraded),
+            ),
         ]
     )
     raw_refs = _provider_refs(probe, "run_path_probes")
@@ -773,6 +778,22 @@ def evaluate_segmentation_policy(
                     in {"VLAN_MISMATCH", "GATEWAY_ALIGNMENT_MISMATCH", "POLICY_GROUP_MISMATCH"}
                     for f in findings
                 ),
+            ),
+            (
+                "net.subnet_inventory",
+                "Inventory the observed subnet when placement and gateway evidence disagree.",
+                any(
+                    f.code in {"VLAN_MISMATCH", "GATEWAY_ALIGNMENT_MISMATCH"}
+                    for f in findings
+                ),
+            ),
+            (
+                "net.topology_map",
+                (
+                    "Map the local path when segmentation evidence suggests the "
+                    "client is in the wrong place."
+                ),
+                bool(findings),
             ),
         ]
     )

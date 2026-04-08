@@ -259,6 +259,15 @@
 - Chose the action upgrades instead of the temporary `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` opt-in because both upstream actions now publish Node 24-based major versions.
 - This should remove the GitHub warning about deprecated Node.js 20 JavaScript actions on the CI jobs `generated-requirements`, `ruff`, `mypy`, and `pytest`.
 
+## 2026-04-08T21:43:50Z - GPT-5.4 - Added topology-oriented NETTOOLS phase-two roadmap
+- Added `docs/NETTOOLS_TODO2.md` as a detailed implementation roadmap for topology-oriented NETTOOLS additions, centered on `net-l2-neighbor-discovery`, `net-topology-map`, `net-mac-path-trace`, `net-subnet-inventory`, and `net-mdns-service-discovery`.
+- The roadmap also covers shared graph models, neighbor and gateway adapter extensions, topology inference and confidence scoring, fixture-backed tests, orchestrator integration, and follow-on skills such as `net-gateway-health` and `net-local-route-anomaly`.
+
+## 2026-04-08T22:12:14Z - GPT-5.4 - Implemented NETTOOLS topology skill wave and validated the repo
+- Added the topology runtime in `skills/nettools-core/nettools/` with shared topology models, neighbor/gateway/service-discovery adapters, graph-analysis helpers, and the new evaluators in `priority_topology.py`.
+- Added nine user-facing NETTOOLS wrappers for topology, subnet, gateway, and RF follow-up skills plus fixture-backed unit and integration coverage.
+- Updated NETTOOLS documentation, skill registration, finding-code registry, and cross-skill follow-up recommendations, then verified the repo with full Ruff, MyPy, and pytest passes.
+
 ## 2026-03-28T21:53:30Z - GPT-5.4 - Compared office Wi-Fi behavior after moving to the kitchen area
 - After moving, the laptop reassociated from 2.4 GHz channel 8 to 5 GHz on 5520 MHz (`CircuitLaunch`, BSSID `f0:9f:c2:6a:d9:76`) with VHT rates around 324 Mbps RX / 200 Mbps TX and signal around `-63 dBm`.
 - Gateway latency improved sharply versus the prior location: `ping 10.1.1.1` showed 0% loss with `1.67/6.95/73.43 ms` min/avg/max instead of the earlier severe sustained jitter on the same Wi-Fi network.

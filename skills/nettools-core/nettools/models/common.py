@@ -28,8 +28,12 @@ class ScopeType(str, Enum):
     SSID = "ssid"
     SWITCH_PORT = "switch_port"
     VLAN = "vlan"
+    SUBNET = "subnet"
+    GATEWAY = "gateway"
     SITE = "site"
     SERVICE = "service"
+    NEIGHBOR_GRAPH = "neighbor_graph"
+    SERVICE_DISCOVERY = "service_discovery"
     PATH = "path"
 
 

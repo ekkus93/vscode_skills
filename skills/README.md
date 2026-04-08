@@ -238,8 +238,20 @@ The NETTOOLS portion of the library is organized as thin skill wrappers backed b
 - Intake and investigation helpers: `net-incident-intake`, `net-incident-correlation`, `net-change-detection`, `net-capture-trigger`
 - Core diagnostics: `net-client-health`, `net-ap-rf-health`, `net-dhcp-path`, `net-dns-latency`, `net-ap-uplink-health`, `net-stp-loop-anomaly`
 - Follow-up diagnostics: `net-roaming-analysis`, `net-auth-8021x-radius`, `net-path-probe`, `net-segmentation-policy`
+- Topology and local-network discovery: `net-l2-neighbor-discovery`, `net-topology-map`, `net-mac-path-trace`, `net-subnet-inventory`, `net-mdns-service-discovery`
+- Additional topology follow-ons: `net-gateway-health`, `net-rf-interference-scan`, `net-site-baseline-compare`, `net-local-route-anomaly`
 
 These are registered shared skills because each wrapper has its own `SKILL.md`, while `skills/nettools-core/` is the shared implementation package rather than a user-facing skill.
+
+### When To Use Topology Skills
+
+Use the topology-oriented NETTOOLS skills when the question is about where something is attached, how a local path is assembled, or whether local service visibility and gateway placement line up with expectations.
+
+- Use `net-mac-path-trace` when you need to answer which AP, port, or switch currently owns a client or endpoint MAC.
+- Use `net-topology-map` when you need a merged local graph or likely gateway path for a client, AP, subnet, VLAN, or site scope.
+- Use `net-l2-neighbor-discovery` when you need raw adjacency evidence before building the merged graph.
+- Use `net-subnet-inventory` when you need passive host visibility in a subnet and only enable active probing when authorization is explicit.
+- Use `net-mdns-service-discovery` when `.local`, Bonjour, AirPrint, or other local-name symptoms suggest service-discovery gaps.
 
 ## OpenClaw Prerequisites
 

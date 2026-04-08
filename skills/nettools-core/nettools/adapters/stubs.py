@@ -11,13 +11,22 @@ from ..models import (
     ClientSession,
     DhcpSummary,
     DnsSummary,
+    GatewayHealthSnapshot,
+    GatewayInterfaceSummary,
+    HostInventoryObservation,
     MacFlapEvent,
+    MacLocationObservation,
+    NeighborCacheEntry,
+    NeighborRecord,
     PathProbeResult,
     RadiusServerResult,
     ResolverResult,
     RoamEvent,
+    RouteEntry,
+    ServiceAdvertisement,
     StpSummary,
     SwitchPortState,
+    TopologyBaselineSummary,
 )
 from .auth import AuthAdapter
 from .base import (
@@ -33,8 +42,11 @@ from .base import (
 )
 from .dhcp import DhcpAdapter
 from .dns import DnsAdapter
+from .gateway import GatewayAdapter
 from .inventory import InventoryConfigAdapter
+from .neighbor import NeighborDiscoveryAdapter
 from .probe import ProbeAdapter
+from .service_discovery import ServiceDiscoveryAdapter
 from .switch import SwitchAdapter
 from .syslog import SyslogEventAdapter
 from .wireless import WirelessControllerAdapter
@@ -121,6 +133,44 @@ class StubWirelessControllerAdapter(WirelessControllerAdapter):
     ) -> AuthSummary | None:
         return self.load_model("get_auth_events", AuthSummary, context)
 
+    def get_ap_uplink_identity(
+        self,
+        *,
+        ap_id: str | None = None,
+        ap_name: str | None = None,
+        context: AdapterContext | None = None,
+    ) -> SwitchPortState | None:
+        return self.load_model("get_ap_uplink_identity", SwitchPortState, context)
+
+    def get_connected_client_inventory(
+        self,
+        *,
+        ap_id: str | None = None,
+        ap_name: str | None = None,
+        site_id: str | None = None,
+        context: AdapterContext | None = None,
+    ) -> list[ClientSession]:
+        return self.load_model_list("get_connected_client_inventory", ClientSession, context)
+
+    def get_ssid_vlan_mapping(
+        self,
+        *,
+        site_id: str | None = None,
+        ssid: str | None = None,
+        context: AdapterContext | None = None,
+    ) -> list[NeighborRecord]:
+        return self.load_model_list("get_ssid_vlan_mapping", NeighborRecord, context)
+
+    def get_topology_hints(
+        self,
+        *,
+        site_id: str | None = None,
+        ap_id: str | None = None,
+        ap_name: str | None = None,
+        context: AdapterContext | None = None,
+    ) -> list[NeighborRecord]:
+        return self.load_model_list("get_topology_hints", NeighborRecord, context)
+
 
 class StubSwitchAdapter(SwitchAdapter):
     def __init__(
@@ -185,6 +235,51 @@ class StubSwitchAdapter(SwitchAdapter):
         context: AdapterContext | None = None,
     ) -> list[StpSummary]:
         return self.load_model_list("get_topology_change_summaries", StpSummary, context)
+
+    def lookup_mac_location(
+        self,
+        *,
+        mac_address: str,
+        switch_id: str | None = None,
+        context: AdapterContext | None = None,
+    ) -> list[MacLocationObservation]:
+        return self.load_model_list("lookup_mac_location", MacLocationObservation, context)
+
+    def list_learned_macs(
+        self,
+        *,
+        switch_id: str | None = None,
+        port: str | None = None,
+        context: AdapterContext | None = None,
+    ) -> list[MacLocationObservation]:
+        return self.load_model_list("list_learned_macs", MacLocationObservation, context)
+
+    def resolve_interface_vlan_membership(
+        self,
+        *,
+        switch_id: str,
+        port: str,
+        context: AdapterContext | None = None,
+    ) -> SwitchPortState | None:
+        return self.load_model("resolve_interface_vlan_membership", SwitchPortState, context)
+
+    def get_neighbor_cache(
+        self,
+        *,
+        switch_id: str,
+        vlan_id: int | None = None,
+        context: AdapterContext | None = None,
+    ) -> list[NeighborCacheEntry]:
+        return self.load_model_list("get_switch_neighbor_cache", NeighborCacheEntry, context)
+
+    def identify_interface_mode(
+        self,
+        *,
+        switch_id: str,
+        port: str,
+        context: AdapterContext | None = None,
+    ) -> SwitchPortState | None:
+        return self.load_model("identify_interface_mode", SwitchPortState, context)
 
 
 class StubDhcpAdapter(DhcpAdapter):
@@ -358,6 +453,40 @@ class StubProbeAdapter(ProbeAdapter):
     ) -> list[PathProbeResult]:
         return self.load_model_list("run_path_probes", PathProbeResult, context)
 
+    def run_icmp_sweep(
+        self,
+        *,
+        subnet_cidr: str,
+        context: AdapterContext | None = None,
+    ) -> list[HostInventoryObservation]:
+        return self.load_model_list("run_icmp_sweep", HostInventoryObservation, context)
+
+    def run_arp_sweep(
+        self,
+        *,
+        subnet_cidr: str,
+        context: AdapterContext | None = None,
+    ) -> list[HostInventoryObservation]:
+        return self.load_model_list("run_arp_sweep", HostInventoryObservation, context)
+
+    def run_tcp_banner_checks(
+        self,
+        *,
+        subnet_cidr: str,
+        ports: list[int],
+        context: AdapterContext | None = None,
+    ) -> list[HostInventoryObservation]:
+        return self.load_model_list("run_tcp_banner_checks", HostInventoryObservation, context)
+
+    def enumerate_passive_hosts(
+        self,
+        *,
+        site_id: str | None = None,
+        subnet_cidr: str | None = None,
+        context: AdapterContext | None = None,
+    ) -> list[HostInventoryObservation]:
+        return self.load_model_list("enumerate_passive_hosts", HostInventoryObservation, context)
+
 
 class StubInventoryConfigAdapter(InventoryConfigAdapter):
     def __init__(
@@ -409,6 +538,194 @@ class StubInventoryConfigAdapter(InventoryConfigAdapter):
         context: AdapterContext | None = None,
     ) -> list[ChangeRecord]:
         return self.load_model_list("get_recent_config_changes", ChangeRecord, context)
+
+    def get_topology_baseline_snapshot(
+        self,
+        *,
+        site_id: str,
+        baseline_key: str | None = None,
+        context: AdapterContext | None = None,
+    ) -> TopologyBaselineSummary | None:
+        return self.load_model("get_topology_baseline_snapshot", TopologyBaselineSummary, context)
+
+
+class StubNeighborDiscoveryAdapter(NeighborDiscoveryAdapter):
+    def __init__(
+        self,
+        *,
+        provider_name: str = "stub-neighbor",
+        fixtures: dict[str, Any] | None = None,
+        fixture_path: str | Path | None = None,
+        timeout_operations: set[str] | None = None,
+        unavailable_operations: set[str] | None = None,
+    ) -> None:
+        super().__init__(
+            provider_name=provider_name,
+            fixture_data=_fixture_data_from_inputs(fixtures=fixtures, fixture_path=fixture_path),
+            timeout_operations=timeout_operations,
+            unavailable_operations=unavailable_operations,
+        )
+
+    def get_lldp_neighbors(
+        self,
+        *,
+        site_id: str | None = None,
+        device_id: str | None = None,
+        context: AdapterContext | None = None,
+    ) -> list[NeighborRecord]:
+        return self.load_model_list("get_lldp_neighbors", NeighborRecord, context)
+
+    def get_cdp_neighbors(
+        self,
+        *,
+        site_id: str | None = None,
+        device_id: str | None = None,
+        context: AdapterContext | None = None,
+    ) -> list[NeighborRecord]:
+        return self.load_model_list("get_cdp_neighbors", NeighborRecord, context)
+
+    def get_bridge_fdb_entries(
+        self,
+        *,
+        site_id: str | None = None,
+        device_id: str | None = None,
+        vlan_id: int | None = None,
+        context: AdapterContext | None = None,
+    ) -> list[NeighborRecord]:
+        return self.load_model_list("get_bridge_fdb_entries", NeighborRecord, context)
+
+    def get_interface_descriptions(
+        self,
+        *,
+        site_id: str | None = None,
+        device_id: str | None = None,
+        context: AdapterContext | None = None,
+    ) -> list[NeighborRecord]:
+        return self.load_model_list("get_interface_descriptions", NeighborRecord, context)
+
+    def get_stp_port_states(
+        self,
+        *,
+        site_id: str | None = None,
+        device_id: str | None = None,
+        context: AdapterContext | None = None,
+    ) -> list[NeighborRecord]:
+        return self.load_model_list("get_stp_port_states", NeighborRecord, context)
+
+
+class StubGatewayAdapter(GatewayAdapter):
+    def __init__(
+        self,
+        *,
+        provider_name: str = "stub-gateway",
+        fixtures: dict[str, Any] | None = None,
+        fixture_path: str | Path | None = None,
+        timeout_operations: set[str] | None = None,
+        unavailable_operations: set[str] | None = None,
+    ) -> None:
+        super().__init__(
+            provider_name=provider_name,
+            fixture_data=_fixture_data_from_inputs(fixtures=fixtures, fixture_path=fixture_path),
+            timeout_operations=timeout_operations,
+            unavailable_operations=unavailable_operations,
+        )
+
+    def get_local_routes(
+        self,
+        *,
+        site_id: str | None = None,
+        gateway_id: str | None = None,
+        context: AdapterContext | None = None,
+    ) -> list[RouteEntry]:
+        return self.load_model_list("get_local_routes", RouteEntry, context)
+
+    def get_interface_mappings(
+        self,
+        *,
+        site_id: str | None = None,
+        gateway_id: str | None = None,
+        context: AdapterContext | None = None,
+    ) -> list[GatewayInterfaceSummary]:
+        return self.load_model_list("get_interface_mappings", GatewayInterfaceSummary, context)
+
+    def get_neighbor_cache(
+        self,
+        *,
+        site_id: str | None = None,
+        gateway_id: str | None = None,
+        subnet_cidr: str | None = None,
+        context: AdapterContext | None = None,
+    ) -> list[NeighborCacheEntry]:
+        return self.load_model_list("get_gateway_neighbor_cache", NeighborCacheEntry, context)
+
+    def get_gateway_health_snapshot(
+        self,
+        *,
+        site_id: str | None = None,
+        gateway_id: str | None = None,
+        context: AdapterContext | None = None,
+    ) -> GatewayHealthSnapshot | None:
+        return self.load_model("get_gateway_health_snapshot", GatewayHealthSnapshot, context)
+
+    def enumerate_passive_hosts(
+        self,
+        *,
+        site_id: str | None = None,
+        subnet_cidr: str | None = None,
+        context: AdapterContext | None = None,
+    ) -> list[HostInventoryObservation]:
+        return self.load_model_list(
+            "enumerate_gateway_passive_hosts",
+            HostInventoryObservation,
+            context,
+        )
+
+
+class StubServiceDiscoveryAdapter(ServiceDiscoveryAdapter):
+    def __init__(
+        self,
+        *,
+        provider_name: str = "stub-service-discovery",
+        fixtures: dict[str, Any] | None = None,
+        fixture_path: str | Path | None = None,
+        timeout_operations: set[str] | None = None,
+        unavailable_operations: set[str] | None = None,
+    ) -> None:
+        super().__init__(
+            provider_name=provider_name,
+            fixture_data=_fixture_data_from_inputs(fixtures=fixtures, fixture_path=fixture_path),
+            timeout_operations=timeout_operations,
+            unavailable_operations=unavailable_operations,
+        )
+
+    def browse_mdns_services(
+        self,
+        *,
+        site_id: str | None = None,
+        subnet_cidr: str | None = None,
+        service_types: list[str] | None = None,
+        context: AdapterContext | None = None,
+    ) -> list[ServiceAdvertisement]:
+        return self.load_model_list("browse_mdns_services", ServiceAdvertisement, context)
+
+    def resolve_mdns_service(
+        self,
+        *,
+        instance_name: str,
+        service_type: str,
+        context: AdapterContext | None = None,
+    ) -> ServiceAdvertisement | None:
+        return self.load_model("resolve_mdns_service", ServiceAdvertisement, context)
+
+    def browse_dns_sd_services(
+        self,
+        *,
+        site_id: str | None = None,
+        subnet_cidr: str | None = None,
+        service_types: list[str] | None = None,
+        context: AdapterContext | None = None,
+    ) -> list[ServiceAdvertisement]:
+        return self.load_model_list("browse_dns_sd_services", ServiceAdvertisement, context)
 
 
 class StubSyslogEventAdapter(SyslogEventAdapter):

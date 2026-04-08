@@ -171,6 +171,51 @@ This file lists reusable skills available in the shared workspace skill library.
 - Use for: detecting topology churn, root changes, MAC flaps, and switching-loop symptoms that can cause widespread slowness
 - Typical outputs: L2 instability findings, topology-change evidence, suspect-port context
 
+### net-l2-neighbor-discovery
+- Path: `skills/net-l2-neighbor-discovery/`
+- Use for: collecting LLDP, CDP, bridge-table, interface-description, and STP-adjacent evidence for a local L2 adjacency view
+- Typical outputs: normalized neighbor records, protocol visibility counts, adjacency evidence, topology follow-up recommendations
+
+### net-topology-map
+- Path: `skills/net-topology-map/`
+- Use for: building a merged local topology graph and summarizing the likely path to the local gateway
+- Typical outputs: graph summary, adjacency list, graph JSON evidence, gateway-path summary, conflict or inference findings
+
+### net-mac-path-trace
+- Path: `skills/net-mac-path-trace/`
+- Use for: tracing a client or endpoint MAC to its current attachment point and likely surrounding network path
+- Typical outputs: target MAC resolution, MAC-location observations, attachment ambiguity findings, topology follow-up recommendations
+
+### net-subnet-inventory
+- Path: `skills/net-subnet-inventory/`
+- Use for: inventorying hosts, gateways, and service visibility within a subnet, VLAN, SSID, gateway, or site scope
+- Typical outputs: host inventory, gateway list, service visibility summary, active-scan authorization state, follow-up recommendations
+
+### net-mdns-service-discovery
+- Path: `skills/net-mdns-service-discovery/`
+- Use for: discovering mDNS and DNS-SD services on the local network and grouping them by host
+- Typical outputs: services-by-host summary, discovered service types, duplicate instance-name conflicts, inventory follow-up recommendations
+
+### net-gateway-health
+- Path: `skills/net-gateway-health/`
+- Use for: validating first-hop gateway latency, packet loss, local interface health, and duplicate-ARP signals
+- Typical outputs: gateway health snapshot, route and interface evidence, latency or packet-loss findings, route-anomaly follow-up recommendations
+
+### net-rf-interference-scan
+- Path: `skills/net-rf-interference-scan/`
+- Use for: estimating RF interference risk from neighboring AP overlap and channel utilization
+- Typical outputs: interference score, same-channel neighbor counts, utilization evidence, AP follow-up recommendations
+
+### net-site-baseline-compare
+- Path: `skills/net-site-baseline-compare/`
+- Use for: comparing current local topology and host visibility against a stored site baseline snapshot
+- Typical outputs: current-versus-baseline summary, regression findings, topology drift evidence, change-correlation recommendations
+
+### net-local-route-anomaly
+- Path: `skills/net-local-route-anomaly/`
+- Use for: detecting duplicate ARP ownership, subnet mismatches, and asymmetric local route-selection problems
+- Typical outputs: route and neighbor-cache counts, duplicate-ARP evidence, default-route anomalies, gateway follow-up recommendations
+
 ### net-incident-correlation
 - Path: `skills/net-incident-correlation/`
 - Use for: correlating incident timing with network events, anomalies, and recent change windows

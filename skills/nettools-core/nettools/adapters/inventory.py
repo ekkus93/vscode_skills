@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 
-from ..models import ChangeRecord
+from ..models import ChangeRecord, TopologyBaselineSummary
 from .base import AdapterContext, BaseAdapter, PolicyMapping, UplinkExpectation
 
 
@@ -48,4 +48,14 @@ class InventoryConfigAdapter(BaseAdapter):
         device_id: str | None = None,
         context: AdapterContext | None = None,
     ) -> list[ChangeRecord]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_topology_baseline_snapshot(
+        self,
+        *,
+        site_id: str,
+        baseline_key: str | None = None,
+        context: AdapterContext | None = None,
+    ) -> TopologyBaselineSummary | None:
         raise NotImplementedError

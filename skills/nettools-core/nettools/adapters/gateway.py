@@ -2,46 +2,56 @@ from __future__ import annotations
 
 from abc import abstractmethod
 
-from ..models import HostInventoryObservation, PathProbeResult
-from .base import AdapterContext, BaseAdapter, ProbeRequest
+from ..models import (
+    GatewayHealthSnapshot,
+    GatewayInterfaceSummary,
+    HostInventoryObservation,
+    NeighborCacheEntry,
+    RouteEntry,
+)
+from .base import AdapterContext, BaseAdapter
 
 
-class ProbeAdapter(BaseAdapter):
+class GatewayAdapter(BaseAdapter):
     @abstractmethod
-    def run_path_probes(
+    def get_local_routes(
         self,
         *,
-        request: ProbeRequest,
+        site_id: str | None = None,
+        gateway_id: str | None = None,
         context: AdapterContext | None = None,
-    ) -> list[PathProbeResult]:
+    ) -> list[RouteEntry]:
         raise NotImplementedError
 
     @abstractmethod
-    def run_icmp_sweep(
+    def get_interface_mappings(
         self,
         *,
-        subnet_cidr: str,
+        site_id: str | None = None,
+        gateway_id: str | None = None,
         context: AdapterContext | None = None,
-    ) -> list[HostInventoryObservation]:
+    ) -> list[GatewayInterfaceSummary]:
         raise NotImplementedError
 
     @abstractmethod
-    def run_arp_sweep(
+    def get_neighbor_cache(
         self,
         *,
-        subnet_cidr: str,
+        site_id: str | None = None,
+        gateway_id: str | None = None,
+        subnet_cidr: str | None = None,
         context: AdapterContext | None = None,
-    ) -> list[HostInventoryObservation]:
+    ) -> list[NeighborCacheEntry]:
         raise NotImplementedError
 
     @abstractmethod
-    def run_tcp_banner_checks(
+    def get_gateway_health_snapshot(
         self,
         *,
-        subnet_cidr: str,
-        ports: list[int],
+        site_id: str | None = None,
+        gateway_id: str | None = None,
         context: AdapterContext | None = None,
-    ) -> list[HostInventoryObservation]:
+    ) -> GatewayHealthSnapshot | None:
         raise NotImplementedError
 
     @abstractmethod

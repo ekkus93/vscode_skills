@@ -14,13 +14,19 @@ from .adapters import (
     AuthAdapter,
     DhcpAdapter,
     DnsAdapter,
+    GatewayAdapter,
     InventoryConfigAdapter,
+    NeighborDiscoveryAdapter,
     ProbeAdapter,
+    ServiceDiscoveryAdapter,
     StubAuthAdapter,
     StubDhcpAdapter,
     StubDnsAdapter,
+    StubGatewayAdapter,
     StubInventoryConfigAdapter,
+    StubNeighborDiscoveryAdapter,
     StubProbeAdapter,
+    StubServiceDiscoveryAdapter,
     StubSwitchAdapter,
     StubSyslogEventAdapter,
     StubWirelessControllerAdapter,
@@ -85,12 +91,15 @@ def utc_now() -> datetime:
 class AdapterBundle:
     wireless: WirelessControllerAdapter | None = None
     switch: SwitchAdapter | None = None
+    neighbor: NeighborDiscoveryAdapter | None = None
+    gateway: GatewayAdapter | None = None
     dhcp: DhcpAdapter | None = None
     dns: DnsAdapter | None = None
     auth: AuthAdapter | None = None
     probe: ProbeAdapter | None = None
     inventory: InventoryConfigAdapter | None = None
     syslog: SyslogEventAdapter | None = None
+    service_discovery: ServiceDiscoveryAdapter | None = None
 
 
 class ClientHealthInput(SharedInputBase):
@@ -139,12 +148,15 @@ def build_stub_adapter_bundle(fixtures: dict[str, Any]) -> AdapterBundle:
     return AdapterBundle(
         wireless=StubWirelessControllerAdapter(fixtures=fixtures),
         switch=StubSwitchAdapter(fixtures=fixtures),
+        neighbor=StubNeighborDiscoveryAdapter(fixtures=fixtures),
+        gateway=StubGatewayAdapter(fixtures=fixtures),
         dhcp=StubDhcpAdapter(fixtures=fixtures),
         dns=StubDnsAdapter(fixtures=fixtures),
         auth=StubAuthAdapter(fixtures=fixtures),
         probe=StubProbeAdapter(fixtures=fixtures),
         inventory=StubInventoryConfigAdapter(fixtures=fixtures),
         syslog=StubSyslogEventAdapter(fixtures=fixtures),
+        service_discovery=StubServiceDiscoveryAdapter(fixtures=fixtures),
     )
 
 
@@ -402,6 +414,14 @@ def evaluate_client_health(skill_input: ClientHealthInput, adapters: AdapterBund
                 "net.ap_rf_health",
                 "RF indicators on the current AP should be validated.",
                 bool(findings),
+            ),
+            (
+                "net.mac_path_trace",
+                "Resolve the client's current attachment point before deeper escalation.",
+                any(
+                    f.code in {"HIGH_RETRY_RATE", "HIGH_PACKET_LOSS", "STICKY_CLIENT"}
+                    for f in findings
+                ),
             ),
             (
                 "net.roaming_analysis",
@@ -986,6 +1006,11 @@ def evaluate_ap_uplink_health(
                 "If the uplink is clean but symptoms persist, validate RF conditions next.",
                 not findings,
             ),
+            (
+                "net.topology_map",
+                "Trace the AP's wired path when uplink state suggests broader topology issues.",
+                bool(findings),
+            ),
         ]
     )
     raw_refs = _provider_refs(
@@ -1081,6 +1106,11 @@ def evaluate_stp_loop_anomaly(
             (
                 "net.change_detection",
                 "Recent switching changes should be reviewed alongside the STP anomaly.",
+                bool(findings),
+            ),
+            (
+                "net.l2_neighbor_discovery",
+                "Rebuild local adjacency evidence when topology instability is suspected.",
                 bool(findings),
             ),
             (

@@ -88,6 +88,15 @@ Examples currently in the shared library include:
 - `net-segmentation-policy`
 - `net-ap-uplink-health`
 - `net-stp-loop-anomaly`
+- `net-l2-neighbor-discovery`
+- `net-topology-map`
+- `net-mac-path-trace`
+- `net-subnet-inventory`
+- `net-mdns-service-discovery`
+- `net-gateway-health`
+- `net-rf-interference-scan`
+- `net-site-baseline-compare`
+- `net-local-route-anomaly`
 - `net-incident-correlation`
 - `net-change-detection`
 - `net-capture-trigger`
@@ -111,6 +120,8 @@ The shared library also includes a dedicated NETTOOLS diagnostic set:
 - `net-incident-intake`: normalizes freeform complaints into NETTOOLS incident records
 - `net-client-health`, `net-ap-rf-health`, `net-dhcp-path`, `net-dns-latency`, `net-ap-uplink-health`, `net-stp-loop-anomaly`: core diagnostic wrappers for client RF, AP RF, DHCP, DNS, AP uplinks, and L2 instability
 - `net-roaming-analysis`, `net-auth-8021x-radius`, `net-path-probe`, `net-segmentation-policy`: deeper follow-up diagnostics for mobility, auth, path quality, and placement policy
+- `net-l2-neighbor-discovery`, `net-topology-map`, `net-mac-path-trace`, `net-subnet-inventory`, `net-mdns-service-discovery`: topology and local-discovery helpers for adjacency, pathing, host inventory, and local services
+- `net-gateway-health`, `net-rf-interference-scan`, `net-site-baseline-compare`, `net-local-route-anomaly`: follow-on topology and first-hop diagnostics for gateway health, RF overlap, baseline drift, and route anomalies
 - `net-incident-correlation`, `net-change-detection`, `net-capture-trigger`: supporting investigation helpers for event correlation, change analysis, and gated capture planning
 
 These wrappers rely on the shared runtime in `skills/nettools-core/`.

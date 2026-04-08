@@ -7,8 +7,11 @@ from nettools.adapters import (
     StubAuthAdapter,
     StubDhcpAdapter,
     StubDnsAdapter,
+    StubGatewayAdapter,
     StubInventoryConfigAdapter,
+    StubNeighborDiscoveryAdapter,
     StubProbeAdapter,
+    StubServiceDiscoveryAdapter,
     StubSwitchAdapter,
     StubSyslogEventAdapter,
     StubWirelessControllerAdapter,
@@ -32,11 +35,14 @@ def build_bundle(fixtures: dict[str, object]) -> AdapterBundle:
     return AdapterBundle(
         wireless=StubWirelessControllerAdapter(fixtures=fixtures),
         switch=StubSwitchAdapter(fixtures=fixtures),
+        neighbor=StubNeighborDiscoveryAdapter(fixtures=fixtures),
+        gateway=StubGatewayAdapter(fixtures=fixtures),
         dhcp=StubDhcpAdapter(fixtures=fixtures),
         dns=StubDnsAdapter(fixtures=fixtures),
         auth=StubAuthAdapter(fixtures=fixtures),
         probe=StubProbeAdapter(fixtures=fixtures),
         inventory=StubInventoryConfigAdapter(fixtures=fixtures),
+        service_discovery=StubServiceDiscoveryAdapter(fixtures=fixtures),
         syslog=StubSyslogEventAdapter(fixtures=fixtures),
     )
 
@@ -248,6 +254,74 @@ RAW_CONTRACT_CASES: list[tuple[str, dict[str, object], dict[str, object]]] = [
                 "expected_policy_group": "corp",
                 "expected_gateway": "10.0.120.1",
             },
+        },
+    ),
+    (
+        "net.l2_neighbor_discovery",
+        {"site_id": "site-1"},
+        {
+            "get_lldp_neighbors": [
+                {
+                    "protocol": "lldp",
+                    "local_device_id": "sw-1",
+                    "remote_device_id": "ap-1",
+                }
+            ],
+            "get_cdp_neighbors": [],
+            "get_bridge_fdb_entries": [],
+            "get_interface_descriptions": [],
+            "get_stp_port_states": [],
+        },
+    ),
+    (
+        "net.topology_map",
+        {"client_id": "client-1", "site_id": "site-1"},
+        {
+            "get_lldp_neighbors": [
+                {
+                    "protocol": "lldp",
+                    "local_device_id": "sw-1",
+                    "remote_device_id": "gw-1",
+                }
+            ],
+            "get_cdp_neighbors": [],
+            "get_interface_descriptions": [],
+            "get_client_session": {
+                "client_id": "client-1",
+                "client_mac": "aa:bb:cc:dd:ee:ff",
+                "ap_id": "ap-1",
+                "ap_name": "AP-1"
+            },
+            "get_ap_uplink_identity": {
+                "switch_id": "sw-1",
+                "port": "Gi1/0/24"
+            },
+            "get_interface_mappings": [
+                {
+                    "gateway_id": "gw-1",
+                    "interface_name": "Vlan120",
+                    "ip_address": "10.0.120.1",
+                    "subnet_cidr": "10.0.120.0/24"
+                }
+            ],
+            "get_gateway_neighbor_cache": []
+        },
+    ),
+    (
+        "net.mdns_service_discovery",
+        {"subnet_cidr": "10.0.120.0/24"},
+        {
+            "browse_mdns_services": [
+                {
+                    "service_type": "_ssh._tcp",
+                    "instance_name": "host._ssh._tcp.local",
+                    "hostname": "host.local",
+                    "ips": ["10.0.120.10"],
+                    "port": 22,
+                    "txt_metadata": {}
+                }
+            ],
+            "browse_dns_sd_services": []
         },
     ),
     (

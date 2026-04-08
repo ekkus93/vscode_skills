@@ -46,6 +46,26 @@ from ..priority3 import (
     evaluate_incident_correlation,
     evaluate_incident_intake,
 )
+from ..priority_topology import (
+    GatewayHealthInput,
+    LocalRouteAnomalyInput,
+    MacPathTraceInput,
+    MdnsServiceDiscoveryInput,
+    NeighborDiscoveryInput,
+    RfInterferenceScanInput,
+    SiteBaselineCompareInput,
+    SubnetInventoryInput,
+    TopologyMapInput,
+    evaluate_gateway_health,
+    evaluate_l2_neighbor_discovery,
+    evaluate_local_route_anomaly,
+    evaluate_mac_path_trace,
+    evaluate_mdns_service_discovery,
+    evaluate_rf_interference_scan,
+    evaluate_site_baseline_compare,
+    evaluate_subnet_inventory,
+    evaluate_topology_map,
+)
 from .resolution import IdentifierResolver
 
 SkillInput = SharedInputBase
@@ -147,6 +167,60 @@ SKILL_REGISTRY: dict[str, SkillDefinition] = {
         CaptureTriggerInput,
         ScopeType.SERVICE,
         evaluate_capture_trigger,
+    ),
+    "net.l2_neighbor_discovery": SkillDefinition(
+        "net.l2_neighbor_discovery",
+        NeighborDiscoveryInput,
+        ScopeType.NEIGHBOR_GRAPH,
+        evaluate_l2_neighbor_discovery,
+    ),
+    "net.topology_map": SkillDefinition(
+        "net.topology_map",
+        TopologyMapInput,
+        ScopeType.PATH,
+        evaluate_topology_map,
+    ),
+    "net.mac_path_trace": SkillDefinition(
+        "net.mac_path_trace",
+        MacPathTraceInput,
+        ScopeType.PATH,
+        evaluate_mac_path_trace,
+    ),
+    "net.subnet_inventory": SkillDefinition(
+        "net.subnet_inventory",
+        SubnetInventoryInput,
+        ScopeType.SUBNET,
+        evaluate_subnet_inventory,
+    ),
+    "net.mdns_service_discovery": SkillDefinition(
+        "net.mdns_service_discovery",
+        MdnsServiceDiscoveryInput,
+        ScopeType.SERVICE_DISCOVERY,
+        evaluate_mdns_service_discovery,
+    ),
+    "net.gateway_health": SkillDefinition(
+        "net.gateway_health",
+        GatewayHealthInput,
+        ScopeType.GATEWAY,
+        evaluate_gateway_health,
+    ),
+    "net.rf_interference_scan": SkillDefinition(
+        "net.rf_interference_scan",
+        RfInterferenceScanInput,
+        ScopeType.AP,
+        evaluate_rf_interference_scan,
+    ),
+    "net.site_baseline_compare": SkillDefinition(
+        "net.site_baseline_compare",
+        SiteBaselineCompareInput,
+        ScopeType.SITE,
+        evaluate_site_baseline_compare,
+    ),
+    "net.local_route_anomaly": SkillDefinition(
+        "net.local_route_anomaly",
+        LocalRouteAnomalyInput,
+        ScopeType.GATEWAY,
+        evaluate_local_route_anomaly,
     ),
 }
 

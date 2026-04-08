@@ -372,6 +372,20 @@ def evaluate_incident_intake(
                 incident_record.movement_state == "moving",
             ),
             (
+                "net.mac_path_trace",
+                "The complaint suggests an unknown or changing attachment point.",
+                any(
+                    token in complaint_lower
+                    for token in (
+                        "which ap",
+                        "which switch",
+                        "where is",
+                        "wrong port",
+                        "wrong vlan",
+                    )
+                ),
+            ),
+            (
                 "net.auth_8021x_radius",
                 "The complaint suggests auth, onboarding, or certificate symptoms.",
                 any(
@@ -401,6 +415,30 @@ def evaluate_incident_intake(
                 any(
                     token in complaint_lower
                     for token in ("slow", "latency", "lag", "timeout", "internet")
+                ),
+            ),
+            (
+                "net.topology_map",
+                "The complaint suggests local path or topology uncertainty.",
+                any(
+                    token in complaint_lower
+                    for token in (
+                        "gateway",
+                        "topology",
+                        "path",
+                        "uplink",
+                        "switch",
+                        "vlan",
+                        "subnet",
+                    )
+                ),
+            ),
+            (
+                "net.mdns_service_discovery",
+                "The complaint suggests a local-name or .local service-discovery problem.",
+                any(
+                    token in complaint_lower
+                    for token in ("mdns", "bonjour", ".local", "airprint")
                 ),
             ),
         ]
@@ -542,6 +580,15 @@ def evaluate_incident_correlation(
                     token in _normalized_text(candidate["reason"])
                     for candidate in suspected_causes
                     for token in ("stp", "loop", "mac flap", "topology")
+                ),
+            ),
+            (
+                "net.topology_map",
+                "Correlated switching evidence suggests reconstructing the local path graph.",
+                any(
+                    token in _normalized_text(candidate["reason"])
+                    for candidate in suspected_causes
+                    for token in ("stp", "loop", "mac flap", "topology", "gateway")
                 ),
             ),
             (
@@ -688,6 +735,15 @@ def evaluate_change_detection(
                     token in _normalized_text(item["category"])
                     for item in ranked_changes[:3]
                     for token in ("switch", "hardware", "port")
+                ),
+            ),
+            (
+                "net.topology_map",
+                "Recent topology-related changes should be compared with the current local graph.",
+                any(
+                    token in _normalized_text(item["summary"])
+                    for item in ranked_changes[:3]
+                    for token in ("topology", "uplink", "vlan", "gateway")
                 ),
             ),
             (

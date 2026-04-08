@@ -1,0 +1,347 @@
+{
+  "get_lldp_neighbors": [
+    {
+      "protocol": "lldp",
+      "local_device_id": "sw-access-1",
+      "local_interface": "Gi1/0/24",
+      "remote_device_id": "ap-42",
+      "remote_interface": "eth0",
+      "evidence_refs": ["lldp:sw-access-1:Gi1/0/24"]
+    },
+    {
+      "protocol": "lldp",
+      "local_device_id": "sw-access-1",
+      "local_interface": "Gi1/0/48",
+      "remote_device_id": "sw-dist-1",
+      "remote_interface": "Gi1/0/48",
+      "evidence_refs": ["lldp:sw-access-1:Gi1/0/48"]
+    }
+  ],
+  "get_cdp_neighbors": [
+    {
+      "protocol": "cdp",
+      "local_device_id": "sw-dist-1",
+      "local_interface": "Gi1/0/48",
+      "remote_device_id": "sw-access-1",
+      "remote_interface": "Gi1/0/48",
+      "evidence_refs": ["cdp:sw-dist-1:Gi1/0/48"]
+    }
+  ],
+  "get_bridge_fdb_entries": [
+    {
+      "protocol": "bridge_fdb",
+      "local_device_id": "sw-access-1",
+      "local_interface": "Gi1/0/10",
+      "remote_device_id": "host-aa-bb-cc-dd-ee-ff",
+      "remote_interface": "client",
+      "vlan_id": 120,
+      "evidence_refs": ["fdb:sw-access-1:Gi1/0/10"]
+    }
+  ],
+  "get_interface_descriptions": [
+    {
+      "protocol": "interfaces",
+      "local_device_id": "sw-access-1",
+      "local_interface": "Gi1/0/24",
+      "remote_device_id": "ap-42",
+      "remote_interface": "eth0",
+      "evidence_refs": ["ifdesc:sw-access-1:Gi1/0/24"]
+    }
+  ],
+  "get_stp_port_states": [
+    {
+      "protocol": "stp",
+      "local_device_id": "sw-dist-1",
+      "local_interface": "Gi1/0/48",
+      "remote_device_id": "sw-access-1",
+      "remote_interface": "Gi1/0/48",
+      "evidence_refs": ["stp:sw-dist-1:Gi1/0/48"]
+    }
+  ],
+  "get_client_session": {
+    "client_id": "client-1",
+    "client_mac": "aa:bb:cc:dd:ee:ff",
+    "ap_id": "ap-42",
+    "ap_name": "AP-42",
+    "rssi_dbm": -64.0,
+    "snr_db": 27.0,
+    "retry_pct": 4.0
+  },
+  "get_ap_state": {
+    "ap_id": "ap-42",
+    "ap_name": "AP-42",
+    "radio_5g": {
+      "band": "5GHz",
+      "channel": 36,
+      "width_mhz": 80,
+      "utilization_pct": 72.0,
+      "client_count": 18
+    }
+  },
+  "get_neighboring_ap_data": [
+    {
+      "ap_id": "ap-41",
+      "ap_name": "AP-41",
+      "radio_5g": {
+        "band": "5GHz",
+        "channel": 36,
+        "width_mhz": 80,
+        "utilization_pct": 68.0,
+        "client_count": 17
+      }
+    },
+    {
+      "ap_id": "ap-43",
+      "ap_name": "AP-43",
+      "radio_5g": {
+        "band": "5GHz",
+        "channel": 36,
+        "width_mhz": 80,
+        "utilization_pct": 64.0,
+        "client_count": 14
+      }
+    }
+  ],
+  "get_ap_uplink_identity": {
+    "switch_id": "sw-access-1",
+    "port": "Gi1/0/24",
+    "ap_id": "ap-42",
+    "ap_name": "AP-42",
+    "speed_mbps": 1000,
+    "trunk": true
+  },
+  "get_connected_client_inventory": [
+    {
+      "client_id": "client-1",
+      "client_mac": "aa:bb:cc:dd:ee:ff",
+      "ap_id": "ap-42",
+      "ap_name": "AP-42"
+    },
+    {
+      "client_id": "client-2",
+      "client_mac": "aa:bb:cc:dd:ee:11",
+      "ap_id": "ap-41",
+      "ap_name": "AP-41"
+    }
+  ],
+  "get_ssid_vlan_mapping": [
+    {
+      "protocol": "controller_map",
+      "local_device_id": "ssid:corp-wifi",
+      "remote_device_id": "vlan:120",
+      "segment_id": "corp-wifi"
+    }
+  ],
+  "get_topology_hints": [
+    {
+      "protocol": "controller_map",
+      "local_device_id": "ap-42",
+      "local_interface": "eth0",
+      "remote_device_id": "sw-access-1",
+      "remote_interface": "Gi1/0/24",
+      "evidence_refs": ["controller:ap-42"]
+    }
+  ],
+  "lookup_mac_location": [
+    {
+      "mac_address": "aa:bb:cc:dd:ee:ff",
+      "device_id": "sw-access-1",
+      "interface": "Gi1/0/10",
+      "vlan_id": 120,
+      "learned_via": "fdb",
+      "hostname": "phil-laptop.local",
+      "ip_address": "10.0.120.55"
+    }
+  ],
+  "list_learned_macs": [
+    {
+      "mac_address": "aa:bb:cc:dd:ee:ff",
+      "device_id": "sw-access-1",
+      "interface": "Gi1/0/10",
+      "vlan_id": 120,
+      "learned_via": "fdb"
+    }
+  ],
+  "resolve_interface_vlan_membership": {
+    "switch_id": "sw-access-1",
+    "port": "Gi1/0/10",
+    "access_vlan": 120,
+    "trunk": false
+  },
+  "get_switch_neighbor_cache": [
+    {
+      "ip_address": "10.0.120.55",
+      "mac_address": "aa:bb:cc:dd:ee:ff",
+      "interface_name": "Vlan120",
+      "state": "reachable",
+      "hostname": "phil-laptop.local",
+      "vlan_id": 120
+    }
+  ],
+  "identify_interface_mode": {
+    "switch_id": "sw-access-1",
+    "port": "Gi1/0/24",
+    "trunk": true,
+    "native_vlan": 120,
+    "allowed_vlans": [120, 130]
+  },
+  "get_interface_mappings": [
+    {
+      "gateway_id": "gw-core-1",
+      "interface_name": "Vlan120",
+      "ip_address": "10.0.120.1",
+      "subnet_cidr": "10.0.120.0/24",
+      "vlan_id": 120,
+      "role": "gateway",
+      "status": "up"
+    }
+  ],
+  "get_gateway_neighbor_cache": [
+    {
+      "ip_address": "10.0.120.55",
+      "mac_address": "aa:bb:cc:dd:ee:ff",
+      "interface_name": "Vlan120",
+      "state": "reachable",
+      "hostname": "phil-laptop.local",
+      "vlan_id": 120
+    },
+    {
+      "ip_address": "10.0.120.20",
+      "mac_address": "cc:dd:ee:ff:00:11",
+      "interface_name": "Vlan120",
+      "state": "reachable",
+      "hostname": "lab-printer.local",
+      "vlan_id": 120
+    }
+  ],
+  "get_gateway_health_snapshot": {
+    "gateway_id": "gw-core-1",
+    "first_hop_latency_ms": 26.0,
+    "packet_loss_pct": 1.5,
+    "arp_entry_count": 45,
+    "duplicate_arp_detected": true,
+    "route_change_count": 2,
+    "redundancy_state": "active"
+  },
+  "get_local_routes": [
+    {
+      "gateway_id": "gw-core-1",
+      "destination_cidr": "0.0.0.0/0",
+      "next_hop": "10.0.120.254",
+      "outgoing_interface": "Vlan120",
+      "protocol": "static",
+      "metric": 10,
+      "is_local": false
+    },
+    {
+      "gateway_id": "gw-core-1",
+      "destination_cidr": "0.0.0.0/0",
+      "next_hop": "10.0.120.253",
+      "outgoing_interface": "Vlan120",
+      "protocol": "static",
+      "metric": 20,
+      "is_local": false
+    }
+  ],
+  "enumerate_gateway_passive_hosts": [
+    {
+      "host_id": "aa:bb:cc:dd:ee:ff",
+      "hostname": "phil-laptop.local",
+      "ip_address": "10.0.120.55",
+      "mac_address": "aa:bb:cc:dd:ee:ff",
+      "subnet_cidr": "10.0.120.0/24",
+      "source": "gateway",
+      "source_type": "passive"
+    },
+    {
+      "host_id": "cc:dd:ee:ff:00:11",
+      "hostname": "lab-printer.local",
+      "ip_address": "10.0.120.20",
+      "mac_address": "cc:dd:ee:ff:00:11",
+      "subnet_cidr": "10.0.120.0/24",
+      "source": "gateway",
+      "source_type": "passive"
+    }
+  ],
+  "browse_mdns_services": [
+    {
+      "service_type": "_ssh._tcp",
+      "instance_name": "phil-laptop._ssh._tcp.local",
+      "hostname": "phil-laptop.local",
+      "ips": ["10.0.120.55"],
+      "port": 22,
+      "txt_metadata": {"user": "phil"}
+    }
+  ],
+  "resolve_mdns_service": {
+    "service_type": "_ssh._tcp",
+    "instance_name": "phil-laptop._ssh._tcp.local",
+    "hostname": "phil-laptop.local",
+    "ips": ["10.0.120.55"],
+    "port": 22,
+    "txt_metadata": {"user": "phil"}
+  },
+  "browse_dns_sd_services": [
+    {
+      "service_type": "_http._tcp",
+      "instance_name": "printer-ui._http._tcp.local",
+      "hostname": "lab-printer.local",
+      "ips": ["10.0.120.20"],
+      "port": 80,
+      "txt_metadata": {"model": "laserjet"}
+    }
+  ],
+  "enumerate_passive_hosts": [
+    {
+      "host_id": "10.0.120.99",
+      "hostname": "sensor.local",
+      "ip_address": "10.0.120.99",
+      "subnet_cidr": "10.0.120.0/24",
+      "source": "probe",
+      "source_type": "passive"
+    }
+  ],
+  "run_icmp_sweep": [
+    {
+      "host_id": "10.0.120.80",
+      "ip_address": "10.0.120.80",
+      "subnet_cidr": "10.0.120.0/24",
+      "source": "probe",
+      "source_type": "icmp",
+      "active": true
+    }
+  ],
+  "run_arp_sweep": [
+    {
+      "host_id": "10.0.120.81",
+      "ip_address": "10.0.120.81",
+      "mac_address": "dd:ee:ff:00:11:22",
+      "subnet_cidr": "10.0.120.0/24",
+      "source": "probe",
+      "source_type": "arp",
+      "active": true
+    }
+  ],
+  "run_tcp_banner_checks": [
+    {
+      "host_id": "10.0.120.20",
+      "hostname": "lab-printer.local",
+      "ip_address": "10.0.120.20",
+      "subnet_cidr": "10.0.120.0/24",
+      "source": "probe",
+      "source_type": "tcp_banner",
+      "active": true,
+      "attributes": {"ports": "80,9100"}
+    }
+  ],
+  "get_topology_baseline_snapshot": {
+    "site_id": "site-1",
+    "node_count": 10,
+    "edge_count": 9,
+    "host_count": 8,
+    "service_count": 4,
+    "gateway_count": 1,
+    "ap_count": 2,
+    "suspicious_gap_count": 0
+  }
+}

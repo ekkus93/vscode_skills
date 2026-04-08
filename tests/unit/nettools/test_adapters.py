@@ -11,8 +11,11 @@ from nettools.adapters import (
     StubAuthAdapter,
     StubDhcpAdapter,
     StubDnsAdapter,
+    StubGatewayAdapter,
     StubInventoryConfigAdapter,
+    StubNeighborDiscoveryAdapter,
     StubProbeAdapter,
+    StubServiceDiscoveryAdapter,
     StubSwitchAdapter,
     StubSyslogEventAdapter,
     StubWirelessControllerAdapter,
@@ -111,3 +114,20 @@ def test_probe_inventory_and_syslog_stubs_support_fixture_path_loading() -> None
     assert uplink.expected_port == "Gi1/0/24"
     assert changes[0].change_id == "chg-77"
     assert events[0].summary == "STP topology change detected"
+
+
+def test_topology_stubs_support_fixture_loading() -> None:
+    fixture_path = "tests/fixtures/nettools/topology_stub_payloads.json"
+
+    neighbor_adapter = StubNeighborDiscoveryAdapter(fixture_path=fixture_path)
+    gateway_adapter = StubGatewayAdapter(fixture_path=fixture_path)
+    service_adapter = StubServiceDiscoveryAdapter(fixture_path=fixture_path)
+
+    lldp = neighbor_adapter.get_lldp_neighbors(site_id="site-1")
+    health = gateway_adapter.get_gateway_health_snapshot(gateway_id="gw-core-1")
+    services = service_adapter.browse_mdns_services(subnet_cidr="10.0.120.0/24")
+
+    assert lldp[0].remote_device_id == "ap-42"
+    assert health is not None
+    assert health.packet_loss_pct == 1.5
+    assert services[0].hostname == "phil-laptop.local"

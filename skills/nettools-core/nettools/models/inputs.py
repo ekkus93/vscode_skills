@@ -24,6 +24,12 @@ class SharedInputBase(BaseModel):
     switch_id: str | None = None
     switch_port: str | None = None
     vlan_id: str | int | None = None
+    subnet_cidr: str | None = None
+    gateway_ip: str | None = None
+    device_id: str | None = None
+    device_name: str | None = None
+    hostname: str | None = None
+    ip_address: str | None = None
     time_window_minutes: int = Field(default=15, ge=1)
     start_time: datetime | None = None
     end_time: datetime | None = None
@@ -66,6 +72,12 @@ class SharedInputBase(BaseModel):
             self.switch_id,
             self.ssid,
             self.vlan_id,
+            self.subnet_cidr,
+            self.gateway_ip,
+            self.device_id,
+            self.device_name,
+            self.hostname,
+            self.ip_address,
             self.site_id,
         ):
             if candidate is not None:
@@ -86,6 +98,18 @@ class SharedInputBase(BaseModel):
             candidates["switch_id"] = self.switch_id
         if self.switch_port:
             candidates["switch_port"] = self.switch_port
+        if self.subnet_cidr:
+            candidates["subnet_cidr"] = self.subnet_cidr
+        if self.gateway_ip:
+            candidates["gateway_ip"] = self.gateway_ip
+        if self.device_id:
+            candidates["device_id"] = self.device_id
+        if self.device_name:
+            candidates["device_name"] = self.device_name
+        if self.hostname:
+            candidates["hostname"] = self.hostname
+        if self.ip_address:
+            candidates["ip_address"] = self.ip_address
         return candidates
 
     def to_input_summary(self) -> dict[str, Any]:
@@ -100,6 +124,10 @@ class SharedInputBase(BaseModel):
             return ScopeType.SWITCH_PORT
         if self.vlan_id is not None:
             return ScopeType.VLAN
+        if self.subnet_cidr:
+            return ScopeType.SUBNET
+        if self.gateway_ip:
+            return ScopeType.GATEWAY
         if self.ssid:
             return ScopeType.SSID
         if self.site_id:

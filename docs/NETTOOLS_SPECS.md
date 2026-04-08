@@ -49,6 +49,16 @@ The target outcome is a toolbox of small, composable OpenClaw skills that can be
 4. Arbitrary packet dissection beyond narrow diagnostic captures.
 5. Deep RF planning / predictive survey modeling.
 
+### 2.3 Topology extension goals
+
+The topology-oriented extension to NETTOOLS should answer the operator questions that the earlier diagnostic set could only imply:
+
+1. What switch, port, or AP is this client currently attached to?
+2. What is the likely client-to-gateway path, and which hops are inferred versus directly observed?
+3. What VLAN, subnet, and local gateway appear to be in use?
+4. What local hosts and mDNS-advertised services are visible within the requested subnet scope?
+5. Where is evidence incomplete, stale, conflicting, or blocked by an unmanaged segment?
+
 ---
 
 ## 3. Design principles
@@ -148,6 +158,26 @@ Used for:
 - baseline tracking
 - event correlation
 - “what changed” analysis
+
+### 4.6 Topology discovery and graph reconstruction
+
+Topology-oriented skills extend the existing adapter and analysis model with a graph-reconstruction workflow:
+
+1. Collect neighbor evidence from LLDP, CDP, bridge tables, interface descriptions, controller uplink mappings, gateway neighbor caches, and local service discovery.
+2. Normalize all records into reusable topology models such as `NetworkNode`, `NetworkEdge`, `NeighborRecord`, `MacLocationObservation`, and `GatewayPathSummary`.
+3. Merge evidence into a `TopologyGraph` with explicit unresolved references and confidence scoring.
+4. Prefer passive evidence by default and require explicit authorization for active subnet scans.
+5. Keep inferred edges visible and downgrade confidence when evidence is partial or contradictory.
+
+Topology outputs should support both a compact adjacency-list view for downstream agents and a richer graph JSON payload for operator tooling.
+
+### 4.7 Active versus passive discovery
+
+The topology layer is passive-first.
+
+1. Passive discovery includes controller telemetry, switch neighbor state, bridge tables, gateway neighbor caches, inventory baselines, and service advertisements.
+2. Active discovery is limited to explicitly authorized subnet probes such as ICMP sweep, ARP sweep, and narrow TCP banner checks.
+3. Skills must record whether active discovery was used and degrade cleanly when only passive evidence is available.
 
 ---
 
