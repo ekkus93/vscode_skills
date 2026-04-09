@@ -29,6 +29,7 @@ def _extract_emitted_finding_codes() -> set[str]:
         "skills/nettools-core/nettools/priority1.py",
         "skills/nettools-core/nettools/priority2.py",
         "skills/nettools-core/nettools/priority3.py",
+        "skills/nettools-core/nettools/priority_topology.py",
     ]:
         text = (root / relative_path).read_text(encoding="utf-8")
         emitted_codes.update(EMITTED_CODE_PATTERN.findall(text))
