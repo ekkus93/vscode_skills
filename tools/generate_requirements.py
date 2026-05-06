@@ -11,8 +11,13 @@ class SkillRequirements:
     name: str
     path: str
     registered: bool
+    bins: tuple[str, ...]
     python_packages: tuple[str, ...]
     depends_on_skills: tuple[str, ...]
+
+    @property
+    def uses_python_runtime(self) -> bool:
+        return any(binary.startswith("python") for binary in self.bins)
 
 
 def _expect_dict(payload: object, context: str) -> dict[str, object]:
@@ -66,6 +71,7 @@ def load_skill_requirements(manifest_path: Path) -> dict[str, SkillRequirements]
             name=skill_name,
             path=_expect_str(skill_entry, "path", context),
             registered=_expect_bool(skill_entry, "registered", context),
+            bins=tuple(_expect_str_list(requires_entry, "bins", context)),
             python_packages=tuple(_expect_str_list(requires_entry, "python_packages", context)),
             depends_on_skills=tuple(_expect_str_list(skill_entry, "depends_on_skills", context)),
         )
@@ -142,31 +148,17 @@ def write_requirements_outputs(
     *,
     manifest_path: Path,
     repo_root: Path,
-    requirements_path: Path,
-    per_skill_dir: Path,
 ) -> None:
     skill_requirements = load_skill_requirements(manifest_path)
-
-    repo_packages = build_repo_python_packages(skill_requirements)
-    requirements_path.write_text(
-        render_requirements_text(
-            header_lines=[
-                "Generated from skills/install-manifest.json for whole-repo development.",
-                "Use per-skill files under requirements/skills for partial OpenClaw installs.",
-            ],
-            packages=repo_packages,
-        ),
-        encoding="utf-8",
-    )
-
-    per_skill_dir.mkdir(parents=True, exist_ok=True)
+    expected_outputs: set[Path] = set()
     for skill_name in sorted(skill_requirements):
         skill = skill_requirements[skill_name]
-        if not skill.registered:
+        if not skill.registered or not skill.uses_python_runtime:
             continue
         closure = resolve_skill_dependency_closure(skill_name, skill_requirements)
         packages = collect_python_packages(closure, skill_requirements)
-        output_path = per_skill_dir / f"{skill_name}.txt"
+        output_path = repo_root / skill.path / "requirements.txt"
+        output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(
             render_requirements_text(
                 header_lines=[
@@ -181,39 +173,11 @@ def write_requirements_outputs(
             ),
             encoding="utf-8",
         )
+        expected_outputs.add(output_path.resolve())
 
-    readme_path = repo_root / "requirements" / "README.md"
-    readme_path.write_text(
-        "\n".join(
-            [
-                "# Generated Requirements",
-                "",
-                (
-                    "This directory contains generated Python dependency views "
-                    "derived from skills/install-manifest.json."
-                ),
-                "",
-                "Files:",
-                (
-                    "- requirements.txt at the repo root: union of required "
-                    "Python packages for all registered skills"
-                ),
-                (
-                    "- requirements/skills/<skill>.txt: transitive Python "
-                    "packages required for one registered skill"
-                ),
-                "",
-                "Important:",
-                "- These files only describe Python packages.",
-                (
-                    "- Use skills/install-manifest.json for binaries, node "
-                    "packages, post-install steps, and dependent skill folders."
-                ),
-                "",
-            ]
-        ),
-        encoding="utf-8",
-    )
+    for existing_path in repo_root.glob("skills/*/requirements.txt"):
+        if existing_path.resolve() not in expected_outputs:
+            existing_path.unlink()
 
 
 def build_argument_parser() -> argparse.ArgumentParser:
@@ -234,14 +198,12 @@ def build_argument_parser() -> argparse.ArgumentParser:
         help="Repository root where requirements outputs should be written.",
     )
     parser.add_argument(
-        "--requirements-path",
-        default="requirements.txt",
-        help="Output path for the whole-repo requirements file, relative to repo root.",
-    )
-    parser.add_argument(
-        "--per-skill-dir",
-        default="requirements/skills",
-        help="Output directory for per-skill requirements files, relative to repo root.",
+        "--skills-root",
+        default="skills",
+        help=(
+            "Skill root directory whose child skill folders receive generated "
+            "requirements.txt files."
+        ),
     )
     return parser
 
@@ -251,14 +213,14 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     repo_root = Path(args.repo_root).resolve()
     manifest_path = (repo_root / args.manifest).resolve()
-    requirements_path = (repo_root / args.requirements_path).resolve()
-    per_skill_dir = (repo_root / args.per_skill_dir).resolve()
+    skills_root = (repo_root / args.skills_root).resolve()
+
+    if skills_root != (repo_root / "skills").resolve():
+        raise ValueError("Only the default skills root is supported in this repository.")
 
     write_requirements_outputs(
         manifest_path=manifest_path,
         repo_root=repo_root,
-        requirements_path=requirements_path,
-        per_skill_dir=per_skill_dir,
     )
     return 0
 

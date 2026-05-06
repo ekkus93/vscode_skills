@@ -5,6 +5,67 @@
 - OpenClaw-compatible skills should use conservative `SKILL.md` YAML frontmatter with required `name` and `description`, and keep `metadata` as a single-line JSON object.
 - OpenClaw skill bodies are flexible markdown instructions; helper files can live beside `SKILL.md`, and `{baseDir}` can be used to reference them.
 
+## 2026-05-06T21:01:05Z - GPT-5.4 - Added Playwright-based tweet-read shared skill
+- Added `skills/tweet-read/` with an OpenClaw `SKILL.md`, a bundled `tweet_read.py` helper, and focused unit tests in `test_tweet_read.py`.
+- The skill is intentionally read-only, accepts exactly one X/Twitter status URL, and returns tweet text, author, handle, timestamp, canonical URL, media links, quoted-tweet text, and visible reply count when available.
+- Login state is stored outside the repo in `~/.local/share/vscode_skills/tweet-read/chromium-profile`; when login is required, the helper stops and tells the user to run `--login` rather than attempting to continue.
+- Registered the skill in `skills/SKILL_LIST.md`, documented it in `skills/README.md` and `README.md`, and added `playwright` plus Chromium install guidance to `skills/install-manifest.json` and generated requirements files.
+- Focused validation passed with `pytest skills/tweet-read/test_tweet_read.py`, `ruff check skills/tweet-read/tweet_read.py skills/tweet-read/test_tweet_read.py`, and `mypy skills/tweet-read/tweet_read.py skills/tweet-read/test_tweet_read.py`.
+
+## 2026-05-06T21:22:05Z - GPT-5.4 - Switched generated Python dependency artifacts to skill-local files and aligned repo target to 3.11
+- `skills/install-manifest.json` remains the Python dependency source of truth, but `tools/generate_requirements.py` now generates `skills/<skill>/requirements.txt` for registered skills that use Python instead of writing a repo-level `requirements.txt` and `requirements/skills/*.txt` outputs.
+- Removed the old generated `requirements.txt` and `requirements/` tree from the repo and refreshed the checked-in generated skill-local requirement files; the repo now has 15 generated `skills/*/requirements.txt` files for the current Python-based skills.
+- Updated `tests/test_generate_requirements.py`, `README.md`, `skills/README.md`, and `skills/audio-transcribe/INSTALL.md` so docs and freshness tests match the new artifact layout.
+- Added `.python-version` with `3.11`, changed `pyproject.toml` Ruff and MyPy targets to Python 3.11, and updated `.github/workflows/ci.yml` jobs to run on Python 3.11 so a single repo-local `uv` environment has a consistent version target.
+- Focused validation passed with `pytest -q tests/test_generate_requirements.py`, `ruff check tools/generate_requirements.py tests/test_generate_requirements.py`, and `mypy tools/generate_requirements.py tests/test_generate_requirements.py`.
+
+## 2026-05-06T21:44:26Z - GPT-5.4 - Recreated repo-local .venv with uv on Python 3.11
+- Removed the previous repo `.venv`, which was still Python 3.10.12, and recreated it as a repo-local `uv`-managed environment using Python 3.11.14.
+- Installed the baseline dev tools into the new environment: `pytest`, `mypy`, and `ruff`.
+- Validation passed with `.venv/bin/python -V`, `.venv/bin/python -m pytest --version`, `.venv/bin/python -m mypy --version`, and `.venv/bin/python -m ruff --version`.
+
+## 2026-05-06T21:48:11Z - GPT-5.4 - Installed tweet-read Python dependency into repo-local uv environment
+- Installed `playwright` into the repo-local `.venv` using `uv pip install --python .venv/bin/python -r skills/tweet-read/requirements.txt`.
+- Verified the dependency import with `.venv/bin/python -c "import playwright; print(playwright.__file__)"`.
+- Chromium is not installed yet; that remains a separate Playwright browser-install step.
+
+## 2026-05-06T21:52:22Z - GPT-5.4 - Installed Chromium for Playwright in the repo-local environment
+- Ran `.venv/bin/python -m playwright install chromium` from the repo root; the command returned cleanly.
+- Verified the Playwright CLI is callable from the repo-local environment with `.venv/bin/python -m playwright --help`.
+- Confirmed the Chromium browser bundle is present in the local Playwright cache via `.venv/bin/python -m playwright install --list`, which showed `/home/phil/.cache/ms-playwright/chromium-1217` referenced by the repo `.venv`.
+
+## 2026-05-06T22:16:03Z - GPT-5.4 - Switched tweet-read from Playwright to Selenium
+- Replaced the `skills/tweet-read/tweet_read.py` browser-control layer with Selenium plus a local Chrome-family browser profile flow, keeping the same read-only tweet extraction contract and persistent profile path.
+- Updated `skills/tweet-read/SKILL.md`, `skills/install-manifest.json`, `skills/tweet-read/requirements.txt`, `README.md`, and `skills/README.md` so the skill now documents Selenium and a locally installed Chrome or Chromium browser instead of Playwright Chromium.
+- Installed `selenium` into the repo-local `.venv` with `uv pip install --python .venv/bin/python -r skills/tweet-read/requirements.txt` and verified the import with `.venv/bin/python -c "import selenium; print(selenium.__version__)"`.
+- Focused validation passed with `.venv/bin/python -m pytest -q skills/tweet-read/test_tweet_read.py` after the switch.
+
+## 2026-05-06T22:24:50Z - GPT-5.4 - Fixed tweet-read Selenium profile path for Snap Chromium and verified live UA
+- The default persistent profile path in `skills/tweet-read/tweet_read.py` now uses `~/vscode-skills-data/tweet-read/chromium-profile` instead of `~/.local/share/...` because Snap Chromium failed to create `SingletonLock` under the hidden path on this machine.
+- Updated `skills/tweet-read/test_tweet_read.py` to match the new default profile location while keeping the profile outside the repo and under the user's home directory.
+- Focused validation passed with `.venv/bin/python -m pytest -q skills/tweet-read/test_tweet_read.py` after the path change.
+- A live Selenium startup check against the new default path returned a normal Chrome UA string (`Mozilla/5.0 ... Chrome/136.0.0.0 ...`) and `navigator.webdriver=None`.
+
+## 2026-05-06T22:28:19Z - GPT-5.4 - Selenium login retry likely succeeded
+- After the profile-path fix and live UA validation, the user reported that the Selenium-based `tweet-read` login retry appeared to work.
+- The current likely-good state is: persistent profile path under `~/vscode-skills-data/tweet-read/chromium-profile`, normal Chrome UA override, and a reusable authenticated browser profile outside the repo.
+
+## 2026-05-06T22:33:50Z - GPT-5.4 - Fixed Selenium tweet extraction JS escape and observed missing i/status page
+- Fixed a local Selenium extraction bug in `skills/tweet-read/tweet_read.py`: the embedded JavaScript used `join('\n\n')` inside a Python triple-quoted string, which became literal newlines inside a JS single-quoted string and caused `JavascriptException: Invalid or unexpected token`.
+- Focused validation passed after the fix with `.venv/bin/python -m pytest -q skills/tweet-read/test_tweet_read.py`.
+- A live fetch probe for `https://x.com/i/status/2034484410864197632` while logged in reached X successfully but rendered `Hmm...this page doesn’t exist. Try searching for something else.` with zero `article[data-testid='tweet']` nodes, so the helper failure for that URL is currently content/page availability rather than login or Selenium startup.
+
+## 2026-05-06T22:37:21Z - GPT-5.4 - Added fallback selector for current X tweet text DOM
+- X rendered the canonical status page `https://x.com/journoverax/status/2034630639664652465` with one `article[data-testid='tweet']` node but zero `[data-testid='tweetText']` nodes; the visible tweet content instead appeared in `div[dir="auto"]` elements outside the `User-Name` subtree.
+- Updated `skills/tweet-read/tweet_read.py` so the Selenium extraction script falls back to `div[dir="auto"]` when `tweetText` nodes are absent, while still excluding user-name nodes.
+- Live validation on that URL succeeded after the change, and focused validation passed with `.venv/bin/python -m pytest -q skills/tweet-read/test_tweet_read.py`.
+
+## 2026-05-06T22:59:35Z - GPT-5.4 - tweet-read now supports both tweets and X articles
+- X article pages expose the title and body in dedicated nodes (`twitter-article-title`, `twitterArticleRichTextView`, `longformRichTextComponent`) rather than standard tweet text nodes.
+- Updated `skills/tweet-read/tweet_read.py` so normalization prefers full article content: `text` now becomes `title + blank line + body` for article pages, while normal tweet pages still use the tweet-text selectors.
+- Added focused unit coverage in `skills/tweet-read/test_tweet_read.py` proving article payloads keep the full body instead of only the title.
+- Live validation on `https://x.com/journoverax/status/2034630639664652465` returned the full article body, and focused validation passed with `.venv/bin/python -m pytest -q skills/tweet-read/test_tweet_read.py`.
+
 ## 2026-03-20T00:29:11Z - GPT-5.4 - Current shared skills library state
 - The shared library at `${HOME}/skills` currently contains registered skills for `bitcoin-price`, `current-date-time`, `docx-to-markdown`, `hacker-news-top10`, `image-ocr`, `weather`, `wikipedia`, and `yahoo-finance-cli`.
 - `${HOME}/skills/list-skills/` exists with a `SKILL.md` file but is intentionally not registered in `${HOME}/skills/SKILL_LIST.md`, matching the shared library README's warning that the index is authoritative.

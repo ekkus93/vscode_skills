@@ -102,6 +102,7 @@ Examples currently in the shared library include:
 - `net-capture-trigger`
 - `company-research`
 - `news-search`
+- `tweet-read`
 - `stock-investment-review`
 - `stock-research`
 - `stock-review-market-context`
@@ -183,6 +184,7 @@ vscode_skills/
 		net-stp-loop-anomaly/
 		nettools-core/
 		news-search/
+		tweet-read/
 		stock-investment-review/
 		stock-research/
 		yahoo-finance/
@@ -264,6 +266,10 @@ ${HOME}/work/vscode_skills/skills/
 		SKILL.md
 		news_search.py
 		test_news_search.py
+	tweet-read/
+		SKILL.md
+		tweet_read.py
+		test_tweet_read.py
 	stock-investment-review/
 		SKILL.md
 		stock_investment_review.py
@@ -309,6 +315,7 @@ You need:
 
 Optional but useful, depending on which skills you want to use:
 
+- `uv`
 - `jq`
 - `curl`
 - `date`
@@ -357,6 +364,7 @@ For the skills currently in the shared library:
 - the `net-*` NETTOOLS wrapper skills need `python3` plus the bundled shared runtime under `skills/nettools-core/`; live investigations also need configured provider adapters or fixture files
 - `company-research` needs `python3`
 - `news-search` needs `python3`
+- `tweet-read` needs `python3`, the `selenium` Python package, and a locally installed Chrome or Chromium browser
 - `stock-investment-review` needs `python3` and the `yfinance` Python package
 - `stock-research` needs `python3` and the `yfinance` Python package
 - `stock-review-market-context` relies on the standalone `stock-research` and `yahoo-finance` shared helpers
@@ -387,12 +395,15 @@ For local transcription support, install the speech-to-text helper package with:
 python3 -m pip install faster-whisper
 ```
 
-### Generated Python requirements
+### Python environment and generated requirements
 
-This repo now supports two Python dependency views derived from `skills/install-manifest.json`:
+The Python dependency source of truth is:
 
-- `requirements.txt`: whole-repo convenience file for working on the full shared skill library
-- `requirements/skills/<skill>.txt`: per-skill Python requirements, resolved across `depends_on_skills`
+- `skills/install-manifest.json`
+
+Generated Python requirements live beside each Python-using skill as:
+
+- `skills/<skill>/requirements.txt`
 
 Generate or refresh them with:
 
@@ -403,9 +414,24 @@ python3 tools/generate_requirements.py
 Important:
 
 - `skills/install-manifest.json` remains the source of truth
-- the generated requirements files only cover Python packages
+- the generated skill-local `requirements.txt` files only cover Python packages
 - binaries, node packages, post-install steps, and dependent skill folders still come from the manifest
-- if you want to install only one skill on another OpenClaw instance, use the matching file under `requirements/skills/` and also follow that skill's manifest entry
+- if you want to install only one skill on another OpenClaw instance, copy that skill folder and use its local `requirements.txt` together with the manifest entry
+
+For a unified repo-local Python environment, standardize on `uv` with Python 3.11. A typical bootstrap flow is:
+
+```bash
+uv python install 3.11
+uv venv --python 3.11
+source .venv/bin/activate
+uv pip install pytest mypy ruff
+```
+
+Then install the Python packages needed by the skills you plan to work on, for example:
+
+```bash
+uv pip install -r skills/tweet-read/requirements.txt
+```
 
 ## Day-To-Day Workflow
 
@@ -439,6 +465,7 @@ Current examples of slash-style skills in this library include:
 - `/net-client-health --client-id client-123`
 - `/net-path-probe --site-id hq-1 --target dns-service`
 - `/news-search OpenAI | time:week | limit:3`
+- `/tweet-read https://x.com/jack/status/20`
 - `/stock-investment-review WING | horizon:45d | company:Wingstop | site:https://www.wingstop.com`
 - `/stock-research AAPL | period:1y | news:month`
 - `/weather Oakland`

@@ -57,12 +57,12 @@ python3 -m pip install faster-whisper
 
 This repo also generates a skill-specific Python requirements file:
 
-- `requirements/skills/audio-transcribe.txt`
+- `skills/audio-transcribe/requirements.txt`
 
 You can install the Python dependency view for this skill with:
 
 ```bash
-python3 -m pip install -r requirements/skills/audio-transcribe.txt
+python3 -m pip install -r skills/audio-transcribe/requirements.txt
 ```
 
 That file only covers Python packages. You still need `ffmpeg` installed separately.

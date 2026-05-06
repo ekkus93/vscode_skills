@@ -18,6 +18,7 @@
       ],
       "pip": [
         "faster-whisper",
+        "playwright",
         "yfinance",
         "openpyxl",
         "xlrd"
@@ -42,6 +43,7 @@
       ],
       "pip": [
         "faster-whisper",
+        "playwright",
         "yfinance",
         "openpyxl",
         "xlrd"
@@ -107,6 +109,15 @@
       ],
       "python_packages": [
         "faster-whisper"
+      ],
+      "node_packages": []
+    },
+    "browser_automation": {
+      "bins": [
+        "python3"
+      ],
+      "python_packages": [
+        "playwright"
       ],
       "node_packages": []
     }
@@ -353,6 +364,29 @@
       "depends_on_skills": [],
       "notes": [
         "Uses the bundled Python helper and Google News RSS."
+      ]
+    },
+    "tweet-read": {
+      "path": "skills/tweet-read/",
+      "registered": true,
+      "user_invocable": true,
+      "requires": {
+        "bins": [
+          "python3"
+        ],
+        "python_packages": [
+          "selenium"
+        ],
+        "node_packages": [],
+        "optional_bins": [],
+        "optional_python_packages": []
+      },
+      "network_access": true,
+      "depends_on_skills": [],
+      "notes": [
+        "Uses Selenium with a local Chrome-family browser and a persistent profile under the user's home directory.",
+        "Requires a locally installed Chrome or Chromium browser in addition to the Python package.",
+        "Read-only skill for one specific X or Twitter status URL."
       ]
     },
     "stock-investment-review": {

@@ -101,6 +101,10 @@ skills/
 		SKILL.md
 		news_search.py
 		test_news_search.py
+	tweet-read/
+		SKILL.md
+		tweet_read.py
+		test_tweet_read.py
 	stock-investment-review/
 		SKILL.md
 		stock_investment_review.py
@@ -220,6 +224,7 @@ According to `SKILL_LIST.md`, the currently registered shared skills are:
 - `net-capture-trigger`: prepare a gated packet-capture plan without implying execution
 - `company-research`: build a concise company profile from official-site context plus recent news
 - `news-search`: search recent distinct news coverage for a topic
+- `tweet-read`: read a single X or Twitter status URL with Selenium and a persistent Chrome-family browser profile stored under the user's home directory
 - `stock-investment-review`: build a stock review with a saved TODO checklist and Markdown report
 - `stock-research`: build a longer-form public stock research snapshot
 - `stock-review-market-context`: companion rules for one-year market context and technical framing
@@ -330,8 +335,7 @@ If you do not need every skill, you can install only the subset required by the 
 
 The repo also generates convenience Python dependency files from `skills/install-manifest.json`:
 
-- `requirements.txt` at the repo root for full-library development
-- `requirements/skills/<skill>.txt` for one registered skill plus the Python packages required by its transitive `depends_on_skills`
+- `skills/<skill>/requirements.txt` for each registered skill that uses Python, including the Python packages required by its transitive `depends_on_skills`
 
 Refresh them with:
 

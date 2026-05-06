@@ -31,6 +31,11 @@ This file lists reusable skills available in the shared workspace skill library.
 - Use for: finding recent distinct news stories for a topic with source names, dates, links, and deduplicated coverage
 - Typical outputs: recent coverage summary, distinct story list, paywall note, source-linked headlines
 
+### tweet-read
+- Path: `skills/tweet-read/`
+- Use for: reading one specific X or Twitter status URL with Selenium and a reusable logged-in Chrome-family browser profile when needed
+- Typical outputs: tweet text, author, handle, timestamp, canonical tweet URL, media links, quoted-tweet text, visible reply count, login-required guidance
+
 ### yahoo-finance
 - Path: `skills/yahoo-finance/`
 - Use for: fetching a concise market snapshot for one public stock or ETF ticker with recent performance and basic fundamentals

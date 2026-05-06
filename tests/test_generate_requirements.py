@@ -36,6 +36,7 @@ def test_build_repo_python_packages_uses_registered_skills() -> None:
     assert generate_requirements.build_repo_python_packages(skill_requirements) == [
         "faster-whisper",
         "openpyxl",
+        "selenium",
         "xlrd",
         "yfinance",
     ]
@@ -77,54 +78,50 @@ def test_excel_to_delimited_skill_requirements_include_transitive_python_package
 
 def test_write_requirements_outputs_writes_repo_and_per_skill_files(tmp_path: pathlib.Path) -> None:
     manifest_path = REPO_ROOT / "skills" / "install-manifest.json"
-    requirements_path = tmp_path / "requirements.txt"
-    per_skill_dir = tmp_path / "requirements" / "skills"
 
     generate_requirements.write_requirements_outputs(
         manifest_path=manifest_path,
         repo_root=tmp_path,
-        requirements_path=requirements_path,
-        per_skill_dir=per_skill_dir,
     )
 
-    repo_requirements = requirements_path.read_text(encoding="utf-8")
-    skill_requirements = (per_skill_dir / "excel-to-delimited.txt").read_text(encoding="utf-8")
+    skill_requirements = (
+        tmp_path / "skills" / "excel-to-delimited" / "requirements.txt"
+    ).read_text(encoding="utf-8")
+    tweet_requirements = (
+        tmp_path / "skills" / "tweet-read" / "requirements.txt"
+    ).read_text(encoding="utf-8")
 
-    assert "faster-whisper" in repo_requirements
-    assert "openpyxl" in repo_requirements
-    assert "yfinance" in repo_requirements
     assert "Resolved skills: excel-to-markdown, excel-to-delimited" in skill_requirements
     assert "xlrd" in skill_requirements
+    assert "selenium" in tweet_requirements
+
+
+def test_write_requirements_outputs_skips_non_python_skills(tmp_path: pathlib.Path) -> None:
+    manifest_path = REPO_ROOT / "skills" / "install-manifest.json"
+
+    generate_requirements.write_requirements_outputs(
+        manifest_path=manifest_path,
+        repo_root=tmp_path,
+    )
+
+    assert not (tmp_path / "skills" / "weather" / "requirements.txt").exists()
+    assert not (tmp_path / "skills" / "docx-to-markdown" / "requirements.txt").exists()
 
 
 def test_checked_in_generated_requirements_are_up_to_date(tmp_path: pathlib.Path) -> None:
     manifest_path = REPO_ROOT / "skills" / "install-manifest.json"
     generated_root = tmp_path / "generated"
     generated_root.mkdir()
-    requirements_path = generated_root / "requirements.txt"
-    per_skill_dir = generated_root / "requirements" / "skills"
 
     generate_requirements.write_requirements_outputs(
         manifest_path=manifest_path,
         repo_root=generated_root,
-        requirements_path=requirements_path,
-        per_skill_dir=per_skill_dir,
     )
 
     expected_files = _generated_files(generated_root)
     committed_files = {
-        pathlib.Path("requirements.txt"): (REPO_ROOT / "requirements.txt").read_text(
-            encoding="utf-8"
-        ),
-        **_generated_files(REPO_ROOT / "requirements"),
-    }
-    committed_files = {
-        (
-            pathlib.Path("requirements") / relative_path
-            if relative_path != pathlib.Path("requirements.txt")
-            else relative_path
-        ): content
-        for relative_path, content in committed_files.items()
+        path.relative_to(REPO_ROOT): path.read_text(encoding="utf-8")
+        for path in sorted(REPO_ROOT.glob("skills/*/requirements.txt"))
     }
 
     assert committed_files == expected_files, (

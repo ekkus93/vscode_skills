@@ -1,0 +1,5 @@
+# Generated from skills/install-manifest.json for the tweet-read skill.
+# Resolved skills: tweet-read
+# Non-Python dependencies and skill-folder dependencies remain in the install manifest.
+
+selenium
