@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import ConfigDict, Field
 
 from .common import Confidence, NormalizedModel
 
 
-class NodeType(str, Enum):
+class NodeType(StrEnum):
     CLIENT = "client"
     ACCESS_POINT = "access_point"
     SWITCH = "switch"
@@ -21,7 +21,7 @@ class NodeType(str, Enum):
     UNKNOWN = "unknown"
 
 
-class EdgeType(str, Enum):
+class EdgeType(StrEnum):
     LLDP = "lldp"
     CDP = "cdp"
     CONTROLLER_MAP = "controller_map"

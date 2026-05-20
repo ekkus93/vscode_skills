@@ -6,7 +6,7 @@ import sys
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from html.parser import HTMLParser
 from types import ModuleType
 from typing import Any
@@ -672,7 +672,7 @@ def research_company(request: dict[str, Any]) -> JsonDict:
 
 
 def format_results(result: JsonDict) -> str:
-    checked_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    checked_date = datetime.now(UTC).strftime("%Y-%m-%d")
     docs_note = (
         result["docs_url"] or "No docs link was found on the inspected official site."
     )

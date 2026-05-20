@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import os
 from collections.abc import Mapping, Sequence
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import Field, ValidationError, model_validator
@@ -46,7 +46,7 @@ from .stop_conditions import StopConditionConfig, evaluate_stop_conditions
 
 
 def utc_now() -> datetime:
-    return datetime.now(timezone.utc).replace(microsecond=0)
+    return datetime.now(UTC).replace(microsecond=0)
 
 
 class DiagnoseIncidentInput(SharedInputBase):

@@ -53,6 +53,10 @@ skills/
 		SKILL.md
 	docx-to-markdown/
 		SKILL.md
+	pdf-to-markdown/
+		SKILL.md
+		pdf_to_markdown.py
+		test_pdf_to_markdown.py
 	excel-to-delimited/
 		SKILL.md
 		excel_to_delimited.py
@@ -203,6 +207,7 @@ According to `SKILL_LIST.md`, the currently registered shared skills are:
 - `bitcoin-price`: get the current Bitcoin price in USD
 - `current-date-time`: get the current local date, time, or datetime from the system clock
 - `docx-to-markdown`: convert `.docx` and legacy `.doc` files into Markdown `.md` files
+- `pdf-to-markdown`: convert `.pdf` files into Markdown `.md` files with OCR fallback for scanned PDFs
 - `excel-to-markdown`: convert `.xlsx` and `.xls` workbooks into a Markdown file for model-readable review
 - `excel-to-delimited`: convert `.xlsx` and `.xls` workbooks into per-sheet `.csv` or `.tsv` exports
 - `hacker-news-top10`: get the current top 10 Hacker News stories with titles, URLs, and short summaries
@@ -277,6 +282,7 @@ These cover most of the registered skills:
 - `ffmpeg` for `audio-transcribe`
 - `pandoc` for `docx-to-markdown`
 - `soffice` or LibreOffice for legacy `.doc` input in `docx-to-markdown`
+- `pdftoppm` and `tesseract` for OCR fallback in `pdf-to-markdown`
 - `tesseract` for `image-ocr`
 - `jq` for `yahoo-finance-cli`
 - `node` and `npm` for `yahoo-finance-cli`
@@ -285,6 +291,7 @@ These cover most of the registered skills:
 ### Python packages used by specific skills
 
 - `faster-whisper` for `audio-transcribe`
+- `pypdf` for `pdf-to-markdown`
 - `yfinance` for `yahoo-finance`, `stock-research`, `stock-investment-review`, and `stock-review-market-context`
 - `openpyxl` for `.xlsx` support in `excel-to-markdown` and `excel-to-delimited`
 - `xlrd` for `.xls` support in `excel-to-markdown` and `excel-to-delimited`
@@ -313,8 +320,8 @@ Ubuntu or Debian baseline:
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y python3 curl jq pandoc ffmpeg tesseract-ocr nodejs npm libreoffice
-python3 -m pip install faster-whisper yfinance openpyxl xlrd
+sudo apt-get install -y python3 curl jq pandoc ffmpeg tesseract-ocr poppler-utils nodejs npm libreoffice
+python3 -m pip install faster-whisper pypdf yfinance openpyxl xlrd
 npm install -g yahoo-finance2
 sudo ln -sf "$(npm bin -g)/yahoo-finance" /usr/local/bin/yf
 ```
@@ -322,9 +329,9 @@ sudo ln -sf "$(npm bin -g)/yahoo-finance" /usr/local/bin/yf
 macOS with Homebrew baseline:
 
 ```bash
-brew install python curl jq pandoc tesseract node libreoffice
+brew install python curl jq pandoc tesseract poppler node libreoffice
 brew install ffmpeg
-python3 -m pip install faster-whisper yfinance openpyxl xlrd
+python3 -m pip install faster-whisper pypdf yfinance openpyxl xlrd
 npm install -g yahoo-finance2
 sudo ln -sf "$(npm bin -g)/yahoo-finance" /usr/local/bin/yf
 ```
@@ -359,6 +366,7 @@ These generated files are only Python-package views. For partial OpenClaw instal
 | `company-research` | Yes | `python3` | Uses the bundled Python helper and live web/news retrieval. |
 | `current-date-time` | Yes | `date` | Uses the system clock only. |
 | `docx-to-markdown` | Yes | `pandoc` | Also needs `soffice` or LibreOffice if you want legacy `.doc` support. |
+| `pdf-to-markdown` | Yes | `python3`, `pypdf`, `pdftoppm`, `tesseract` | Uses OCR fallback for scanned PDFs; OCR quality depends on scan quality and installed language data. |
 | `excel-to-delimited` | Yes | `python3`, `openpyxl`, `xlrd` | `openpyxl` is for `.xlsx`; `xlrd` is for legacy `.xls`. |
 | `excel-to-markdown` | Yes | `python3`, `openpyxl`, `xlrd` | `openpyxl` is for `.xlsx`; `xlrd` is for legacy `.xls`. |
 | `hacker-news-top10` | Yes | `curl`, `python3` | Uses the Hacker News API and linked page fetches. |
@@ -396,7 +404,7 @@ If you want a smaller OpenClaw deployment, these bundles cover the major categor
 
 - Research-only bundle: `python3 curl`
 - Finance bundle: `python3 curl jq node npm` plus `python3 -m pip install yfinance` and global `npm install -g yahoo-finance2`
-- Document conversion bundle: `pandoc` plus `python3 -m pip install openpyxl xlrd`, and LibreOffice if you need `.doc`
+- Document conversion bundle: `pandoc`, `pdftoppm`, and `tesseract` plus `python3 -m pip install pypdf openpyxl xlrd`, and LibreOffice if you need `.doc`
 - OCR bundle: `tesseract`
 
 ## Summary

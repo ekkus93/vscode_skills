@@ -7,7 +7,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 ATOM_NS = {"atom": "http://www.w3.org/2005/Atom"}
 OPENSEARCH_NS = {"opensearch": "http://a9.com/-/spec/opensearch/1.1/"}
@@ -210,7 +210,7 @@ def format_authors(authors: list[str]) -> str:
 
 
 def format_results(query_info: dict[str, str], parsed: dict[str, object]) -> str:
-    checked_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    checked_date = datetime.now(UTC).strftime("%Y-%m-%d")
     entries = parsed["entries"]
     total_results = parsed["total_results"]
     if not isinstance(entries, list) or not isinstance(total_results, int):

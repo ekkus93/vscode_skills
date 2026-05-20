@@ -2,7 +2,7 @@ import argparse
 import importlib.util
 import pathlib
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from types import ModuleType
 from typing import Any, cast
 
@@ -280,7 +280,7 @@ def format_company_news(items: list[JsonDict]) -> list[str]:
 
 
 def format_result(result: JsonDict) -> str:
-    checked_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    checked_date = datetime.now(UTC).strftime("%Y-%m-%d")
     snapshot = result["market_snapshot"]
     company_result = result["company_result"]
     history = snapshot["history"]

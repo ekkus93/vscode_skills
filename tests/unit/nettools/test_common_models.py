@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from nettools.models import (
     Confidence,
@@ -22,10 +22,10 @@ def test_skill_result_serializes_to_expected_contract_shape() -> None:
         scope_id="client-123",
         summary="Client shows elevated retry rate.",
         confidence=Confidence.MEDIUM,
-        observed_at=datetime(2026, 3, 28, 7, 0, tzinfo=timezone.utc),
+        observed_at=datetime(2026, 3, 28, 7, 0, tzinfo=UTC),
         time_window=TimeWindow(
-            start=datetime(2026, 3, 28, 6, 45, tzinfo=timezone.utc),
-            end=datetime(2026, 3, 28, 7, 0, tzinfo=timezone.utc),
+            start=datetime(2026, 3, 28, 6, 45, tzinfo=UTC),
+            end=datetime(2026, 3, 28, 7, 0, tzinfo=UTC),
         ),
         evidence={"retry_pct": 24.2},
         findings=[
@@ -58,8 +58,8 @@ def test_skill_result_serializes_to_expected_contract_shape() -> None:
 
 
 def test_time_window_rejects_inverted_bounds() -> None:
-    start = datetime(2026, 3, 28, 7, 0, tzinfo=timezone.utc)
-    end = datetime(2026, 3, 28, 6, 45, tzinfo=timezone.utc)
+    start = datetime(2026, 3, 28, 7, 0, tzinfo=UTC)
+    end = datetime(2026, 3, 28, 6, 45, tzinfo=UTC)
 
     try:
         TimeWindow(start=start, end=end)

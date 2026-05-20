@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from nettools import DependencyTimeoutError
@@ -101,8 +101,8 @@ def test_probe_inventory_and_syslog_stubs_support_fixture_path_loading() -> None
     events = syslog_adapter.fetch_events_by_time_window(
         context=AdapterContext(
             time_window=TimeWindow(
-                start=datetime(2026, 3, 28, 7, 0, tzinfo=timezone.utc),
-                end=datetime(2026, 3, 28, 7, 15, tzinfo=timezone.utc),
+                start=datetime(2026, 3, 28, 7, 0, tzinfo=UTC),
+                end=datetime(2026, 3, 28, 7, 15, tzinfo=UTC),
             )
         )
     )

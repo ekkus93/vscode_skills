@@ -72,6 +72,7 @@ Examples currently in the shared library include:
 - `bitcoin-price`
 - `current-date-time`
 - `docx-to-markdown`
+- `pdf-to-markdown`
 - `excel-to-delimited`
 - `excel-to-markdown`
 - `hacker-news-top10`
@@ -165,6 +166,7 @@ vscode_skills/
 		arxiv-search/
 			audio-transcribe/
 		company-research/
+		pdf-to-markdown/
 		excel-to-delimited/
 		excel-to-markdown/
 		net-ap-rf-health/
@@ -212,6 +214,10 @@ ${HOME}/work/vscode_skills/skills/
 		SKILL.md
 	docx-to-markdown/
 		SKILL.md
+	pdf-to-markdown/
+		SKILL.md
+		pdf_to_markdown.py
+		test_pdf_to_markdown.py
 	excel-to-delimited/
 		SKILL.md
 		excel_to_delimited.py
@@ -357,6 +363,7 @@ For the skills currently in the shared library:
 - `bitcoin-price` needs `curl` and `python3`
 - `current-date-time` needs the system `date` command
 - `docx-to-markdown` needs `pandoc`
+- `pdf-to-markdown` needs `python3`, the `pypdf` Python package, and `pdftoppm` plus `tesseract` for OCR fallback on scanned PDFs
 - `excel-to-delimited` needs `python3` plus the `openpyxl` and `xlrd` Python packages
 - `excel-to-markdown` needs `python3` plus the `openpyxl` and `xlrd` Python packages
 - `hacker-news-top10` needs `curl` and `python3`
@@ -387,6 +394,24 @@ For the Excel conversion skills, install the workbook readers with:
 
 ```bash
 python3 -m pip install openpyxl xlrd
+```
+
+For PDF-to-Markdown conversion, install the PDF reader helper with:
+
+```bash
+python3 -m pip install pypdf
+```
+
+For scanned-PDF OCR fallback, also install page rasterization and OCR tools with:
+
+```bash
+sudo apt-get install -y poppler-utils tesseract-ocr
+```
+
+On macOS with Homebrew, use:
+
+```bash
+brew install poppler tesseract
 ```
 
 For local transcription support, install the speech-to-text helper package with:
@@ -460,6 +485,7 @@ Current examples of slash-style skills in this library include:
 - `/current-date-time`
 - `/excel-to-delimited /tmp/vendor-pricing.xls | format:tsv`
 - `/excel-to-markdown /path/to/research-notes.xlsx`
+- `/pdf-to-markdown /path/to/report.pdf`
 - `/hacker-news-top10`
 - `/net-diagnose-incident --site-id hq-1 --client-id client-42 --complaint "My laptop cannot connect to CorpWiFi and reconnect helps"`
 - `/net-client-health --client-id client-123`

@@ -2,7 +2,7 @@ import argparse
 import math
 import re
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 JsonDict = dict[str, Any]
@@ -273,7 +273,7 @@ def fetch_snapshot(request: JsonDict) -> JsonDict:
 
 
 def format_result(result: JsonDict) -> str:
-    checked_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    checked_date = datetime.now(UTC).strftime("%Y-%m-%d")
     history = result["history"]
     lead = (
         f"Yahoo Finance snapshot for {result['ticker']} ({result['company_name']}): "

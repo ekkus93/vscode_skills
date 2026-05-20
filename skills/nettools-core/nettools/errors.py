@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from .findings import (
@@ -14,7 +14,7 @@ from .models import Confidence, Finding, FindingSeverity, ScopeType, SkillResult
 
 
 def utc_now() -> datetime:
-    return datetime.now(timezone.utc).replace(microsecond=0)
+    return datetime.now(UTC).replace(microsecond=0)
 
 
 class NettoolsError(Exception):

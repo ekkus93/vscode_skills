@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from nettools.errors import BadInputError, DependencyTimeoutError, error_to_skill_result
 from nettools.findings import validate_finding_code
@@ -27,8 +27,8 @@ def test_error_to_skill_result_maps_bad_input_to_fail() -> None:
         scope_type=ScopeType.CLIENT,
         scope_id="unscoped",
         time_window=TimeWindow(
-            start=datetime(2026, 3, 28, 6, 45, tzinfo=timezone.utc),
-            end=datetime(2026, 3, 28, 7, 0, tzinfo=timezone.utc),
+            start=datetime(2026, 3, 28, 6, 45, tzinfo=UTC),
+            end=datetime(2026, 3, 28, 7, 0, tzinfo=UTC),
         ),
     )
 
@@ -43,12 +43,12 @@ def test_error_to_skill_result_maps_dependency_timeout_to_unknown() -> None:
         scope_type=ScopeType.SWITCH_PORT,
         scope_id="Gi1/0/18",
         time_window=TimeWindow(
-            start=datetime(2026, 3, 28, 6, 45, tzinfo=timezone.utc),
-            end=datetime(2026, 3, 28, 7, 0, tzinfo=timezone.utc),
+            start=datetime(2026, 3, 28, 6, 45, tzinfo=UTC),
+            end=datetime(2026, 3, 28, 7, 0, tzinfo=UTC),
         ),
-        observed_at=datetime(2026, 3, 28, 7, 0, tzinfo=timezone.utc),
+        observed_at=datetime(2026, 3, 28, 7, 0, tzinfo=UTC),
     )
 
     assert result.status == Status.UNKNOWN
     assert result.findings[0].code == "DEPENDENCY_TIMEOUT"
-    assert result.observed_at == datetime(2026, 3, 28, 7, 0, tzinfo=timezone.utc)
+    assert result.observed_at == datetime(2026, 3, 28, 7, 0, tzinfo=UTC)

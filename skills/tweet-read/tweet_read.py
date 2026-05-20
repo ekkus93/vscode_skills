@@ -195,13 +195,17 @@ def fetch_tweet(url: str, *, profile_dir: Path, headless: bool = True) -> TweetD
               return null;
             }
 
-                        const articleTitleNode = article.querySelector('[data-testid="twitter-article-title"]');
+                        const articleTitleNode = article.querySelector(
+                            '[data-testid="twitter-article-title"]'
+                        );
                         const articleBodyNode =
                             article.querySelector('[data-testid="twitterArticleRichTextView"]')
                             || article.querySelector('[data-testid="longformRichTextComponent"]');
 
                         const textNodes = Array.from(
-                            article.querySelectorAll('[data-testid="tweetText"], div[dir="auto"]')
+                            article.querySelectorAll(
+                                '[data-testid="tweetText"], div[dir="auto"]'
+                            )
                         ).filter(
                             (node) => !node.closest('[data-testid="User-Name"]')
                                 && !node.closest('[data-testid="twitterArticleReadView"]')

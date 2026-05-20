@@ -4,7 +4,7 @@ import argparse
 import os
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, TypeVar
 
 from pydantic import Field, ValidationError, model_validator
@@ -84,7 +84,7 @@ SkillInputType = TypeVar("SkillInputType", bound=SharedInputBase)
 
 
 def utc_now() -> datetime:
-    return datetime.now(timezone.utc).replace(microsecond=0)
+    return datetime.now(UTC).replace(microsecond=0)
 
 
 @dataclass

@@ -36,6 +36,7 @@ def test_build_repo_python_packages_uses_registered_skills() -> None:
     assert generate_requirements.build_repo_python_packages(skill_requirements) == [
         "faster-whisper",
         "openpyxl",
+        "pypdf",
         "selenium",
         "xlrd",
         "yfinance",

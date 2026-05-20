@@ -5,7 +5,7 @@ import importlib.util
 import pathlib
 import re
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from types import ModuleType
 from typing import Any
 
@@ -230,7 +230,7 @@ def recommendation(result: JsonDict, horizon: str) -> tuple[str, str]:
 
 
 def build_todo_markdown(result: JsonDict, request: JsonDict) -> str:
-    checked_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    checked_date = datetime.now(UTC).strftime("%Y-%m-%d")
     ticker = str(request["ticker"])
     company_name = str(result["market_snapshot"]["company_name"])
     horizon = str(request["horizon"])
@@ -298,7 +298,7 @@ def build_report_markdown(result: JsonDict, request: JsonDict) -> str:
     history = snapshot["history"]
     ticker = str(request["ticker"])
     horizon = str(request["horizon"])
-    checked_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    checked_date = datetime.now(UTC).strftime("%Y-%m-%d")
     company_name = str(snapshot["company_name"])
     action, rationale = recommendation(result, horizon)
     current_price = yahoo_finance.format_price(

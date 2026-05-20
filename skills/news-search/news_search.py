@@ -7,7 +7,7 @@ import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 JsonDict = dict[str, Any]
@@ -183,8 +183,8 @@ def parse_pub_date(value: str | None) -> tuple[str, datetime | None]:
     except (TypeError, ValueError, IndexError):
         return "not available", None
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=timezone.utc)
-    return parsed.astimezone(timezone.utc).strftime("%Y-%m-%d"), parsed.astimezone(timezone.utc)
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC).strftime("%Y-%m-%d"), parsed.astimezone(UTC)
 
 
 def normalize_title(title: str) -> str:
@@ -356,7 +356,7 @@ def paywall_note(items: list[JsonDict]) -> str | None:
 
 
 def format_results(query: dict[str, Any], items: list[JsonDict]) -> str:
-    checked_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    checked_date = datetime.now(UTC).strftime("%Y-%m-%d")
     deduped = dedupe_articles(items)[: query["limit"]]
     if not deduped:
         return (

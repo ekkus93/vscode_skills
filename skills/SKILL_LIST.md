@@ -91,6 +91,11 @@ This file lists reusable skills available in the shared workspace skill library.
 - Use for: converting `.docx` and legacy `.doc` files into Markdown `.md` files
 - Typical outputs: converted markdown file, output path confirmation
 
+### pdf-to-markdown
+- Path: `skills/pdf-to-markdown/`
+- Use for: converting local `.pdf` files into Markdown `.md` files with OCR fallback for scanned PDFs
+- Typical outputs: converted markdown file, output path confirmation
+
 ### excel-to-markdown
 - Path: `skills/excel-to-markdown/`
 - Use for: converting local `.xlsx` and `.xls` workbooks into a single Markdown file for readable workbook review

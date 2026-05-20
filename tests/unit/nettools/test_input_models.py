@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from nettools.models import ScopeType, SharedInputBase
 
@@ -18,18 +18,18 @@ def test_shared_input_defaults_time_window_when_not_provided() -> None:
 def test_shared_input_accepts_explicit_time_window() -> None:
     shared_input = SharedInputBase(
         site_id="hq-1",
-        start_time=datetime(2026, 3, 28, 6, 0, tzinfo=timezone.utc),
-        end_time=datetime(2026, 3, 28, 6, 30, tzinfo=timezone.utc),
+        start_time=datetime(2026, 3, 28, 6, 0, tzinfo=UTC),
+        end_time=datetime(2026, 3, 28, 6, 30, tzinfo=UTC),
     )
 
-    assert shared_input.time_window.start == datetime(2026, 3, 28, 6, 0, tzinfo=timezone.utc)
-    assert shared_input.time_window.end == datetime(2026, 3, 28, 6, 30, tzinfo=timezone.utc)
+    assert shared_input.time_window.start == datetime(2026, 3, 28, 6, 0, tzinfo=UTC)
+    assert shared_input.time_window.end == datetime(2026, 3, 28, 6, 30, tzinfo=UTC)
     assert shared_input.default_scope_type() == ScopeType.SITE
 
 
 def test_shared_input_requires_both_explicit_time_bounds() -> None:
     try:
-        SharedInputBase(start_time=datetime(2026, 3, 28, 6, 0, tzinfo=timezone.utc))
+        SharedInputBase(start_time=datetime(2026, 3, 28, 6, 0, tzinfo=UTC))
     except ValueError as exc:
         assert "provided together" in str(exc)
     else:

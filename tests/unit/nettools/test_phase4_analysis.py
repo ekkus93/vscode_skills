@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from nettools.analysis import (
@@ -56,7 +56,7 @@ def test_phase4_scenarios_cover_phase16_canonical_fixture_inventory() -> None:
 
 def test_normalization_helpers_preserve_source_metadata_and_aliases() -> None:
     scenarios = load_phase4_scenarios()
-    observed_at = datetime(2026, 3, 28, 8, 0, tzinfo=timezone.utc)
+    observed_at = datetime(2026, 3, 28, 8, 0, tzinfo=UTC)
 
     client = normalize_client_session(
         scenarios["weak_signal_client"]["wireless"],
@@ -145,7 +145,7 @@ def test_threshold_scoring_and_recommendation_helpers() -> None:
 
 def test_mixed_evidence_fixture_preserves_two_domain_ambiguity_inputs() -> None:
     scenarios = load_phase4_scenarios()
-    observed_at = datetime(2026, 3, 28, 8, 30, tzinfo=timezone.utc)
+    observed_at = datetime(2026, 3, 28, 8, 30, tzinfo=UTC)
     scenario = scenarios["mixed_evidence_two_domain_ambiguity"]
 
     auth = normalize_auth_summary(
@@ -196,12 +196,12 @@ def test_threshold_helpers_treat_equal_boundary_as_breached() -> None:
 
 def test_correlation_and_cache_helpers() -> None:
     first_window = TimeWindow(
-        start=datetime(2026, 3, 28, 8, 0, tzinfo=timezone.utc),
-        end=datetime(2026, 3, 28, 8, 15, tzinfo=timezone.utc),
+        start=datetime(2026, 3, 28, 8, 0, tzinfo=UTC),
+        end=datetime(2026, 3, 28, 8, 15, tzinfo=UTC),
     )
     second_window = TimeWindow(
-        start=datetime(2026, 3, 28, 8, 10, tzinfo=timezone.utc),
-        end=datetime(2026, 3, 28, 8, 25, tzinfo=timezone.utc),
+        start=datetime(2026, 3, 28, 8, 10, tzinfo=UTC),
+        end=datetime(2026, 3, 28, 8, 25, tzinfo=UTC),
     )
 
     overlap_ratio = time_window_overlap_ratio(first_window, second_window)

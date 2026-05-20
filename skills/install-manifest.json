@@ -12,6 +12,7 @@
         "pandoc",
         "ffmpeg",
         "tesseract-ocr",
+        "poppler-utils",
         "nodejs",
         "npm",
         "libreoffice"
@@ -38,6 +39,7 @@
         "pandoc",
         "ffmpeg",
         "tesseract",
+        "poppler",
         "node",
         "libreoffice"
       ],
@@ -87,6 +89,7 @@
         "pandoc"
       ],
       "python_packages": [
+        "pypdf",
         "openpyxl",
         "xlrd"
       ],
@@ -243,6 +246,29 @@
       "depends_on_skills": [],
       "notes": [
         "Legacy .doc input additionally requires LibreOffice or soffice."
+      ]
+    },
+    "pdf-to-markdown": {
+      "path": "skills/pdf-to-markdown/",
+      "registered": true,
+      "user_invocable": true,
+      "requires": {
+        "bins": [
+          "python3",
+          "pdftoppm",
+          "tesseract"
+        ],
+        "python_packages": [
+          "pypdf"
+        ],
+        "node_packages": [],
+        "optional_bins": [],
+        "optional_python_packages": []
+      },
+      "network_access": false,
+      "depends_on_skills": [],
+      "notes": [
+        "Uses direct text extraction first, then OCR fallback for scanned PDFs via pdftoppm plus Tesseract."
       ]
     },
     "excel-to-delimited": {

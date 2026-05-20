@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -11,10 +11,10 @@ from .execution import SkillExecutionRecord
 
 
 def utc_now() -> datetime:
-    return datetime.now(timezone.utc).replace(microsecond=0)
+    return datetime.now(UTC).replace(microsecond=0)
 
 
-class IncidentType(str, Enum):
+class IncidentType(StrEnum):
     SINGLE_CLIENT = "single_client"
     SINGLE_AREA = "single_area"
     SITE_WIDE = "site_wide"
@@ -23,7 +23,7 @@ class IncidentType(str, Enum):
     UNKNOWN_SCOPE = "unknown_scope"
 
 
-class DiagnosticDomain(str, Enum):
+class DiagnosticDomain(StrEnum):
     SINGLE_CLIENT_RF = "single_client_rf"
     SINGLE_AP_RF = "single_ap_rf"
     ROAMING_ISSUE = "roaming_issue"
@@ -38,14 +38,14 @@ class DiagnosticDomain(str, Enum):
     UNKNOWN = "unknown"
 
 
-class InvestigationStatus(str, Enum):
+class InvestigationStatus(StrEnum):
     RUNNING = "running"
     COMPLETED = "completed"
     BLOCKED = "blocked"
     FAILED = "failed"
 
 
-class StopReasonCode(str, Enum):
+class StopReasonCode(StrEnum):
     HIGH_CONFIDENCE_DIAGNOSIS = "high_confidence_diagnosis"
     TWO_DOMAIN_BOUNDED_AMBIGUITY = "two_domain_bounded_ambiguity"
     INVESTIGATION_BUDGET_EXHAUSTED = "investigation_budget_exhausted"
@@ -54,7 +54,7 @@ class StopReasonCode(str, Enum):
     NO_NEW_INFORMATION = "no_new_information"
 
 
-class InvestigationTraceEventType(str, Enum):
+class InvestigationTraceEventType(StrEnum):
     PLAYBOOK_SELECTION = "playbook_selection"
     BRANCH_DECISION = "branch_decision"
     SCORE_UPDATE = "score_update"

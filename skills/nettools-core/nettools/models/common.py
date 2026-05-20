@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -9,20 +9,20 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from ..findings import validate_finding_code
 
 
-class Status(str, Enum):
+class Status(StrEnum):
     OK = "ok"
     WARN = "warn"
     FAIL = "fail"
     UNKNOWN = "unknown"
 
 
-class Confidence(str, Enum):
+class Confidence(StrEnum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
 
 
-class ScopeType(str, Enum):
+class ScopeType(StrEnum):
     CLIENT = "client"
     AP = "ap"
     SSID = "ssid"
@@ -37,7 +37,7 @@ class ScopeType(str, Enum):
     PATH = "path"
 
 
-class FindingSeverity(str, Enum):
+class FindingSeverity(StrEnum):
     INFO = "info"
     WARN = "warn"
     CRITICAL = "critical"

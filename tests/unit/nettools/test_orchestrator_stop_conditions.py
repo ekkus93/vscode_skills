@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from nettools.models import Confidence
 from nettools.orchestrator import (
@@ -14,7 +14,7 @@ from nettools.orchestrator import (
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc).replace(microsecond=0)
+    return datetime.now(UTC).replace(microsecond=0)
 
 
 def test_high_confidence_stop() -> None:

@@ -940,3 +940,31 @@
 ## 2026-04-06T06:38:20Z - GPT-5.4 - Pushed audio transcription skill to origin/master
 - Pushed `master` to `origin/master`, advancing the remote from `ef1cbf9` to `a2df697`.
 - Left unrelated local-only changes uncommitted: `vscode_skills.code-workspace` and generated transcript files under `outputs/`.
+
+## 2026-05-20T03:21:37Z - GPT-5.4 - Added pdf-to-markdown shared skill
+- Added `skills/pdf-to-markdown/` with an OpenClaw-style `SKILL.md`, a bundled `pdf_to_markdown.py` helper, and focused unit tests in `test_pdf_to_markdown.py`.
+- The new skill converts local text-based PDF files into Markdown beside the source file, preserves page order with per-page headings, and fails clearly when `pypdf` is missing or the PDF has no extractable text because OCR is intentionally out of scope.
+- Registered the skill in `skills/SKILL_LIST.md`, added `pypdf` to `skills/install-manifest.json`, regenerated `skills/pdf-to-markdown/requirements.txt`, and refreshed both `README.md` files so the new skill and dependency are documented.
+- Focused validation passed with `./.venv/bin/pytest skills/pdf-to-markdown/test_pdf_to_markdown.py tests/test_generate_requirements.py`, `./.venv/bin/ruff check skills/pdf-to-markdown/pdf_to_markdown.py skills/pdf-to-markdown/test_pdf_to_markdown.py tests/test_generate_requirements.py`, and `./.venv/bin/mypy skills/pdf-to-markdown/pdf_to_markdown.py skills/pdf-to-markdown/test_pdf_to_markdown.py tests/test_generate_requirements.py`.
+
+## 2026-05-20T03:24:58Z - GPT-5.4 - Added scanned-PDF OCR fallback to pdf-to-markdown
+- Extended `skills/pdf-to-markdown/pdf_to_markdown.py` so it now tries `pypdf` text extraction first, then automatically falls back to scanned-PDF OCR by rasterizing pages with `pdftoppm` and running `tesseract` per page when the PDF has no embedded text.
+- Updated `skills/pdf-to-markdown/SKILL.md`, `skills/SKILL_LIST.md`, `skills/install-manifest.json`, `skills/README.md`, and `README.md` so the skill now documents scanned-PDF support plus the added OCR fallback requirements `pdftoppm` and `tesseract`.
+- Expanded `skills/pdf-to-markdown/test_pdf_to_markdown.py` to cover OCR fallback activation, empty OCR output failure, missing `pdftoppm`, missing `tesseract`, and CLI `--ocr-language` plumbing.
+- Focused validation passed with `./.venv/bin/pytest skills/pdf-to-markdown/test_pdf_to_markdown.py`, `./.venv/bin/ruff check skills/pdf-to-markdown/pdf_to_markdown.py skills/pdf-to-markdown/test_pdf_to_markdown.py`, and `./.venv/bin/mypy skills/pdf-to-markdown/pdf_to_markdown.py skills/pdf-to-markdown/test_pdf_to_markdown.py`.
+
+## 2026-05-20T03:26:39Z - GPT-5.4 - Added pdf-to-markdown install guide for OCR fallback dependencies
+- Added `skills/pdf-to-markdown/INSTALL.md` with per-skill deployment guidance covering `pypdf`, `pdftoppm`, and `tesseract`, plus verification, smoke-test, and common-failure steps.
+- Updated `skills/pdf-to-markdown/SKILL.md` to point operators at the new install guide.
+- Updated `README.md` and `skills/README.md` so the human-facing setup instructions now explicitly include `poppler-utils` or `poppler` and `tesseract` alongside `pypdf` for scanned-PDF OCR fallback.
+- Verified the touched markdown files with editor diagnostics and targeted text checks; no markdown diagnostics were reported.
+
+## 2026-05-20T03:35:14Z - GPT-5.4 - Restored repo-local test dependencies in .venv and revalidated full pytest suite
+- Installed missing test/runtime dependencies into the repo-local `.venv` with `uv pip`: `pydantic` and `openpyxl` (plus transitive packages `annotated-types`, `pydantic-core`, `typing-inspection`, and `et-xmlfile`).
+- A first full pytest run after installing `pydantic` reached execution and passed `345` tests with `2` skips caused by missing `openpyxl`.
+- After installing `openpyxl`, the full suite passed cleanly with `347 passed, 0 skipped` using `./.venv/bin/pytest`.
+
+## 2026-05-20T03:44:00Z - GPT-5.4 - Cleaned repo-wide Ruff findings and restored green lint/test baseline
+- Ran repo-wide `./.venv/bin/ruff check . --fix`, which resolved the bulk UTC-modernization findings automatically.
+- Manually fixed the remaining Ruff findings by converting several NETTOOLS string enums in `skills/nettools-core/nettools/models/common.py`, `skills/nettools-core/nettools/models/topology.py`, and `skills/nettools-core/nettools/orchestrator/state.py` from `str, Enum` to `StrEnum`, and by wrapping the remaining long JavaScript selector lines in `skills/tweet-read/tweet_read.py`.
+- Final validation passed with `./.venv/bin/ruff check .` and `./.venv/bin/pytest`, ending at `347 passed` with no remaining Ruff findings.

@@ -1,6 +1,6 @@
 import importlib.util
 import pathlib
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from types import ModuleType
 
 import pytest
@@ -198,7 +198,7 @@ def test_build_news_items_retries_with_disambiguating_query(
             "source": "Local News",
             "source_key": "local news",
             "published_date": "2026-03-15",
-            "published_at": datetime(2026, 3, 15, tzinfo=timezone.utc),
+            "published_at": datetime(2026, 3, 15, tzinfo=UTC),
             "link": "https://news.google.com/rss/articles/GENERIC",
         }
     ]
@@ -209,7 +209,7 @@ def test_build_news_items_retries_with_disambiguating_query(
             "source": "Reuters",
             "source_key": "reuters",
             "published_date": "2026-03-15",
-            "published_at": datetime(2026, 3, 15, tzinfo=timezone.utc),
+            "published_at": datetime(2026, 3, 15, tzinfo=UTC),
             "link": "https://news.google.com/rss/articles/COMPANY",
         }
     ]
@@ -250,7 +250,7 @@ def test_build_news_items_skips_irrelevant_fallback_results(
                     "source": "Local News",
                     "source_key": "local news",
                     "published_date": "2026-03-15",
-                    "published_at": datetime(2026, 3, 15, tzinfo=timezone.utc),
+                    "published_at": datetime(2026, 3, 15, tzinfo=UTC),
                     "link": "https://news.google.com/rss/articles/GENERIC1",
                 }
             ]
@@ -262,7 +262,7 @@ def test_build_news_items_skips_irrelevant_fallback_results(
                     "source": "WWBT",
                     "source_key": "wwbt",
                     "published_date": "2026-03-14",
-                    "published_at": datetime(2026, 3, 14, tzinfo=timezone.utc),
+                    "published_at": datetime(2026, 3, 14, tzinfo=UTC),
                     "link": "https://news.google.com/rss/articles/GENERIC2",
                 }
             ]
@@ -322,19 +322,19 @@ def test_rank_company_news_items_prefers_high_signal_publishers() -> None:
             "title": "Acme launches new feature",
             "source": "Reuters",
             "source_key": "reuters",
-            "published_at": datetime(2026, 3, 11, tzinfo=timezone.utc),
+            "published_at": datetime(2026, 3, 11, tzinfo=UTC),
         },
         {
             "title": "Acme launches new feature",
             "source": "RACER - Racing News",
             "source_key": "racer - racing news",
-            "published_at": datetime(2026, 3, 12, tzinfo=timezone.utc),
+            "published_at": datetime(2026, 3, 12, tzinfo=UTC),
         },
         {
             "title": "Acme launches new feature",
             "source": "TradingView",
             "source_key": "tradingview",
-            "published_at": datetime(2026, 3, 13, tzinfo=timezone.utc),
+            "published_at": datetime(2026, 3, 13, tzinfo=UTC),
         },
     ]
     ranked = company_research.rank_company_news_items(items)
@@ -351,19 +351,19 @@ def test_rank_company_news_items_prefers_mid_signal_blog_over_weaker_outlets() -
             "title": "Acme ecosystem update",
             "source": "The GitHub Blog",
             "source_key": "the github blog",
-            "published_at": datetime(2026, 3, 10, tzinfo=timezone.utc),
+            "published_at": datetime(2026, 3, 10, tzinfo=UTC),
         },
         {
             "title": "Acme ecosystem update",
             "source": "iZOOlogic",
             "source_key": "izoologic",
-            "published_at": datetime(2026, 3, 11, tzinfo=timezone.utc),
+            "published_at": datetime(2026, 3, 11, tzinfo=UTC),
         },
         {
             "title": "Acme ecosystem update",
             "source": "RACER - Racing News",
             "source_key": "racer - racing news",
-            "published_at": datetime(2026, 3, 12, tzinfo=timezone.utc),
+            "published_at": datetime(2026, 3, 12, tzinfo=UTC),
         },
     ]
     ranked = company_research.rank_company_news_items(items)
@@ -380,13 +380,13 @@ def test_rank_company_news_items_keeps_preferred_sources_above_mid_signal_blog()
             "title": "Acme funding round",
             "source": "The GitHub Blog",
             "source_key": "the github blog",
-            "published_at": datetime(2026, 3, 13, tzinfo=timezone.utc),
+            "published_at": datetime(2026, 3, 13, tzinfo=UTC),
         },
         {
             "title": "Acme funding round",
             "source": "Reuters",
             "source_key": "reuters",
-            "published_at": datetime(2026, 3, 12, tzinfo=timezone.utc),
+            "published_at": datetime(2026, 3, 12, tzinfo=UTC),
         },
     ]
     ranked = company_research.rank_company_news_items(items)
@@ -399,13 +399,13 @@ def test_rank_company_news_items_keeps_recency_within_same_quality_band() -> Non
             "title": "Older Reuters story",
             "source": "Reuters",
             "source_key": "reuters",
-            "published_at": datetime(2026, 3, 11, tzinfo=timezone.utc),
+            "published_at": datetime(2026, 3, 11, tzinfo=UTC),
         },
         {
             "title": "Newer Reuters story",
             "source": "Reuters",
             "source_key": "reuters",
-            "published_at": datetime(2026, 3, 13, tzinfo=timezone.utc),
+            "published_at": datetime(2026, 3, 13, tzinfo=UTC),
         },
     ]
     ranked = company_research.rank_company_news_items(items)

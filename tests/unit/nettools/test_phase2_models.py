@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from nettools.models import (
     AccessPointState,
@@ -60,12 +60,12 @@ def test_phase2_models_include_source_metadata_and_serialize_cleanly() -> None:
         provider="wireless-controller",
         source_type="api",
         source_id="client/123",
-        collected_at=datetime(2026, 3, 28, 7, 0, tzinfo=timezone.utc),
+        collected_at=datetime(2026, 3, 28, 7, 0, tzinfo=UTC),
         raw_ref="controller:client/123",
     )
     session = ClientSession(
         client_id="client-123",
-        observed_at=datetime(2026, 3, 28, 7, 0, tzinfo=timezone.utc),
+        observed_at=datetime(2026, 3, 28, 7, 0, tzinfo=UTC),
         source_metadata=[source],
         rssi_dbm=-67,
     )
